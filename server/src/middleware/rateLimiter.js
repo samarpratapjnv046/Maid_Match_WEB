@@ -9,10 +9,10 @@ const createLimiter = (windowMs, max, message) =>
     legacyHeaders: false,
   });
 
-// Strict: login & register
+// Strict: login & register (relaxed in development)
 export const authLimiter = createLimiter(
   15 * 60 * 1000, // 15 minutes
-  10,
+  process.env.NODE_ENV === 'production' ? 10 : 100,
   'Too many authentication attempts. Please try again after 15 minutes.'
 );
 

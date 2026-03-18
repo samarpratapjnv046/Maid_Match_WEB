@@ -1,0 +1,89 @@
+
+> client@0.0.0 lint
+> eslint .
+
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\components\layout\Navbar.jsx
+  8:25  error  'loading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\context\AuthContext.jsx
+   4:14  error  Fast refresh only works when a file only exports components. Move your React context(s) to a separate file  react-refresh/only-export-components
+  20:14  error  'err' is defined but never used                                                                             no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\Home.jsx
+  3:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\Login.jsx
+  5:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\Profile.jsx
+   1:39  error  'useCallback' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  21:32  error  'Icon' is defined but never used                                                    no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\Register.jsx
+  5:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\SearchWorkers.jsx
+   5:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                    no-unused-vars
+  17:6   warning  React Hook useEffect has a missing dependency: 'fetchWorkers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\WorkerProfile.jsx
+   6:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  35:16  error  'err' is defined but never used                                                no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\admin\AdminAuditLogs.jsx
+  58:14  error  'err' is defined but never used  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\admin\AdminBookings.jsx
+  34:14  error  'err' is defined but never used  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\admin\AdminDashboard.jsx
+  18:27  error  'Icon' is defined but never used  no-unused-vars
+  55:14  error  'err' is defined but never used   no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\admin\AdminLayout.jsx
+  27:37  error  'Icon' is defined but never used  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\admin\AdminPayments.jsx
+  10:27  error  'Icon' is defined but never used  no-unused-vars
+  42:14  error  'err' is defined but never used   no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\admin\AdminReviews.jsx
+  35:14  error  'err' is defined but never used  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\admin\AdminUsers.jsx
+   8:22  error  'getStatusLabel' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  53:14  error  'err' is defined but never used                                                        no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\admin\AdminWorkers.jsx
+  47:14  error  'err' is defined but never used  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\customer\BookingDetail.jsx
+   14:3   error  'formatDate' is defined but never used. Allowed unused vars must match /^[A-Z_]/u         no-unused-vars
+   44:41  error  'currentStatus' is defined but never used                                                 no-unused-vars
+  110:9   error  'navigate' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\customer\MyBookings.jsx
+  142:11  error  'user' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\customer\SearchWorkers.jsx
+  165:11  error  'user' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\worker\WorkerBookings.jsx
+  20:3  error  'formatDate' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\worker\WorkerDashboard.jsx
+   25:3   error  'formatDate' is defined but never used. Allowed unused vars must match /^[A-Z_]/u         no-unused-vars
+   34:27  error  'Icon' is defined but never used                                                          no-unused-vars
+  228:9   error  'navigate' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  652:36  error  'Icon' is defined but never used                                                          no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\worker\WorkerProfile.jsx
+  57:32  error  'Icon' is defined but never used  no-unused-vars
+
+C:\Users\RiteshSingh\Desktop\Maid_Match\client\src\pages\worker\WorkerWallet.jsx
+  120:14  error  'err' is defined but never used  no-unused-vars
+  139:14  error  'err' is defined but never used  no-unused-vars
+
+✖ 36 problems (35 errors, 1 warning)
+
