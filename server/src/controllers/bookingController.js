@@ -1,0 +1,293 @@
+import mongoose from 'mongoose';
+import Booking from '../models/Booking.js';
+import Worker from '../models/Worker.js';
+import Payment from '../models/Payment.js';
+import Review from '../models/Review.js';
+import Transaction from '../models/Transaction.js';
+import { generateAndStoreOTP, verifyOTP } from '../services/otpService.js';
+import { calculateCommission } from '../services/paymentService.js';
+import { AppError } from '../utils/errorHandler.js';
+
+const pushStatus = (booking, status, userId, note = '') => {
+  booking.status_history.push({ status, changed_by: userId, note });
+  booking.status = status;
+};
+
+// @desc    Create booking request
+// @route   POST /api/bookings
+// @access  Private (customer)
+export const createBooking = async (req, res, next) => {
+  try {
+    const { worker_id, service_type, duration_type, start_time, end_time, address, special_instructions } = req.body;
+
+    const worker = await Worker.findById(worker_id);
+    if (!worker) return next(new AppError('Worker not found.', 404));
+    if (!worker.is_verified || !worker.is_available) {
+      return next(new AppError('Worker is not available for bookings.', 400));
+    }
+    if (!worker.services.includes(service_type)) {
+      return next(new AppError(`Worker does not offer the service: ${service_type}.`, 400));
+    }
+
+    // Prevent duplicate pending bookings
+    const duplicate = await Booking.findOne({
+      user_id: req.user._id,
+      worker_id,
+      status: { $in: ['offer_pending', 'accepted', 'pending_payment', 'paid'] },
+    });
+    if (duplicate) {
+      return next(new AppError('You already have an active booking with this worker.', 409));
+    }
+
+    // Calculate price
+    const start = new Date(start_time);
+    const end = new Date(end_time);
+    const diffMs = end - start;
+
+    let baseAmount;
+    if (duration_type === 'hourly') {
+      const hours = diffMs / (1000 * 60 * 60);
+      baseAmount = Math.round(hours * worker.pricing.hourly);
+    } else if (duration_type === 'daily') {
+      const days = diffMs / (1000 * 60 * 60 * 24);
+      baseAmount = Math.round(days * worker.pricing.daily);
+    } else {
+      const months = diffMs / (1000 * 60 * 60 * 24 * 30);
+      baseAmount = Math.round(months * worker.pricing.monthly);
+    }
+
+    if (baseAmount <= 0) return next(new AppError('Invalid time range for duration type.', 400));
+
+    const { commissionRate, platformCommission, workerPayout } = calculateCommission(baseAmount);
+
+    const booking = await Booking.create({
+      user_id: req.user._id,
+      worker_id,
+      service_type,
+      duration_type,
+      start_time,
+      end_time,
+      address,
+      special_instructions,
+      price: {
+        base_amount: baseAmount,
+        platform_commission: platformCommission,
+        commission_rate: commissionRate,
+        worker_payout: workerPayout,
+      },
+      status: 'offer_pending',
+      status_history: [{ status: 'offer_pending', changed_by: req.user._id, note: 'Booking created' }],
+    });
+
+    res.status(201).json({ success: true, data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Worker accepts or rejects booking
+// @route   PATCH /api/bookings/:id/respond
+// @access  Private (worker)
+export const respondToBooking = async (req, res, next) => {
+  try {
+    const { action, rejection_reason } = req.body;
+
+    const worker = await Worker.findOne({ user_id: req.user._id });
+    if (!worker) return next(new AppError('Worker profile not found.', 404));
+
+    const booking = await Booking.findOne({ _id: req.params.id, worker_id: worker._id });
+    if (!booking) return next(new AppError('Booking not found.', 404));
+    if (booking.status !== 'offer_pending') {
+      return next(new AppError(`Cannot respond to a booking with status: ${booking.status}.`, 400));
+    }
+
+    if (action === 'accept') {
+      pushStatus(booking, 'accepted', req.user._id, 'Worker accepted');
+    } else {
+      booking.rejection_reason = rejection_reason || 'No reason provided.';
+      pushStatus(booking, 'rejected', req.user._id, rejection_reason);
+    }
+
+    await booking.save();
+    res.json({ success: true, data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get all bookings for current user
+// @route   GET /api/bookings
+// @access  Private
+export const getMyBookings = async (req, res, next) => {
+  try {
+    const { status, page, limit } = req.query;
+    const filter = {};
+
+    if (req.user.role === 'customer') {
+      filter.user_id = req.user._id;
+    } else if (req.user.role === 'worker') {
+      const worker = await Worker.findOne({ user_id: req.user._id });
+      if (!worker) return next(new AppError('Worker profile not found.', 404));
+      filter.worker_id = worker._id;
+    }
+
+    if (status) filter.status = status;
+
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = Math.min(parseInt(limit, 10) || 10, 50);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [bookings, total] = await Promise.all([
+      Booking.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .populate('user_id', 'name phone')
+        .populate({ path: 'worker_id', select: '-aadhaar', populate: { path: 'user_id', select: 'name phone profilePhoto' } }),
+      Booking.countDocuments(filter),
+    ]);
+
+    res.json({ success: true, total, page: pageNum, pages: Math.ceil(total / limitNum), data: bookings });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get single booking
+// @route   GET /api/bookings/:id
+// @access  Private
+export const getBookingById = async (req, res, next) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate('user_id', 'name phone email')
+      .populate({ path: 'worker_id', select: '-aadhaar', populate: { path: 'user_id', select: 'name phone profilePhoto' } })
+      .populate('payment_id');
+
+    if (!booking) return next(new AppError('Booking not found.', 404));
+
+    // Ownership check
+    const worker = req.user.role === 'worker' ? await Worker.findOne({ user_id: req.user._id }) : null;
+    const isOwner =
+      req.user.role === 'admin' ||
+      booking.user_id._id.equals(req.user._id) ||
+      (worker && booking.worker_id._id.equals(worker._id));
+
+    if (!isOwner) return next(new AppError('Access denied.', 403));
+
+    res.json({ success: true, data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Worker verifies OTP to complete job
+// @route   POST /api/bookings/:id/complete
+// @access  Private (worker)
+export const completeBookingWithOTP = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { otp } = req.body;
+    const worker = await Worker.findOne({ user_id: req.user._id }).session(session);
+    if (!worker) return next(new AppError('Worker profile not found.', 404));
+
+    const booking = await Booking.findOne({ _id: req.params.id, worker_id: worker._id }).session(session);
+    if (!booking) return next(new AppError('Booking not found.', 404));
+    if (booking.status !== 'paid') {
+      return next(new AppError(`Cannot complete booking with status: ${booking.status}.`, 400));
+    }
+
+    // Verify OTP
+    await verifyOTP(booking._id.toString(), otp);
+
+    // Mark booking complete
+    pushStatus(booking, 'completed', req.user._id, 'OTP verified by worker');
+    await booking.save({ session });
+
+    // Credit worker wallet
+    const workerPayout = booking.price.worker_payout;
+    const balanceAfter = worker.wallet_balance + workerPayout;
+    worker.wallet_balance = balanceAfter;
+    worker.total_bookings += 1;
+    await worker.save({ session });
+
+    // Create transaction record
+    await Transaction.create(
+      [
+        {
+          worker_id: worker._id,
+          booking_id: booking._id,
+          payment_id: booking.payment_id,
+          type: 'credit',
+          amount: workerPayout,
+          balance_after: balanceAfter,
+          description: `Earnings for booking ${booking._id}`,
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    res.json({ success: true, message: 'Booking completed. Earnings credited to wallet.', data: booking });
+  } catch (err) {
+    await session.abortTransaction();
+    next(err);
+  } finally {
+    session.endSession();
+  }
+};
+
+// @desc    Cancel a booking (customer only, before payment)
+// @route   PATCH /api/bookings/:id/cancel
+// @access  Private (customer)
+export const cancelBooking = async (req, res, next) => {
+  try {
+    const booking = await Booking.findOne({ _id: req.params.id, user_id: req.user._id });
+    if (!booking) return next(new AppError('Booking not found.', 404));
+
+    const cancellableStatuses = ['offer_pending', 'accepted'];
+    if (!cancellableStatuses.includes(booking.status)) {
+      return next(new AppError(`Cannot cancel booking with status: ${booking.status}.`, 400));
+    }
+
+    pushStatus(booking, 'cancelled', req.user._id, 'Cancelled by customer');
+    await booking.save();
+
+    res.json({ success: true, message: 'Booking cancelled.', data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Submit a review for completed booking
+// @route   POST /api/bookings/:id/review
+// @access  Private (customer)
+export const submitReview = async (req, res, next) => {
+  try {
+    const { rating, comment } = req.body;
+
+    const booking = await Booking.findOne({ _id: req.params.id, user_id: req.user._id });
+    if (!booking) return next(new AppError('Booking not found.', 404));
+    if (booking.status !== 'completed') {
+      return next(new AppError('You can only review completed bookings.', 400));
+    }
+    if (booking.review_id) {
+      return next(new AppError('Review already submitted for this booking.', 409));
+    }
+
+    const review = await Review.create({
+      booking_id: booking._id,
+      user_id: req.user._id,
+      worker_id: booking.worker_id,
+      rating,
+      comment,
+    });
+
+    booking.review_id = review._id;
+    await booking.save();
+
+    res.status(201).json({ success: true, data: review });
+  } catch (err) {
+    next(err);
+  }
+};

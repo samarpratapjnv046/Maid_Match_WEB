@@ -1,0 +1,70 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import mongoSanitize from 'express-mongo-sanitize';
+
+import authRoutes from './src/routes/authRoutes.js';
+import workerRoutes from './src/routes/workerRoutes.js';
+import bookingRoutes from './src/routes/bookingRoutes.js';
+import paymentRoutes from './src/routes/paymentRoutes.js';
+import walletRoutes from './src/routes/walletRoutes.js';
+import adminRoutes from './src/routes/adminRoutes.js';
+
+import { globalErrorHandler } from './src/utils/errorHandler.js';
+import { generalLimiter } from './src/middleware/rateLimiter.js';
+import { AppError } from './src/utils/errorHandler.js';
+
+const app = express();
+
+// ─── Security ────────────────────────────────────────────────────────────────
+app.use(helmet());
+app.use(
+  cors({
+    origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  })
+);
+
+// ─── Body Parsing ─────────────────────────────────────────────────────────────
+// Raw body for Razorpay webhook signature verification
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(cookieParser());
+
+// ─── Sanitization ─────────────────────────────────────────────────────────────
+app.use(mongoSanitize()); // Prevent NoSQL injection
+
+// ─── Logging ──────────────────────────────────────────────────────────────────
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+}
+
+// ─── Global Rate Limit ───────────────────────────────────────────────────────
+app.use('/api/', generalLimiter);
+
+// ─── Health Check ─────────────────────────────────────────────────────────────
+app.get('/api/health', (_req, res) => {
+  res.json({ success: true, status: 'Server is running.', env: process.env.NODE_ENV, timestamp: new Date().toISOString() });
+});
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
+app.use('/api/auth', authRoutes);
+app.use('/api/workers', workerRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/wallet', walletRoutes);
+app.use('/api/admin', adminRoutes);
+
+// ─── 404 Handler ──────────────────────────────────────────────────────────────
+app.all('*', (req, _res, next) => {
+  next(new AppError(`Route ${req.originalUrl} not found.`, 404));
+});
+
+// ─── Global Error Handler ─────────────────────────────────────────────────────
+app.use(globalErrorHandler);
+
+export default app;
