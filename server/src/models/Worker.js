@@ -53,10 +53,10 @@ const workerSchema = new mongoose.Schema(
         coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]
       },
     },
-    // Aadhaar - stored securely, never exposed in public APIs
+    // Aadhaar - stored securely, excluded in all public queries via .select('-aadhaar')
     aadhaar: {
-      url: { type: String, select: false },
-      public_id: { type: String, select: false },
+      url: { type: String },
+      public_id: { type: String },
       verified: { type: Boolean, default: false },
     },
     is_verified: { type: Boolean, default: false },
