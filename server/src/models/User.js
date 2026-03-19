@@ -16,15 +16,15 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email'],
     },
+    googleId: { type: String, default: '' },
     password: {
       type: String,
-      required: [true, 'Please provide a password'],
+      required: false,
       minlength: 6,
       select: false,
     },
     phone: {
       type: String,
-      required: [true, 'Please provide a phone number'],
       match: [/^[6-9]\d{9}$/, 'Please provide a valid Indian phone number'],
     },
     role: {
@@ -60,8 +60,8 @@ const userSchema = new mongoose.Schema(
 userSchema.index({ 'address.coordinates': '2dsphere' });
 
 userSchema.pre('save', async function () {
-  // 1. If password is not modified, just exit the function (no 'next' needed)
-  if (!this.isModified('password')) return;
+  // 1. If password doesn't exist or is not modified, skip hashing
+  if (!this.password || !this.isModified('password')) return;
 
   // 2. Hash the password
   const salt = await bcrypt.genSalt(12);
@@ -69,13 +69,14 @@ userSchema.pre('save', async function () {
 
   // 3. Update the passwordChangedAt timestamp if it's an existing user
   if (!this.isNew) {
-    // Pro-tip: Subtract 1 second to ensure the token generated *after* saving 
+    // Pro-tip: Subtract 1 second to ensure the token generated *after* saving
     // isn't accidentally marked as created *before* the password change.
-    this.passwordChangedAt = Date.now() - 1000; 
+    this.passwordChangedAt = Date.now() - 1000;
   }
 });
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
+  if (!this.password) return false;
   return bcrypt.compare(enteredPassword, this.password);
 };
 

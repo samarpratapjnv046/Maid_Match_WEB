@@ -56,10 +56,11 @@ function WorkerCard({ worker }) {
   const pricing = worker.pricing || {};
   const experience = worker.experience_years;
   const city = worker.location?.city || '';
+  const pincode = worker.location?.pincode || '';
   const isVerified = worker.is_verified || worker.verification_status === 'verified';
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#C9A84C]/30 transition-all duration-200 hover:-translate-y-0.5 p-5 flex flex-col gap-4">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_6px_24px_rgba(0,0,0,0.13)] hover:border-[#C9A84C]/40 transition-all duration-200 hover:-translate-y-0.5 p-5 flex flex-col">
       {/* Header */}
       <div className="flex items-start gap-4">
         <div className="relative flex-shrink-0">
@@ -99,37 +100,36 @@ function WorkerCard({ worker }) {
             <span className="text-xs text-gray-400">({reviewCount} reviews)</span>
           </div>
 
-          {city && (
-            <div className="flex items-center gap-1 mt-1 text-gray-500 text-xs">
-              <MapPin size={11} />
-              <span>{city}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1 mt-1 text-gray-500 text-xs">
+            <MapPin size={11} />
+            <span>{[city, pincode].filter(Boolean).join(' – ') || '—'}</span>
+          </div>
         </div>
       </div>
 
-      {/* Service badges */}
-      {services.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {services.slice(0, 4).map((svc) => (
-            <span
-              key={svc}
-              className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-[#FAF8F3] border border-[#C9A84C]/25 text-[#1B2B4B] rounded-full font-medium"
-            >
-              <span role="img" aria-label={serviceLabels[svc]}>{serviceIcons[svc]}</span>
-              {serviceLabels[svc] || svc}
-            </span>
-          ))}
-          {services.length > 4 && (
-            <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-500 rounded-full font-medium">
-              +{services.length - 4} more
-            </span>
-          )}
-        </div>
-      )}
+      {/* Service badges — fixed min-height so cards align even with fewer services */}
+      <div className="mt-4 flex flex-wrap gap-1.5 min-h-[2rem]">
+        {services.slice(0, 4).map((svc) => (
+          <span
+            key={svc}
+            className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-[#FAF8F3] border border-[#C9A84C]/25 text-[#1B2B4B] rounded-full font-medium"
+          >
+            <span role="img" aria-label={serviceLabels[svc]}>{serviceIcons[svc]}</span>
+            {serviceLabels[svc] || svc}
+          </span>
+        ))}
+        {services.length > 4 && (
+          <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-500 rounded-full font-medium">
+            +{services.length - 4} more
+          </span>
+        )}
+      </div>
+
+      {/* Spacer pushes pricing + footer to bottom */}
+      <div className="flex-1" />
 
       {/* Pricing row */}
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         {[
           { label: 'Hourly', key: 'hourly' },
           { label: 'Daily', key: 'daily' },
@@ -144,16 +144,17 @@ function WorkerCard({ worker }) {
         ))}
       </div>
 
-      {/* Footer row */}
-      <div className="flex items-center justify-between pt-1">
-        {experience != null && (
-          <span className="text-xs text-gray-500">
-            <span className="font-semibold text-[#1B2B4B]">{experience}</span> yr{experience !== 1 ? 's' : ''} exp
-          </span>
-        )}
+      {/* Footer row — always at the bottom */}
+      <div className="mt-4 flex items-center justify-between pt-3 border-t border-gray-50">
+        <span className="text-xs text-gray-500">
+          {experience != null && experience > 0
+            ? <><span className="font-semibold text-[#1B2B4B]">{experience}</span> yr{experience !== 1 ? 's' : ''} exp</>
+            : <span className="text-gray-300">—</span>
+          }
+        </span>
         <Link
           to={`/workers/${worker._id}`}
-          className="ml-auto inline-flex items-center gap-1.5 bg-[#1B2B4B] hover:bg-[#152238] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-150 hover:-translate-y-0.5 shadow-sm"
+          className="inline-flex items-center gap-1.5 bg-[#1B2B4B] hover:bg-[#152238] text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all duration-150 hover:-translate-y-0.5 shadow-sm"
         >
           View Profile
         </Link>
@@ -171,6 +172,7 @@ export default function SearchWorkers() {
   const [filters, setFilters] = useState({
     services: initialService ? [initialService] : [],
     city: '',
+    pincode: '',
     durationType: '',
     minRating: 0,
     maxRating: 5,
@@ -189,6 +191,7 @@ export default function SearchWorkers() {
       const params = new URLSearchParams();
       if (filters.services.length > 0) params.set('services', filters.services.join(','));
       if (filters.city.trim()) params.set('city', filters.city.trim());
+      if (filters.pincode.trim()) params.set('pincode', filters.pincode.trim());
       if (filters.durationType) params.set('durationType', filters.durationType);
       if (ratingRange[0] > 0) params.set('minRating', ratingRange[0]);
       if (ratingRange[1] < 5) params.set('maxRating', ratingRange[1]);
@@ -266,13 +269,14 @@ export default function SearchWorkers() {
   }
 
   function handleReset() {
-    setFilters({ services: [], city: '', durationType: '', minRating: 0, maxRating: 5 });
+    setFilters({ services: [], city: '', pincode: '', durationType: '', minRating: 0, maxRating: 5 });
     setRatingRange([0, 5]);
   }
 
   const activeFilterCount =
     filters.services.length +
     (filters.city.trim() ? 1 : 0) +
+    (filters.pincode.trim() ? 1 : 0) +
     (filters.durationType ? 1 : 0) +
     (ratingRange[0] > 0 || ratingRange[1] < 5 ? 1 : 0);
 
@@ -302,6 +306,24 @@ export default function SearchWorkers() {
               </span>
             </label>
           ))}
+        </div>
+      </div>
+
+      {/* Pincode */}
+      <div>
+        <h3 className="font-serif text-sm font-semibold text-[#1B2B4B] uppercase tracking-wider mb-3">
+          Pincode
+        </h3>
+        <div className="relative">
+          <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            maxLength={6}
+            value={filters.pincode}
+            onChange={(e) => setFilters((prev) => ({ ...prev, pincode: e.target.value.replace(/\D/g, '') }))}
+            placeholder="e.g. 400001"
+            className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40 focus:border-[#C9A84C] bg-white transition-colors"
+          />
         </div>
       </div>
 
@@ -457,7 +479,7 @@ export default function SearchWorkers() {
             </div>
 
             {/* Active filter chips */}
-            {(filters.services.length > 0 || filters.city || filters.durationType) && (
+            {(filters.services.length > 0 || filters.city || filters.pincode || filters.durationType) && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {filters.services.map((svc) => (
                   <span
@@ -474,6 +496,17 @@ export default function SearchWorkers() {
                     </button>
                   </span>
                 ))}
+                {filters.pincode && (
+                  <span className="inline-flex items-center gap-1 bg-[#1B2B4B] text-white text-xs px-3 py-1 rounded-full font-medium">
+                    <MapPin size={10} /> {filters.pincode}
+                    <button
+                      onClick={() => setFilters((p) => ({ ...p, pincode: '' }))}
+                      className="ml-1 hover:text-[#C9A84C] transition-colors leading-none"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
                 {filters.city && (
                   <span className="inline-flex items-center gap-1 bg-[#1B2B4B] text-white text-xs px-3 py-1 rounded-full font-medium">
                     <MapPin size={10} /> {filters.city}
@@ -501,7 +534,7 @@ export default function SearchWorkers() {
 
             {/* Results grid */}
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
                 <SkeletonCard />
                 <SkeletonCard />
                 <SkeletonCard />
@@ -524,7 +557,7 @@ export default function SearchWorkers() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
                   {workers.map((worker) => (
                     <WorkerCard key={worker._id} worker={worker} />
                   ))}

@@ -7,6 +7,8 @@ import {
   getMe,
   updateMe,
   changePassword,
+  googleRedirect,
+  googleCallback,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
@@ -24,6 +26,9 @@ router.post('/register', authLimiter, validate(registerSchema), register);
 router.post('/login', authLimiter, validate(loginSchema), login);
 router.post('/refresh', refreshToken);
 router.post('/logout', protect, logout);
+
+router.get('/google', googleRedirect);
+router.get('/google/callback', googleCallback);
 
 router.get('/me', protect, getMe);
 router.patch('/me', protect, uploadProfilePhoto, updateMe);

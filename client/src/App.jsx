@@ -11,6 +11,7 @@ import ProtectedRoute from './components/layout/ProtectedRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AuthCallback from './pages/AuthCallback';
 
 // Customer pages
 import SearchWorkers from './pages/customer/SearchWorkers';
@@ -94,6 +95,9 @@ function AppRoutes() {
       <Route path="/" element={<PublicRoute><MainLayout><Home /></MainLayout></PublicRoute>} />
       <Route path="/workers" element={<PublicRoute><MainLayout><SearchWorkers /></MainLayout></PublicRoute>} />
       <Route path="/workers/:id" element={<PublicRoute><MainLayout><WorkerProfile /></MainLayout></PublicRoute>} />
+
+      {/* ── OAuth callback (public, no auth guard) ── */}
+      <Route path="/auth/callback" element={<AuthCallback />} />
 
       {/* ── Auth routes (guests only) ── */}
       <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />

@@ -106,6 +106,7 @@ export const searchWorkers = async (req, res, next) => {
     const q = req.query;
     // Accept both snake_case and camelCase param names from frontend
     const city         = q.city;
+    const pincode      = q.pincode;
     const servicesRaw  = q.services || q.service; // comma-sep or single
     const min_price    = q.min_price;
     const max_price    = q.max_price;
@@ -121,6 +122,7 @@ export const searchWorkers = async (req, res, next) => {
     const filter = { is_verified: true, is_available: true };
 
     if (city) filter['location.city'] = { $regex: city, $options: 'i' };
+    if (pincode) filter['location.pincode'] = pincode.trim();
 
     if (servicesRaw) {
       const serviceList = servicesRaw.split(',').map((s) => s.trim()).filter(Boolean);

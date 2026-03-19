@@ -91,8 +91,21 @@ export const AuthProvider = ({ children }) => {
     setUser((prev) => ({ ...prev, ...updatedData }));
   };
 
+  const loginWithToken = async (token) => {
+    localStorage.setItem('accessToken', token);
+    try {
+      const res = await api.get('/auth/me');
+      const userData = res.data?.data || res.data;
+      setUser(userData);
+      return userData.role;
+    } catch (err) {
+      localStorage.removeItem('accessToken');
+      throw err;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout, checkAuth, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, error, login, register, logout, checkAuth, updateUser, loginWithToken }}>
       {children}
     </AuthContext.Provider>
   );

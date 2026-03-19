@@ -9,14 +9,21 @@ import { AppError } from '../utils/errorHandler.js';
 // @access  Public
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, phone, role } = req.body;
+    const { name, email, password, phone, role, pincode } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return next(new AppError('Email already registered.', 409));
     }
 
-    const user = await User.create({ name, email, password, phone, role });
+    if (!pincode || !/^\d{6}$/.test(pincode)) {
+      return next(new AppError('A valid 6-digit pincode is required.', 400));
+    }
+
+    const user = await User.create({
+      name, email, password, phone, role,
+      address: { pincode },
+    });
 
     sendTokens(user, 201, res);
   } catch (err) {
@@ -144,5 +151,84 @@ export const changePassword = async (req, res, next) => {
     sendTokens(user, 200, res);
   } catch (err) {
     next(err);
+  }
+};
+
+// @desc    Redirect to Google OAuth
+// @route   GET /api/auth/google
+// @access  Public
+export const googleRedirect = (req, res) => {
+  const role = ['customer', 'worker'].includes(req.query.role) ? req.query.role : 'customer';
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    redirect_uri: `${process.env.SERVER_URL || 'http://localhost:5000'}/api/auth/google/callback`,
+    response_type: 'code',
+    scope: 'openid email profile',
+    state: role,
+    access_type: 'offline',
+    prompt: 'select_account',
+  });
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+};
+
+// @desc    Google OAuth callback
+// @route   GET /api/auth/google/callback
+// @access  Public
+export const googleCallback = async (req, res) => {
+  const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+  try {
+    const { code, state } = req.query;
+    if (!code) return res.redirect(`${clientOrigin}/login?error=google_failed`);
+
+    const role = ['customer', 'worker'].includes(state) ? state : 'customer';
+
+    // Exchange code for Google access token
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: `${process.env.SERVER_URL || 'http://localhost:5000'}/api/auth/google/callback`,
+        grant_type: 'authorization_code',
+      }),
+    });
+    const tokenData = await tokenRes.json();
+    if (tokenData.error) return res.redirect(`${clientOrigin}/login?error=google_failed`);
+
+    // Get user profile from Google
+    const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const googleUser = await userRes.json();
+    if (!googleUser.email) return res.redirect(`${clientOrigin}/login?error=google_failed`);
+
+    // Find existing user by googleId or email
+    let user = await User.findOne({ $or: [{ googleId: googleUser.sub }, { email: googleUser.email }] });
+
+    if (user) {
+      if (user.is_banned) return res.redirect(`${clientOrigin}/login?error=banned`);
+      // Link Google account if not already linked
+      if (!user.googleId) {
+        user.googleId = googleUser.sub;
+        await user.save();
+      }
+    } else {
+      // Create new user
+      user = await User.create({
+        name: googleUser.name,
+        email: googleUser.email,
+        googleId: googleUser.sub,
+        role,
+        profilePhoto: { url: googleUser.picture || '', public_id: '' },
+      });
+    }
+
+    const accessToken = generateAccessToken(user._id, user.role);
+    res.redirect(`${clientOrigin}/auth/callback?token=${accessToken}`);
+  } catch (err) {
+    console.error('Google OAuth error:', err);
+    res.redirect(`${clientOrigin}/login?error=google_failed`);
   }
 };
