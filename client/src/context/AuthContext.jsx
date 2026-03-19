@@ -17,9 +17,26 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     checkAuth();
+
+    // When the axios interceptor fails to refresh the token, it dispatches this event.
+    // Handle it here so we clear user state without a full page reload.
+    const handleSessionExpired = () => {
+      setUser(null);
+      setLoading(false);
+    };
+    window.addEventListener('auth:sessionExpired', handleSessionExpired);
+    return () => window.removeEventListener('auth:sessionExpired', handleSessionExpired);
   }, []);
 
   const checkAuth = async () => {
+    // Skip the API call entirely if there is no token — avoids a pointless
+    // 401 → refresh attempt → failure cycle on public pages (register, home, etc.)
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
     try {
       const res = await api.get('/auth/me');
       // Backend returns { success, data: { ...user } }
@@ -33,8 +50,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (credentials) => {
-    setLoading(true);
-    setError(null);
     try {
       const res = await api.post('/auth/login', credentials);
       // Backend returns { success, accessToken, user: { _id, name, email, phone, role } }
@@ -43,17 +58,12 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       return res.data;
     } catch (err) {
-      const message = err.response?.data?.message || 'Login failed.';
-      setError(message);
+      const message = err.response?.data?.message || 'Invalid email or password.';
       throw message;
-    } finally {
-      setLoading(false);
     }
   };
 
   const register = async (userData) => {
-    setLoading(true);
-    setError(null);
     try {
       const res = await api.post('/auth/register', userData);
       const { accessToken, user: newUser } = res.data;
@@ -62,10 +72,7 @@ export const AuthProvider = ({ children }) => {
       return res.data;
     } catch (err) {
       const message = err.response?.data?.message || 'Registration failed.';
-      setError(message);
       throw message;
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -14,7 +14,8 @@ const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
-  const { login, loading } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname;
@@ -27,6 +28,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
+    setIsSubmitting(true);
     try {
       const data = await login(formData);
       const role = data?.user?.role;
@@ -34,6 +36,8 @@ const Login = () => {
       navigate(redirect, { replace: true });
     } catch (err) {
       setLocalError(typeof err === 'string' ? err : 'Invalid email or password.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -118,10 +122,10 @@ const Login = () => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={isSubmitting}
               className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-sm shadow-primary-200"
             >
-              {loading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
                   Signing in…

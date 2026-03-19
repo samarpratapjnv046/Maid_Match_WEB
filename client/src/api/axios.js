@@ -47,9 +47,8 @@ api.interceptors.response.use(
         queue.forEach((p) => p.reject(e));
         queue = [];
         localStorage.removeItem('accessToken');
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
+        // Dispatch event so AuthContext can clear user state via React Router (no full-page reload)
+        window.dispatchEvent(new Event('auth:sessionExpired'));
         return Promise.reject(e);
       } finally {
         isRefreshing = false;

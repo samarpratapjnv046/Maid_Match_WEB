@@ -52,8 +52,9 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [step1Loading, setStep1Loading] = useState(false);
   const [step2Loading, setStep2Loading] = useState(false);
-  const { register, loading } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -88,11 +89,13 @@ const Register = () => {
       setLocalError("Passwords don't match.");
       return;
     }
-    if (formData.password.length < 8) {
-      setLocalError('Password must be at least 8 characters.');
+    const pwdPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+    if (!pwdPattern.test(formData.password)) {
+      setLocalError('Password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character (@$!%*?&).');
       return;
     }
 
+    setStep1Loading(true);
     try {
       const { name, email, password, phone, role } = formData;
       await register({ name, email, password, phone, role });
@@ -104,6 +107,8 @@ const Register = () => {
       }
     } catch (err) {
       setLocalError(typeof err === 'string' ? err : 'Registration failed. Please try again.');
+    } finally {
+      setStep1Loading(false);
     }
   };
 
@@ -297,10 +302,10 @@ const Register = () => {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={step1Loading}
                   className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-sm shadow-primary-200 mt-2"
                 >
-                  {loading ? (
+                  {step1Loading ? (
                     <><Loader2 size={16} className="animate-spin" /> Creating account…</>
                   ) : formData.role === 'worker' ? (
                     <><span>Continue</span><ChevronRight size={16} /></>
