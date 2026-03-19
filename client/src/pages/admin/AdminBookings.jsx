@@ -30,7 +30,7 @@ export default function AdminBookings() {
     try {
       const params = statusFilter ? `?status=${statusFilter}` : '';
       const res = await api.get(`/admin/bookings${params}`);
-      setBookings(res.data?.bookings || res.data || []);
+      setBookings(res.data?.data || []);
     } catch (err) {
       toast.error('Failed to load bookings');
     } finally {

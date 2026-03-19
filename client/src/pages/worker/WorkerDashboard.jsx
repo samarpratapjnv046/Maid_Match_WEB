@@ -365,11 +365,11 @@ export default function WorkerDashboard() {
 
   // ─── Derived stats ─────────────────────────────────────────────────────────
   const profileExists = !profileLoading && workerProfile !== null;
-  const verificationStatus = workerProfile?.verificationStatus || 'pending';
+  const verificationStatus = workerProfile?.verification_status || 'pending';
   const isVerified = verificationStatus === 'verified';
-  const totalBookings = workerProfile?.totalBookings ?? recentBookings.length;
-  const rating = workerProfile?.averageRating || 0;
-  const totalReviews = workerProfile?.totalReviews || 0;
+  const totalBookings = workerProfile?.total_bookings ?? recentBookings.length;
+  const rating = workerProfile?.rating || 0;
+  const totalReviews = workerProfile?.total_reviews || 0;
 
   // Profile completeness
   const completenessItems = [

@@ -47,7 +47,7 @@ export default function AdminUsers() {
     setLoading(true);
     try {
       const res = await api.get('/admin/users');
-      const data = res.data?.users || res.data || [];
+      const data = res.data?.data || [];
       setUsers(data);
       setFiltered(data);
     } catch (err) {

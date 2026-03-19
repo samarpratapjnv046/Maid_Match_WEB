@@ -37,7 +37,7 @@ export default function AdminPayments() {
         api.get('/admin/payments'),
         api.get('/admin/revenue'),
       ]);
-      setPayments(paymentsRes.data?.payments || paymentsRes.data || []);
+      setPayments(paymentsRes.data?.data || []);
       setRevenue(revenueRes.data);
     } catch (err) {
       toast.error('Failed to load payments');

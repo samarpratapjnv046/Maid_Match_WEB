@@ -54,7 +54,7 @@ export default function AdminAuditLogs() {
     setLoading(true);
     try {
       const res = await api.get('/admin/audit-logs');
-      setLogs(res.data?.logs || res.data || []);
+      setLogs(res.data?.data || []);
     } catch (err) {
       toast.error('Failed to load audit logs');
     } finally {

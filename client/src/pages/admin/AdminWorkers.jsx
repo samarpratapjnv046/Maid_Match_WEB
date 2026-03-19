@@ -43,7 +43,7 @@ export default function AdminWorkers() {
     setLoading(true);
     try {
       const res = await api.get('/admin/workers');
-      setWorkers(res.data?.workers || res.data || []);
+      setWorkers(res.data?.data || []);
     } catch (err) {
       toast.error('Failed to load workers');
     } finally {
@@ -54,7 +54,7 @@ export default function AdminWorkers() {
   useEffect(() => { fetchWorkers(); }, [fetchWorkers]);
 
   const tabWorkers = workers.filter((w) => {
-    const status = w.verificationStatus || w.status;
+    const status = w.verification_status;
     return status === activeTab;
   });
 
@@ -100,7 +100,7 @@ export default function AdminWorkers() {
       {/* Tabs */}
       <div className="flex border-b border-gray-200 gap-1">
         {TABS.map((tab) => {
-          const count = workers.filter((w) => (w.verificationStatus || w.status) === tab.key).length;
+          const count = workers.filter((w) => (w.verification_status) === tab.key).length;
           return (
             <button
               key={tab.key}
@@ -146,19 +146,19 @@ export default function AdminWorkers() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {tabWorkers.map((w) => {
-                  const status = w.verificationStatus || w.status;
+                  const status = w.verification_status;
                   return (
                     <tr key={w._id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#1B2B4B] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-                            {w.name?.charAt(0)?.toUpperCase()}
+                            {w.user_id?.name?.charAt(0)?.toUpperCase()}
                           </div>
-                          <span className="text-sm font-medium text-gray-800 whitespace-nowrap">{w.name}</span>
+                          <span className="text-sm font-medium text-gray-800 whitespace-nowrap">{w.user_id?.name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{w.email}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{w.city || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{w.user_id?.email}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{w.location?.city || '—'}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1 max-w-[160px]">
                           {(w.services || []).slice(0, 2).map((s) => (
@@ -237,7 +237,7 @@ export default function AdminWorkers() {
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            You are rejecting <span className="font-semibold text-[#1B2B4B]">{rejectModal.worker?.name}</span>.
+            You are rejecting <span className="font-semibold text-[#1B2B4B]">{rejectModal.worker?.user_id?.name}</span>.
             Please provide a reason that will be shared with the worker.
           </p>
           <div>

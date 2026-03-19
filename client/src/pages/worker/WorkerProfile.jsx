@@ -133,7 +133,7 @@ export default function WorkerProfile() {
       const { data } = await api.get('/workers/profile/me');
       const profile = data.data?.worker || data.data || data.worker || data;
       setProfileExists(true);
-      setVerificationStatus(profile.verificationStatus || 'pending');
+      setVerificationStatus(profile.verification_status || 'pending');
       setCurrentPhoto(profile.profilePhoto?.url || null);
 
       // Populate form
@@ -144,7 +144,7 @@ export default function WorkerProfile() {
           daily: profile.pricing?.daily ?? '',
           monthly: profile.pricing?.monthly ?? '',
         },
-        experience_years: profile.experienceYears ?? profile.experience_years ?? '',
+        experience_years: profile.experience_years ?? '',
         bio: profile.bio || '',
         languages: Array.isArray(profile.languages)
           ? profile.languages.join(', ')

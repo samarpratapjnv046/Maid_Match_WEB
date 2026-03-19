@@ -34,7 +34,7 @@ function StatCard({ icon: Icon, label, value, color = 'gold' }) {
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [revenue, setRevenue] = useState(null);
+  const [stats, setStats] = useState({ totalUsers: 0, totalWorkers: 0, totalBookings: 0, totalRevenue: 0 });
   const [pendingWorkers, setPendingWorkers] = useState([]);
   const [activeBookings, setActiveBookings] = useState([]);
   const [rejectModal, setRejectModal] = useState({ open: false, worker: null });
@@ -44,14 +44,24 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [revRes, workersRes, bookingsRes] = await Promise.all([
+      const [revRes, usersRes, allWorkersRes, pendingWorkersRes, bookingsRes] = await Promise.all([
         api.get('/admin/revenue'),
-        api.get('/admin/workers?status=pending'),
-        api.get('/admin/bookings?status=accepted'),
+        api.get('/admin/users?limit=1'),
+        api.get('/admin/workers?limit=1'),
+        api.get('/admin/workers?verification_status=pending'),
+        api.get('/admin/bookings?limit=5'),
       ]);
-      setRevenue(revRes.data);
-      setPendingWorkers(workersRes.data?.workers || workersRes.data || []);
-      setActiveBookings(bookingsRes.data?.bookings || bookingsRes.data || []);
+      const rev = revRes.data?.data?.revenue || {};
+      const bookingsByStatus = revRes.data?.data?.bookings_by_status || [];
+      const totalBookings = bookingsByStatus.reduce((sum, s) => sum + s.count, 0);
+      setStats({
+        totalUsers: usersRes.data?.total ?? 0,
+        totalWorkers: allWorkersRes.data?.total ?? 0,
+        totalBookings,
+        totalRevenue: rev.totalRevenue ?? 0,
+      });
+      setPendingWorkers(pendingWorkersRes.data?.data || []);
+      setActiveBookings(bookingsRes.data?.data || []);
     } catch (err) {
       toast.error('Failed to load dashboard data');
     } finally {
@@ -115,10 +125,10 @@ export default function AdminDashboard() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        <StatCard icon={Users}       label="Total Users"             value={revenue?.totalUsers ?? '—'} />
-        <StatCard icon={Briefcase}   label="Total Workers"           value={pendingWorkers.length !== undefined ? '—' : '—'} />
-        <StatCard icon={Calendar}    label="Total Bookings"          value={revenue?.totalBookings ?? '—'} />
-        <StatCard icon={DollarSign}  label="Total Revenue"           value={revenue?.totalRevenue != null ? formatCurrency(revenue.totalRevenue) : '—'} color="navy" />
+        <StatCard icon={Users}       label="Total Users"             value={stats.totalUsers} />
+        <StatCard icon={Briefcase}   label="Total Workers"           value={stats.totalWorkers} />
+        <StatCard icon={Calendar}    label="Total Bookings"          value={stats.totalBookings} />
+        <StatCard icon={DollarSign}  label="Total Revenue"           value={formatCurrency(stats.totalRevenue)} color="navy" />
         <StatCard icon={Clock}       label="Pending Verifications"   value={pendingWorkers.length} />
         <StatCard icon={CheckCircle} label="Active Bookings"         value={activeBookings.length} />
       </div>
@@ -156,13 +166,13 @@ export default function AdminDashboard() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#1B2B4B] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-                            {w.name?.charAt(0)?.toUpperCase()}
+                            {w.user_id?.name?.charAt(0)?.toUpperCase()}
                           </div>
-                          <span className="text-sm font-medium text-gray-800">{w.name}</span>
+                          <span className="text-sm font-medium text-gray-800">{w.user_id?.name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{w.email}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{w.city || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{w.user_id?.email}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{w.location?.city || '—'}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
                           {(w.services || []).slice(0, 2).map((s) => (
@@ -277,7 +287,7 @@ export default function AdminDashboard() {
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            You are rejecting <span className="font-semibold text-[#1B2B4B]">{rejectModal.worker?.name}</span>.
+            You are rejecting <span className="font-semibold text-[#1B2B4B]">{rejectModal.worker?.user_id?.name}</span>.
             Please provide a reason.
           </p>
           <div>
