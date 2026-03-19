@@ -162,8 +162,8 @@ export const getMyBookings = async (req, res, next) => {
 export const getBookingById = async (req, res, next) => {
   try {
     const booking = await Booking.findById(req.params.id)
-      .populate('user_id', 'name phone email')
-      .populate({ path: 'worker_id', select: '-aadhaar', populate: { path: 'user_id', select: 'name phone profilePhoto' } })
+      .populate('user_id', 'name phone email address')
+      .populate({ path: 'worker_id', select: '-aadhaar', populate: { path: 'user_id', select: 'name phone email profilePhoto' } })
       .populate('payment_id');
 
     if (!booking) return next(new AppError('Booking not found.', 404));

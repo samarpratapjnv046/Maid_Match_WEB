@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { MapPin, Clock, Calendar, CheckCircle, Phone, AlertTriangle, Trash2 } from 'lucide-react';
+import { MapPin, Clock, Calendar, CheckCircle, Phone, Mail, AlertTriangle, Trash2, Lock } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/common/Modal';
@@ -346,6 +346,8 @@ export default function BookingDetail() {
   const canPay = user?.role === 'customer' && ['accepted', 'pending_payment'].includes(status);
   const canReview = status === 'completed' && !reviewSubmitted && !existingReview;
   const isPaid = ['paid', 'pending_payment', 'completed'].includes(status);
+  // Contact info is revealed only after worker accepts
+  const contactsVisible = ['accepted', 'pending_payment', 'paid', 'completed'].includes(status);
 
   return (
     <div className="min-h-screen bg-[#FAF8F3]">
@@ -380,38 +382,100 @@ export default function BookingDetail() {
           <div className="flex-1 min-w-0 space-y-5">
             {/* Customer card — shown to worker and admin */}
             {(user?.role === 'worker' || user?.role === 'admin') && (
-              <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <h2 className="font-serif text-base font-semibold text-[#1B2B4B] mb-4">Customer</h2>
-                <div className="flex items-center gap-4">
+              <section className={`bg-white rounded-2xl border shadow-sm p-5 ${contactsVisible ? 'border-green-100' : 'border-gray-100'}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-serif text-base font-semibold text-[#1B2B4B]">Customer</h2>
+                  {contactsVisible ? (
+                    <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full font-semibold">
+                      <CheckCircle size={11} /> Contact Unlocked
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-full font-medium">
+                      <Lock size={11} /> Pending Acceptance
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-4 mb-4">
                   <div className="w-14 h-14 rounded-full bg-[#1B2B4B] flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-bold text-xl">{customer.name?.[0]?.toUpperCase() || '?'}</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[#1B2B4B] truncate">{customer.name || 'Customer'}</p>
-                    {customer.phone && (
-                      <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
-                        <Phone size={10} /> {customer.phone}
-                      </p>
-                    )}
-                    {customer.email && (
-                      <p className="text-xs text-gray-400 mt-0.5">{customer.email}</p>
+                  <div>
+                    <p className="font-semibold text-[#1B2B4B]">{customer.name || 'Customer'}</p>
+                    {!contactsVisible && (
+                      <p className="text-xs text-gray-400 mt-0.5">Contact details visible after you accept the booking</p>
                     )}
                   </div>
                 </div>
+
+                {contactsVisible && (
+                  <div className="space-y-2.5 pt-3 border-t border-gray-100">
+                    {customer.phone && (
+                      <a
+                        href={`tel:${customer.phone}`}
+                        className="flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 border border-green-200 rounded-xl transition-colors group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center flex-shrink-0">
+                          <Phone size={14} className="text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 font-medium">Phone</p>
+                          <p className="text-sm font-semibold text-[#1B2B4B] group-hover:text-green-700">{customer.phone}</p>
+                        </div>
+                      </a>
+                    )}
+                    {customer.email && (
+                      <a
+                        href={`mailto:${customer.email}`}
+                        className="flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
+                          <Mail size={14} className="text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 font-medium">Email</p>
+                          <p className="text-sm font-semibold text-[#1B2B4B] group-hover:text-blue-700">{customer.email}</p>
+                        </div>
+                      </a>
+                    )}
+                    {(customer.address?.street || customer.address?.city) && (
+                      <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                        <div className="w-8 h-8 rounded-lg bg-[#1B2B4B] flex items-center justify-center flex-shrink-0">
+                          <MapPin size={14} className="text-[#C9A84C]" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 font-medium">Address</p>
+                          <p className="text-sm font-semibold text-[#1B2B4B]">
+                            {[customer.address?.street, customer.address?.city, customer.address?.state, customer.address?.pincode]
+                              .filter(Boolean).join(', ')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </section>
             )}
 
             {/* Worker card — shown to customer and admin */}
             {(user?.role === 'customer' || user?.role === 'admin') && (
-            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h2 className="font-serif text-base font-semibold text-[#1B2B4B] mb-4">Worker</h2>
-              <div className="flex items-center gap-4">
+            <section className={`bg-white rounded-2xl border shadow-sm p-5 ${contactsVisible ? 'border-green-100' : 'border-gray-100'}`}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-serif text-base font-semibold text-[#1B2B4B]">Worker</h2>
+                {contactsVisible ? (
+                  <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full font-semibold">
+                    <CheckCircle size={11} /> Contact Unlocked
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-xs text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-full font-medium">
+                    <Lock size={11} /> Awaiting Acceptance
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-4 mb-4">
                 {workerPhoto ? (
-                  <img
-                    src={workerPhoto}
-                    alt={worker.name}
-                    className="w-14 h-14 rounded-full object-cover border-2 border-gray-100"
-                  />
+                  <img src={workerPhoto} alt={worker.name} className="w-14 h-14 rounded-full object-cover border-2 border-gray-100 flex-shrink-0" />
                 ) : (
                   <div className="w-14 h-14 rounded-full bg-[#1B2B4B] flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-bold text-xl">{workerInitials}</span>
@@ -419,21 +483,19 @@ export default function BookingDetail() {
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-[#1B2B4B] truncate">{worker.name || 'Worker'}</p>
-                    {(worker.isVerified || worker.verificationStatus === 'verified') && (
+                    <p className="font-semibold text-[#1B2B4B]">{worker.name || 'Worker'}</p>
+                    {worker.isVerified && (
                       <CheckCircle size={14} className="text-green-500 fill-green-100 flex-shrink-0" />
                     )}
                   </div>
-                  {worker.averageRating > 0 && (
+                  {workerProfile.rating > 0 && (
                     <div className="flex items-center gap-1.5 mt-1">
-                      <StarRating rating={worker.averageRating} size={13} />
-                      <span className="text-xs text-gray-500">({worker.totalReviews || 0} reviews)</span>
+                      <StarRating rating={workerProfile.rating} size={13} />
+                      <span className="text-xs text-gray-500">({workerProfile.total_reviews || 0} reviews)</span>
                     </div>
                   )}
-                  {worker.city && (
-                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
-                      <MapPin size={10} /> {worker.city}
-                    </p>
+                  {!contactsVisible && (
+                    <p className="text-xs text-gray-400 mt-0.5">Contact details visible once worker accepts</p>
                   )}
                 </div>
                 <Link
@@ -443,6 +505,53 @@ export default function BookingDetail() {
                   View Profile
                 </Link>
               </div>
+
+              {contactsVisible && (
+                <div className="space-y-2.5 pt-3 border-t border-gray-100">
+                  {workerUser.phone && (
+                    <a
+                      href={`tel:${workerUser.phone}`}
+                      className="flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 border border-green-200 rounded-xl transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center flex-shrink-0">
+                        <Phone size={14} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Phone</p>
+                        <p className="text-sm font-semibold text-[#1B2B4B] group-hover:text-green-700">{workerUser.phone}</p>
+                      </div>
+                    </a>
+                  )}
+                  {workerUser.email && (
+                    <a
+                      href={`mailto:${workerUser.email}`}
+                      className="flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
+                        <Mail size={14} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Email</p>
+                        <p className="text-sm font-semibold text-[#1B2B4B] group-hover:text-blue-700">{workerUser.email}</p>
+                      </div>
+                    </a>
+                  )}
+                  {workerProfile.location?.city && (
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                      <div className="w-8 h-8 rounded-lg bg-[#1B2B4B] flex items-center justify-center flex-shrink-0">
+                        <MapPin size={14} className="text-[#C9A84C]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Location</p>
+                        <p className="text-sm font-semibold text-[#1B2B4B]">
+                          {[workerProfile.location.city, workerProfile.location.state, workerProfile.location.pincode]
+                            .filter(Boolean).join(', ')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
             )}
 

@@ -13,6 +13,7 @@ import {
   X,
   LogOut,
   Shield,
+  UserCircle,
 } from 'lucide-react';
 
 const NAV_LINKS = [
@@ -23,6 +24,7 @@ const NAV_LINKS = [
   { to: '/admin/payments',label: 'Payments',     icon: CreditCard },
   { to: '/admin/reviews', label: 'Reviews',      icon: Star },
   { to: '/admin/audit-logs', label: 'Audit Logs', icon: ClipboardList },
+  { to: '/admin/profile', label: 'Profile',      icon: UserCircle },
 ];
 
 function NavItem({ to, label, icon: Icon, end, onClick }) {

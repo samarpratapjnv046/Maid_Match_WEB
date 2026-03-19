@@ -41,10 +41,11 @@ import Profile from './pages/Profile';
 // Spinner for auth loading
 import Spinner from './components/common/Spinner';
 
-// Worker blocked route — redirect workers away, allow everyone else (including guests)
-function WorkerBlockedRoute({ children }) {
+// Public route — redirect workers and admins to their dashboards
+function PublicRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner size="lg" color="navy" /></div>;
+  if (user?.role === 'admin') return <Navigate to="/admin" replace />;
   if (user?.role === 'worker') return <Navigate to="/worker/dashboard" replace />;
   return children;
 }
@@ -59,6 +60,20 @@ function GuestRoute({ children }) {
     return <Navigate to="/dashboard" replace />;
   }
   return children;
+}
+
+// Redirect admin to /admin/profile, others get the standard profile page
+function AdminRedirectProfile() {
+  const { user } = useAuth();
+  if (user?.role === 'admin') return <Navigate to="/admin/profile" replace />;
+  return <MainLayout><Profile /></MainLayout>;
+}
+
+// Catch-all: admins go to /admin, everyone else goes to /
+function CatchAll() {
+  const { user } = useAuth();
+  if (user?.role === 'admin') return <Navigate to="/admin" replace />;
+  return <MainLayout><Navigate to="/" replace /></MainLayout>;
 }
 
 // Main layout wrapper (with Navbar + Footer)
@@ -76,9 +91,9 @@ function AppRoutes() {
   return (
     <Routes>
       {/* ── Public routes ── */}
-      <Route path="/" element={<MainLayout><Home /></MainLayout>} />
-      <Route path="/workers" element={<WorkerBlockedRoute><MainLayout><SearchWorkers /></MainLayout></WorkerBlockedRoute>} />
-      <Route path="/workers/:id" element={<WorkerBlockedRoute><MainLayout><WorkerProfile /></MainLayout></WorkerBlockedRoute>} />
+      <Route path="/" element={<PublicRoute><MainLayout><Home /></MainLayout></PublicRoute>} />
+      <Route path="/workers" element={<PublicRoute><MainLayout><SearchWorkers /></MainLayout></PublicRoute>} />
+      <Route path="/workers/:id" element={<PublicRoute><MainLayout><WorkerProfile /></MainLayout></PublicRoute>} />
 
       {/* ── Auth routes (guests only) ── */}
       <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
@@ -110,12 +125,12 @@ function AppRoutes() {
         }
       />
 
-      {/* ── Shared profile route ── */}
+      {/* ── Shared profile route (admin redirected to /admin/profile) ── */}
       <Route
         path="/profile"
         element={
           <ProtectedRoute>
-            <MainLayout><Profile /></MainLayout>
+            <AdminRedirectProfile />
           </ProtectedRoute>
         }
       />
@@ -170,10 +185,11 @@ function AppRoutes() {
         <Route path="payments" element={<AdminPayments />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="audit-logs" element={<AdminAuditLogs />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
       {/* ── Catch-all ── */}
-      <Route path="*" element={<MainLayout><Navigate to="/" replace /></MainLayout>} />
+      <Route path="*" element={<CatchAll />} />
     </Routes>
   );
 }

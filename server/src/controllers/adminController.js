@@ -247,11 +247,13 @@ export const hideReview = async (req, res, next) => {
     const review = await Review.findById(req.params.id);
     if (!review) return next(new AppError('Review not found.', 404));
 
-    review.is_visible = false;
+    const show = req.query.show === 'true';
+    const prev = { is_visible: review.is_visible };
+    review.is_visible = show;
     await review.save();
 
-    await logAction(req.user._id, 'HIDE_REVIEW', 'review', review._id, { is_visible: true }, { is_visible: false }, req.body.reason || '', req.ip);
-    res.json({ success: true, message: 'Review hidden.' });
+    await logAction(req.user._id, show ? 'SHOW_REVIEW' : 'HIDE_REVIEW', 'review', review._id, prev, { is_visible: show }, req.body.reason || '', req.ip);
+    res.json({ success: true, message: show ? 'Review is now visible.' : 'Review hidden.' });
   } catch (err) { next(err); }
 };
 

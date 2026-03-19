@@ -42,7 +42,7 @@ export default function AdminReviews() {
   useEffect(() => { fetchReviews(); }, [fetchReviews]);
 
   const handleToggleVisibility = async (review) => {
-    const isCurrentlyHidden = review.isHidden || review.status === 'hidden';
+    const isCurrentlyHidden = review.is_visible === false;
     setToggling(review._id);
     try {
       if (isCurrentlyHidden) {
@@ -60,7 +60,7 @@ export default function AdminReviews() {
     }
   };
 
-  const hiddenCount  = reviews.filter((r) => r.isHidden || r.status === 'hidden').length;
+  const hiddenCount  = reviews.filter((r) => r.is_visible === false).length;
   const visibleCount = reviews.length - hiddenCount;
 
   return (
@@ -104,7 +104,7 @@ export default function AdminReviews() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {reviews.map((review) => {
-                  const isHidden = review.isHidden || review.status === 'hidden';
+                  const isHidden = review.is_visible === false;
                   const isToggling = toggling === review._id;
                   return (
                     <tr
@@ -114,20 +114,20 @@ export default function AdminReviews() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-full bg-[#C9A84C]/20 text-[#1B2B4B] flex items-center justify-center text-xs font-bold flex-shrink-0">
-                            {(review.worker?.name || review.workerId?.name || '?').charAt(0).toUpperCase()}
+                            {(review.worker_id?.user_id?.name || '?').charAt(0).toUpperCase()}
                           </div>
                           <span className="text-sm font-medium text-gray-800 whitespace-nowrap">
-                            {review.worker?.name || review.workerId?.name || '—'}
+                            {review.worker_id?.user_id?.name || '—'}
                           </span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-full bg-[#1B2B4B] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-                            {(review.user?.name || review.userId?.name || '?').charAt(0).toUpperCase()}
+                            {(review.user_id?.name || '?').charAt(0).toUpperCase()}
                           </div>
                           <span className="text-sm text-gray-800 whitespace-nowrap">
-                            {review.user?.name || review.userId?.name || '—'}
+                            {review.user_id?.name || '—'}
                           </span>
                         </div>
                       </td>
@@ -135,8 +135,8 @@ export default function AdminReviews() {
                         <StarDisplay rating={review.rating} />
                       </td>
                       <td className="px-4 py-3 max-w-xs">
-                        <p className="text-sm text-gray-600 truncate" title={review.comment || review.review}>
-                          {review.comment || review.review || <span className="italic text-gray-400">No comment</span>}
+                        <p className="text-sm text-gray-600 truncate" title={review.comment}>
+                          {review.comment || <span className="italic text-gray-400">No comment</span>}
                         </p>
                       </td>
                       <td className="px-4 py-3">

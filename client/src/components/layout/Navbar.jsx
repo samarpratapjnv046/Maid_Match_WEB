@@ -43,10 +43,12 @@ export default function Navbar() {
   const photo = user?.profilePhoto?.url;
   const initials = user?.name?.[0]?.toUpperCase() || '?';
 
-  const navLinks = [
-    { to: '/', label: 'Home' },
-    ...(user?.role !== 'worker' ? [{ to: '/workers', label: 'Find a Maid' }] : []),
-  ];
+  const navLinks = user?.role === 'admin'
+    ? []
+    : [
+        { to: '/', label: 'Home' },
+        ...(user?.role !== 'worker' ? [{ to: '/workers', label: 'Find a Maid' }] : []),
+      ];
 
   const userMenuLinks = user?.role === 'customer'
     ? [
@@ -65,7 +67,6 @@ export default function Navbar() {
     : user?.role === 'admin'
     ? [
         { to: '/admin', label: 'Admin Panel' },
-        { to: '/profile', label: 'Profile' },
       ]
     : [];
 

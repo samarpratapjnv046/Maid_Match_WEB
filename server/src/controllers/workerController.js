@@ -202,7 +202,7 @@ export const checkWorkerAvailability = async (req, res, next) => {
     // Overlap condition: existing.start_time < requested.end AND existing.end_time > requested.start
     const conflicts = await Booking.find({
       worker_id: worker._id,
-      status: { $in: ['accepted', 'pending_payment', 'paid'] },
+      status: { $in: ['offer_pending', 'accepted', 'pending_payment', 'paid'] },
       start_time: { $lt: end },
       end_time: { $gt: start },
     }).select('start_time end_time service_type duration_type');
