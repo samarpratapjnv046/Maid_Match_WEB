@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Filter } from 'lucide-react';
+import { Filter, Trash2 } from 'lucide-react';
 import api from '../../api/axios';
 import Spinner from '../../components/common/Spinner';
 import EmptyState from '../../components/common/EmptyState';
@@ -24,6 +24,22 @@ export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
+
+  async function handleDelete(e, bookingId) {
+    e.stopPropagation();
+    if (!window.confirm('Delete this booking? This cannot be undone.')) return;
+    setDeletingId(bookingId);
+    try {
+      await api.delete(`/bookings/${bookingId}`);
+      toast.success('Booking deleted.');
+      setBookings((prev) => prev.filter((b) => b._id !== bookingId));
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to delete booking.');
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -80,7 +96,7 @@ export default function AdminBookings() {
             <table className="min-w-full divide-y divide-gray-100">
               <thead className="bg-gray-50">
                 <tr>
-                  {['Booking ID', 'Customer', 'Worker', 'Service', 'Status', 'Amount', 'Date'].map((h) => (
+                  {['Booking ID', 'Customer', 'Worker', 'Service', 'Status', 'Amount', 'Date', ''].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                       {h}
                     </th>
@@ -102,25 +118,25 @@ export default function AdminBookings() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-[#1B2B4B] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-                          {(b.user?.name || b.customer?.name || '?').charAt(0).toUpperCase()}
+                          {(b.user_id?.name || '?').charAt(0).toUpperCase()}
                         </div>
                         <span className="text-sm text-gray-800 whitespace-nowrap">
-                          {b.user?.name || b.customer?.name || '—'}
+                          {b.user_id?.name || '—'}
                         </span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-[#C9A84C]/20 text-[#1B2B4B] flex items-center justify-center text-xs font-bold flex-shrink-0">
-                          {(b.worker?.name || '?').charAt(0).toUpperCase()}
+                          {(b.worker_id?.user_id?.name || '?').charAt(0).toUpperCase()}
                         </div>
                         <span className="text-sm text-gray-800 whitespace-nowrap">
-                          {b.worker?.name || '—'}
+                          {b.worker_id?.user_id?.name || '—'}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-                      {getStatusLabel(b.service)}
+                    <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap capitalize">
+                      {b.service_type?.replace(/_/g, ' ') || '—'}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-1 rounded-full font-semibold whitespace-nowrap ${getStatusColor(b.status)}`}>
@@ -128,10 +144,20 @@ export default function AdminBookings() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-800 whitespace-nowrap">
-                      {b.totalAmount != null ? formatCurrency(b.totalAmount) : '—'}
+                      {b.price?.base_amount != null ? formatCurrency(b.price.base_amount) : '—'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
                       {b.createdAt ? formatDate(b.createdAt) : '—'}
+                    </td>
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={(e) => handleDelete(e, b._id)}
+                        disabled={deletingId === b._id}
+                        className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                        title="Delete booking"
+                      >
+                        {deletingId === b._id ? <Spinner size="sm" /> : <Trash2 size={14} />}
+                      </button>
                     </td>
                   </tr>
                 ))}

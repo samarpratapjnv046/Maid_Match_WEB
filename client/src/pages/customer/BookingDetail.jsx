@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { MapPin, Clock, Calendar, CheckCircle, Phone, AlertTriangle } from 'lucide-react';
+import { MapPin, Clock, Calendar, CheckCircle, Phone, AlertTriangle, Trash2 } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/common/Modal';
@@ -127,6 +127,11 @@ export default function BookingDetail() {
 
   // Payment
   const [payLoading, setPayLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // OTP display after payment
+  const [otpModal, setOtpModal] = useState(false);
+  const [completionOtp, setCompletionOtp] = useState('');
 
   const fetchBooking = useCallback(async () => {
     setLoading(true);
@@ -164,6 +169,20 @@ export default function BookingDetail() {
     }
   }
 
+  // ─── Delete handler ─────────────────────────────────────────────────────────
+  async function handleDelete() {
+    if (!window.confirm('Delete this booking? This cannot be undone.')) return;
+    setDeleteLoading(true);
+    try {
+      await api.delete(`/bookings/${id}`);
+      toast.success('Booking deleted.');
+      navigate(user?.role === 'worker' ? '/worker/bookings' : user?.role === 'admin' ? '/admin/bookings' : '/bookings');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to delete booking.');
+      setDeleteLoading(false);
+    }
+  }
+
   // ─── Pay Now handler (Razorpay) ─────────────────────────────────────────────
   async function handlePayNow() {
     setPayLoading(true);
@@ -179,17 +198,18 @@ export default function BookingDetail() {
       const { data: orderData } = await api.post('/payments/create-order', {
         booking_id: id,
       });
-      const order = orderData.data?.order || orderData.order || orderData;
-
-      const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxxxxxxxxxx';
+      const orderId = orderData.order_id || orderData.data?.order?.id;
+      const orderAmount = orderData.amount || orderData.data?.order?.amount;
+      const orderCurrency = orderData.currency || orderData.data?.order?.currency || 'INR';
+      const rzpKey = orderData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID;
 
       const options = {
         key: rzpKey,
-        amount: order.amount,
-        currency: order.currency || 'INR',
+        amount: orderAmount,
+        currency: orderCurrency,
         name: 'MaidMatch',
         description: `Booking #${id.slice(-8).toUpperCase()}`,
-        order_id: order.id,
+        order_id: orderId,
         prefill: {
           name: user?.name || '',
           email: user?.email || '',
@@ -200,13 +220,18 @@ export default function BookingDetail() {
         },
         handler: async function (response) {
           try {
-            await api.post('/payments/verify', {
+            const { data: verifyData } = await api.post('/payments/verify', {
               booking_id: id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             });
-            toast.success('Payment successful! Your booking is confirmed.');
+            if (verifyData.otp) {
+              setCompletionOtp(verifyData.otp);
+              setOtpModal(true);
+            } else {
+              toast.success('Payment successful! Your booking is confirmed.');
+            }
             fetchBooking();
           } catch (verifyErr) {
             const msg = verifyErr?.response?.data?.message || 'Payment verification failed. Contact support.';
@@ -279,7 +304,7 @@ export default function BookingDetail() {
         <div className="text-center">
           <div className="text-5xl mb-4">😕</div>
           <h2 className="font-serif text-xl font-semibold text-[#1B2B4B] mb-2">Booking not found</h2>
-          <Link to="/bookings" className="text-[#C9A84C] font-semibold hover:underline text-sm">
+          <Link to={user?.role === 'worker' ? '/worker/bookings' : '/bookings'} className="text-[#C9A84C] font-semibold hover:underline text-sm">
             Back to my bookings
           </Link>
         </div>
@@ -288,27 +313,37 @@ export default function BookingDetail() {
   }
 
   // Destructure booking
-  const worker = booking.worker || {};
+  const workerProfile = booking.worker_id || {};
+  const workerUser = workerProfile.user_id || {};
+  const worker = {
+    _id: workerProfile._id,
+    name: workerUser.name || workerProfile.name,
+    profilePhoto: workerUser.profilePhoto || workerProfile.profilePhoto,
+    averageRating: workerProfile.averageRating,
+    totalReviews: workerProfile.totalReviews,
+    city: workerProfile.city,
+    isVerified: workerProfile.is_verified,
+  };
   const workerPhoto = worker.profilePhoto?.url;
   const workerInitials = worker.name?.[0]?.toUpperCase() || '?';
+  const customer = booking.user_id || {};
   const service = booking.service_type;
   const status = booking.status;
   const statusHistory = booking.status_history || booking.statusHistory || [];
   const startTime = booking.start_time;
   const endTime = booking.end_time;
   const address = booking.address || {};
-  const totalAmount = booking.totalAmount ?? booking.total_amount ?? booking.price;
-  const baseAmount = booking.baseAmount ?? booking.base_amount;
-  const taxAmount = booking.taxAmount ?? booking.tax_amount;
-  const platformFee = booking.platformFee ?? booking.platform_fee;
+  const totalAmount = booking.price?.base_amount;
+  const platformFee = booking.price?.platform_commission;
+  const workerPayout = booking.price?.worker_payout;
   const durationType = booking.duration_type;
   const specialInstructions = booking.special_instructions;
-  const payment = booking.payment || {};
+  const payment = booking.payment_id || {};
   const existingReview = booking.review;
 
   // Determine which actions to show
-  const canCancel = ['offer_pending', 'accepted'].includes(status);
-  const canPay = status === 'accepted';
+  const canCancel = user?.role === 'customer' && ['offer_pending', 'accepted'].includes(status);
+  const canPay = user?.role === 'customer' && ['accepted', 'pending_payment'].includes(status);
   const canReview = status === 'completed' && !reviewSubmitted && !existingReview;
   const isPaid = ['paid', 'pending_payment', 'completed'].includes(status);
 
@@ -318,7 +353,7 @@ export default function BookingDetail() {
       <div className="bg-[#1B2B4B] py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <Link
-            to="/bookings"
+            to={user?.role === 'worker' ? '/worker/bookings' : '/bookings'}
             className="inline-flex items-center gap-1 text-gray-400 hover:text-white text-sm mb-5 transition-colors"
           >
             ← Back to bookings
@@ -343,7 +378,31 @@ export default function BookingDetail() {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* ─── Left: booking info ─────────────────────────────────────────── */}
           <div className="flex-1 min-w-0 space-y-5">
-            {/* Worker card */}
+            {/* Customer card — shown to worker and admin */}
+            {(user?.role === 'worker' || user?.role === 'admin') && (
+              <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h2 className="font-serif text-base font-semibold text-[#1B2B4B] mb-4">Customer</h2>
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-[#1B2B4B] flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-xl">{customer.name?.[0]?.toUpperCase() || '?'}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[#1B2B4B] truncate">{customer.name || 'Customer'}</p>
+                    {customer.phone && (
+                      <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                        <Phone size={10} /> {customer.phone}
+                      </p>
+                    )}
+                    {customer.email && (
+                      <p className="text-xs text-gray-400 mt-0.5">{customer.email}</p>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Worker card — shown to customer and admin */}
+            {(user?.role === 'customer' || user?.role === 'admin') && (
             <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h2 className="font-serif text-base font-semibold text-[#1B2B4B] mb-4">Worker</h2>
               <div className="flex items-center gap-4">
@@ -385,6 +444,7 @@ export default function BookingDetail() {
                 </Link>
               </div>
             </section>
+            )}
 
             {/* Service & Schedule */}
             <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
@@ -483,14 +543,11 @@ export default function BookingDetail() {
             <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h2 className="font-serif text-base font-semibold text-[#1B2B4B] mb-3">Price Breakdown</h2>
               <div>
-                {baseAmount != null && (
-                  <PriceRow label="Base Amount" value={formatCurrency(baseAmount)} />
+                {workerPayout != null && (
+                  <PriceRow label="Worker Earnings" value={formatCurrency(workerPayout)} />
                 )}
                 {platformFee != null && (
-                  <PriceRow label="Platform Fee" value={formatCurrency(platformFee)} />
-                )}
-                {taxAmount != null && (
-                  <PriceRow label="Taxes & Fees" value={formatCurrency(taxAmount)} />
+                  <PriceRow label="Platform Commission" value={formatCurrency(platformFee)} />
                 )}
                 {totalAmount != null && (
                   <PriceRow label="Total" value={formatCurrency(totalAmount)} highlight />
@@ -498,16 +555,7 @@ export default function BookingDetail() {
               </div>
 
               {/* Payment status */}
-              {payment.status && (
-                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
-                  <span className="text-xs text-gray-400">Payment:</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getStatusColor(payment.status)}`}>
-                    {getStatusLabel(payment.status)}
-                  </span>
-                </div>
-              )}
-
-              {isPaid && !payment.status && (
+              {isPaid && (
                 <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-1.5 text-green-600 text-xs font-semibold">
                   <CheckCircle size={13} />
                   Payment received
@@ -557,12 +605,15 @@ export default function BookingDetail() {
                 </button>
               )}
 
-              {/* No actions available */}
-              {!canCancel && !canPay && !canReview && (
-                <p className="text-center text-xs text-gray-400 py-2">
-                  No actions available for this booking.
-                </p>
-              )}
+              {/* Delete */}
+              <button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="w-full flex items-center justify-center gap-2 border border-red-200 hover:border-red-400 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed text-red-600 font-semibold py-3 rounded-lg text-sm transition-all duration-150"
+              >
+                {deleteLoading ? <Spinner size="sm" color="red" /> : <Trash2 size={14} />}
+                Delete Booking
+              </button>
             </section>
 
             {/* Support note */}
@@ -627,6 +678,32 @@ export default function BookingDetail() {
               )}
             </button>
           </div>
+        </div>
+      </Modal>
+
+      {/* ─── OTP Display Modal (shown to customer after payment) ────────── */}
+      <Modal
+        isOpen={otpModal}
+        onClose={() => setOtpModal(false)}
+        title="Your Booking OTP"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-center">
+            <CheckCircle size={28} className="text-green-500 mx-auto mb-2" />
+            <p className="text-sm font-medium text-green-800">Payment successful! Share this OTP with your worker when they arrive to verify job completion.</p>
+          </div>
+          <div className="bg-[#FAF8F3] border-2 border-dashed border-[#C9A84C]/50 rounded-xl p-6 text-center">
+            <p className="text-xs text-gray-400 mb-2 uppercase tracking-widest font-semibold">Your OTP</p>
+            <p className="text-4xl font-extrabold tracking-[0.3em] text-[#1B2B4B]">{completionOtp}</p>
+          </div>
+          <p className="text-xs text-gray-400 text-center">Keep this OTP safe. The worker will enter it once the job is complete to unlock their payment.</p>
+          <button
+            onClick={() => setOtpModal(false)}
+            className="w-full bg-[#1B2B4B] hover:bg-[#152238] text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
+          >
+            I've noted the OTP
+          </button>
         </div>
       </Modal>
 

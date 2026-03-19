@@ -82,11 +82,11 @@ function SkeletonCard() {
 
 // ─── Pending request card ─────────────────────────────────────────────────────
 function PendingRequestCard({ booking, onAccept, onReject, actionLoading }) {
-  const customer = booking.customer || {};
+  const customer = booking.user_id || {};
   const photo = customer.profilePhoto?.url;
   const initials = customer.name?.[0]?.toUpperCase() || '?';
   const service = booking.service_type;
-  const amount = booking.totalAmount ?? booking.total_amount ?? booking.price;
+  const amount = booking.price?.base_amount;
 
   return (
     <div className="bg-white rounded-2xl border border-amber-100 shadow-sm p-5">
@@ -177,10 +177,10 @@ function PendingRequestCard({ booking, onAccept, onReject, actionLoading }) {
 
 // ─── Recent booking row ───────────────────────────────────────────────────────
 function RecentBookingRow({ booking }) {
-  const customer = booking.customer || {};
+  const customer = booking.user_id || {};
   const service = booking.service_type;
   const status = booking.status;
-  const amount = booking.totalAmount ?? booking.total_amount ?? booking.price;
+  const amount = booking.price?.base_amount;
 
   return (
     <Link
@@ -267,8 +267,7 @@ export default function WorkerDashboard() {
     setWalletLoading(true);
     try {
       const { data } = await api.get('/wallet');
-      const balance = data.data?.balance ?? data.balance ?? data.data ?? 0;
-      setWalletBalance(typeof balance === 'object' ? balance.balance ?? 0 : balance);
+      setWalletBalance(data.data?.wallet_balance ?? 0);
     } catch {
       setWalletBalance(0);
     } finally {
@@ -736,7 +735,7 @@ export default function WorkerDashboard() {
               <p className="text-sm font-medium text-red-800 mb-0.5">Reject this booking?</p>
               <p className="text-xs text-red-600">
                 You are about to reject a booking from{' '}
-                <strong>{rejectTarget?.customer?.name || 'the customer'}</strong>.
+                <strong>{rejectTarget?.user_id?.name || 'the customer'}</strong>.
                 Please provide a reason.
               </p>
             </div>

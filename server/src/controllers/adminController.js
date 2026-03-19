@@ -174,6 +174,7 @@ export const getAllPayments = async (req, res, next) => {
     const [payments, total] = await Promise.all([
       Payment.find(filter)
         .populate('user_id', 'name email')
+        .populate({ path: 'worker_id', select: 'user_id', populate: { path: 'user_id', select: 'name email' } })
         .populate('booking_id', 'service_type status')
         .sort({ createdAt: -1 })
         .skip(skip)

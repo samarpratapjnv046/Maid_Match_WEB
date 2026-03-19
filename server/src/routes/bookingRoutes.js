@@ -6,6 +6,7 @@ import {
   getBookingById,
   completeBookingWithOTP,
   cancelBooking,
+  deleteBooking,
   submitReview,
 } from '../controllers/bookingController.js';
 import { protect } from '../middleware/auth.js';
@@ -30,5 +31,6 @@ router.patch('/:id/respond', authorize('worker'), validate(bookingActionSchema),
 router.patch('/:id/cancel', authorize('customer'), cancelBooking);
 router.post('/:id/complete', authorize('worker'), otpLimiter, validate(otpVerifySchema), completeBookingWithOTP);
 router.post('/:id/review', authorize('customer'), validate(reviewSchema), submitReview);
+router.delete('/:id', deleteBooking);
 
 export default router;

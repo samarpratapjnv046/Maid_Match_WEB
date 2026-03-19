@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Calendar, Clock, MapPin, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, MapPin, ChevronRight, Trash2 } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import Spinner from '../../components/common/Spinner';
@@ -52,25 +52,27 @@ function SkeletonBookingCard() {
   );
 }
 
-function BookingCard({ booking }) {
-  const worker = booking.worker || {};
+function BookingCard({ booking, onDelete }) {
+  const workerProfile = booking.worker_id || {};
+  const workerUser = workerProfile.user_id || {};
+  const worker = {
+    name: workerUser.name || workerProfile.name,
+    profilePhoto: workerUser.profilePhoto || workerProfile.profilePhoto,
+  };
   const workerPhoto = worker.profilePhoto?.url;
   const workerInitials = worker.name?.[0]?.toUpperCase() || '?';
   const service = booking.service_type;
   const status = booking.status;
   const startTime = booking.start_time;
-  const amount = booking.totalAmount ?? booking.total_amount ?? booking.price;
+  const amount = booking.price?.base_amount;
   const durationType = booking.duration_type;
   const city = booking.address?.city;
 
   return (
-    <Link
-      to={`/bookings/${booking._id}`}
-      className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#C9A84C]/30 transition-all duration-200 hover:-translate-y-0.5 p-5 flex flex-col gap-4 block"
-    >
+    <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#C9A84C]/30 transition-all duration-200 hover:-translate-y-0.5 p-5 flex flex-col gap-4">
       {/* Header row */}
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0">
+        <Link to={`/bookings/${booking._id}`} className="flex-shrink-0">
           {workerPhoto ? (
             <img
               src={workerPhoto}
@@ -82,11 +84,11 @@ function BookingCard({ booking }) {
               <span className="text-white font-bold text-base">{workerInitials}</span>
             </div>
           )}
-        </div>
+        </Link>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <div>
+            <Link to={`/bookings/${booking._id}`} className="flex-1 min-w-0">
               <p className="font-semibold text-[#1B2B4B] text-sm truncate">{worker.name || 'Worker'}</p>
               {service && (
                 <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
@@ -94,11 +96,19 @@ function BookingCard({ booking }) {
                   {serviceLabels[service] || service}
                 </p>
               )}
+            </Link>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={(e) => { e.preventDefault(); onDelete(booking._id); }}
+                className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete booking"
+              >
+                <Trash2 size={14} />
+              </button>
+              <Link to={`/bookings/${booking._id}`}>
+                <ChevronRight size={16} className="text-gray-300 group-hover:text-[#C9A84C] transition-colors mt-0.5" />
+              </Link>
             </div>
-            <ChevronRight
-              size={16}
-              className="text-gray-300 group-hover:text-[#C9A84C] transition-colors flex-shrink-0 mt-0.5"
-            />
           </div>
           <div className="mt-2">
             <span className={`inline-block text-xs px-2.5 py-1 rounded-full font-semibold ${getStatusColor(status)}`}>
@@ -109,7 +119,7 @@ function BookingCard({ booking }) {
       </div>
 
       {/* Details row */}
-      <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-gray-500">
+      <Link to={`/bookings/${booking._id}`} className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-gray-500">
         {startTime && (
           <span className="flex items-center gap-1">
             <Calendar size={11} className="text-[#C9A84C]" />
@@ -133,8 +143,8 @@ function BookingCard({ booking }) {
             {formatCurrency(amount)}
           </span>
         )}
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }
 
@@ -143,6 +153,7 @@ export default function MyBookings() {
   const [activeTab, setActiveTab] = useState('all');
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
 
   const fetchBookings = useCallback(async (status) => {
     setLoading(true);
@@ -159,7 +170,7 @@ export default function MyBookings() {
         if (statusMap[status]) params.set('status', statusMap[status]);
       }
       const { data } = await api.get(`/bookings?${params.toString()}`);
-      const list = data.data?.bookings || data.data || data.bookings || [];
+      const list = data.data || [];
       setBookings(Array.isArray(list) ? list : []);
     } catch (err) {
       const msg = err?.response?.data?.message || 'Failed to load bookings.';
@@ -173,6 +184,20 @@ export default function MyBookings() {
   useEffect(() => {
     fetchBookings(activeTab);
   }, [activeTab, fetchBookings]);
+
+  async function handleDelete(bookingId) {
+    if (!window.confirm('Delete this booking? This cannot be undone.')) return;
+    setDeletingId(bookingId);
+    try {
+      await api.delete(`/bookings/${bookingId}`);
+      toast.success('Booking deleted.');
+      setBookings((prev) => prev.filter((b) => b._id !== bookingId));
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to delete booking.');
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const empty = EMPTY_STATES[activeTab] || EMPTY_STATES.all;
 
@@ -231,7 +256,7 @@ export default function MyBookings() {
         ) : (
           <div className="space-y-4">
             {bookings.map((booking) => (
-              <BookingCard key={booking._id} booking={booking} />
+              <BookingCard key={booking._id} booking={booking} onDelete={handleDelete} />
             ))}
           </div>
         )}

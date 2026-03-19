@@ -131,7 +131,10 @@ export const getMyBookings = async (req, res, next) => {
       filter.worker_id = worker._id;
     }
 
-    if (status) filter.status = status;
+    if (status) {
+      const statuses = status.split(',').map((s) => s.trim()).filter(Boolean);
+      filter.status = statuses.length === 1 ? statuses[0] : { $in: statuses };
+    }
 
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = Math.min(parseInt(limit, 10) || 10, 50);
@@ -254,6 +257,34 @@ export const cancelBooking = async (req, res, next) => {
     await booking.save();
 
     res.json({ success: true, message: 'Booking cancelled.', data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Delete a booking (all roles — each can only delete their own)
+// @route   DELETE /api/bookings/:id
+// @access  Private (customer, worker, admin)
+export const deleteBooking = async (req, res, next) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return next(new AppError('Booking not found.', 404));
+
+    // Ownership check
+    if (req.user.role === 'customer') {
+      if (!booking.user_id.equals(req.user._id)) {
+        return next(new AppError('Access denied.', 403));
+      }
+    } else if (req.user.role === 'worker') {
+      const worker = await Worker.findOne({ user_id: req.user._id });
+      if (!worker || !booking.worker_id.equals(worker._id)) {
+        return next(new AppError('Access denied.', 403));
+      }
+    }
+    // admin can delete any booking
+
+    await booking.deleteOne();
+    res.json({ success: true, message: 'Booking deleted.' });
   } catch (err) {
     next(err);
   }

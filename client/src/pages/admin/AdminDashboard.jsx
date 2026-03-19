@@ -58,7 +58,9 @@ export default function AdminDashboard() {
         totalUsers: usersRes.data?.total ?? 0,
         totalWorkers: allWorkersRes.data?.total ?? 0,
         totalBookings,
-        totalRevenue: rev.totalRevenue ?? 0,
+        totalRevenue: (rev.totalRevenue ?? 0) / 100,
+        pendingVerifications: pendingWorkersRes.data?.total ?? 0,
+        activeBookingsCount: bookingsRes.data?.total ?? 0,
       });
       setPendingWorkers(pendingWorkersRes.data?.data || []);
       setActiveBookings(bookingsRes.data?.data || []);
@@ -129,8 +131,8 @@ export default function AdminDashboard() {
         <StatCard icon={Briefcase}   label="Total Workers"           value={stats.totalWorkers} />
         <StatCard icon={Calendar}    label="Total Bookings"          value={stats.totalBookings} />
         <StatCard icon={DollarSign}  label="Total Revenue"           value={formatCurrency(stats.totalRevenue)} color="navy" />
-        <StatCard icon={Clock}       label="Pending Verifications"   value={pendingWorkers.length} />
-        <StatCard icon={CheckCircle} label="Active Bookings"         value={activeBookings.length} />
+        <StatCard icon={Clock}       label="Pending Verifications"   value={stats.pendingVerifications} />
+        <StatCard icon={CheckCircle} label="Active Bookings"         value={stats.activeBookingsCount} />
       </div>
 
       {/* Pending Worker Verifications */}
@@ -250,13 +252,13 @@ export default function AdminDashboard() {
                         #{b._id?.slice(-6).toUpperCase()}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-800">
-                        {b.user?.name || b.customer?.name || '—'}
+                        {b.user_id?.name || '—'}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-800">
-                        {b.worker?.name || '—'}
+                        {b.worker_id?.user_id?.name || '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {getStatusLabel(b.service)}
+                      <td className="px-4 py-3 text-sm text-gray-600 capitalize">
+                        {b.service_type?.replace(/_/g, ' ') || '—'}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`text-xs px-2 py-1 rounded-full font-semibold ${getStatusColor(b.status)}`}>
@@ -264,7 +266,7 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-800">
-                        {b.totalAmount != null ? formatCurrency(b.totalAmount) : '—'}
+                        {b.price?.base_amount != null ? formatCurrency(b.price.base_amount) : '—'}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500">
                         {b.createdAt ? formatDate(b.createdAt) : '—'}

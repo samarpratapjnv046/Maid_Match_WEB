@@ -58,7 +58,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] flex">
+    <div className="h-screen overflow-hidden bg-[#FAF8F3] flex">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -67,17 +67,17 @@ export default function AdminLayout() {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — mobile: fixed drawer, desktop: static full-height column */}
       <aside
         className={`
-          fixed top-0 left-0 h-full z-30 w-64 bg-[#1B2B4B] flex flex-col
+          fixed top-0 left-0 z-30 w-64 h-screen bg-[#1B2B4B] flex flex-col flex-shrink-0
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:relative lg:translate-x-0 lg:flex-shrink-0
+          lg:static lg:translate-x-0
         `}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
+        <div className="flex items-center justify-between px-5 py-5 border-b border-white/10 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-[#C9A84C] rounded-lg flex items-center justify-center">
               <Shield size={16} className="text-[#1B2B4B]" />
@@ -103,7 +103,7 @@ export default function AdminLayout() {
         </nav>
 
         {/* Footer */}
-        <div className="px-3 py-4 border-t border-white/10">
+        <div className="px-3 py-4 border-t border-white/10 flex-shrink-0">
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-150"
@@ -114,10 +114,10 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main content — only this area scrolls */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen">
         {/* Mobile top bar */}
-        <header className="lg:hidden bg-[#1B2B4B] text-white px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-md">
+        <header className="lg:hidden bg-[#1B2B4B] text-white px-4 py-3 flex items-center gap-3 flex-shrink-0 shadow-md">
           <button
             className="p-1.5 rounded-md hover:bg-white/10 transition-colors"
             onClick={() => setSidebarOpen(true)}
@@ -132,8 +132,8 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+        {/* Page content — scrollable */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

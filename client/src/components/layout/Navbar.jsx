@@ -45,7 +45,7 @@ export default function Navbar() {
 
   const navLinks = [
     { to: '/', label: 'Home' },
-    { to: '/workers', label: 'Find a Maid' },
+    ...(user?.role !== 'worker' ? [{ to: '/workers', label: 'Find a Maid' }] : []),
   ];
 
   const userMenuLinks = user?.role === 'customer'
@@ -59,7 +59,8 @@ export default function Navbar() {
         { to: '/worker/dashboard', label: 'Dashboard' },
         { to: '/worker/bookings', label: 'My Bookings' },
         { to: '/worker/wallet', label: 'My Wallet' },
-        { to: '/worker/profile', label: 'Profile' },
+        { to: '/worker/profile', label: 'Worker Profile' },
+        { to: '/profile', label: 'Account Settings' },
       ]
     : user?.role === 'admin'
     ? [

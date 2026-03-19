@@ -11,6 +11,7 @@ import {
   ChevronRight,
   ChevronLeft,
   AlertCircle,
+  Trash2,
 } from 'lucide-react';
 import api from '../../api/axios';
 import Spinner from '../../components/common/Spinner';
@@ -65,13 +66,13 @@ function SkeletonCard() {
 }
 
 // ─── Booking card ──────────────────────────────────────────────────────────────
-function BookingCard({ booking, onAccept, onOpenReject, onOpenComplete, actionLoading }) {
-  const customer = booking.customer || {};
+function BookingCard({ booking, onAccept, onOpenReject, onOpenComplete, onDelete, actionLoading }) {
+  const customer = booking.user_id || {};
   const photo = customer.profilePhoto?.url;
   const initials = customer.name?.[0]?.toUpperCase() || '?';
   const service = booking.service_type;
   const status = booking.status;
-  const amount = booking.totalAmount ?? booking.total_amount ?? booking.price;
+  const amount = booking.price?.base_amount;
 
   const isPending = status === 'offer_pending';
   const isPaid = status === 'paid';
@@ -146,12 +147,23 @@ function BookingCard({ booking, onAccept, onOpenReject, onOpenComplete, actionLo
       <div className="flex flex-wrap gap-2">
         {/* View detail link */}
         <Link
-          to={`/worker/bookings/${booking._id}`}
+          to={`/bookings/${booking._id}`}
           className="flex items-center gap-1.5 border border-gray-200 hover:border-[#1B2B4B]/40 text-gray-600 hover:text-[#1B2B4B] font-medium px-3 py-2 rounded-lg text-xs transition-colors"
         >
           View Details
           <ChevronRight size={12} />
         </Link>
+
+        {/* Delete */}
+        <button
+          onClick={() => onDelete(booking._id)}
+          disabled={isLoadingAction}
+          className="flex items-center gap-1.5 border border-red-100 hover:border-red-300 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed text-red-500 font-medium px-3 py-2 rounded-lg text-xs transition-colors"
+          title="Delete booking"
+        >
+          <Trash2 size={12} />
+          Delete
+        </button>
 
         {/* Pending offer actions */}
         {isPending && (
@@ -230,8 +242,8 @@ export default function WorkerBookings() {
       }
 
       const { data } = await api.get(`/bookings?${params.toString()}`);
-      const list = data.data?.bookings || data.data || data.bookings || [];
-      const total = data.data?.totalPages || data.totalPages || 1;
+      const list = data.data || [];
+      const total = data.pages || 1;
       setBookings(Array.isArray(list) ? list : []);
       setTotalPages(total);
     } catch (err) {
@@ -294,6 +306,21 @@ export default function WorkerBookings() {
       toast.error(err?.response?.data?.message || 'Failed to reject booking.');
     } finally {
       setRejectLoading(false);
+    }
+  }
+
+  // ─── Delete booking ─────────────────────────────────────────────────────────
+  async function handleDelete(bookingId) {
+    if (!window.confirm('Delete this booking? This cannot be undone.')) return;
+    setActionLoading(bookingId);
+    try {
+      await api.delete(`/bookings/${bookingId}`);
+      toast.success('Booking deleted.');
+      setBookings((prev) => prev.filter((b) => b._id !== bookingId));
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to delete booking.');
+    } finally {
+      setActionLoading(null);
     }
   }
 
@@ -382,6 +409,7 @@ export default function WorkerBookings() {
                   onAccept={handleAccept}
                   onOpenReject={openRejectModal}
                   onOpenComplete={openOtpModal}
+                  onDelete={handleDelete}
                   actionLoading={actionLoading}
                 />
               ))}
@@ -432,7 +460,7 @@ export default function WorkerBookings() {
           <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-xl p-4">
             <AlertCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-red-800">Reject booking from {rejectTarget?.customer?.name || 'this customer'}?</p>
+              <p className="text-sm font-medium text-red-800">Reject booking from {rejectTarget?.user_id?.name || 'this customer'}?</p>
               <p className="text-xs text-red-600 mt-0.5">Please provide a reason — the customer will be notified.</p>
             </div>
           </div>
@@ -487,7 +515,7 @@ export default function WorkerBookings() {
             <div className="flex items-start gap-3">
               <CheckCircle size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-green-800">Completing job for {otpTarget?.customer?.name || 'customer'}</p>
+                <p className="text-sm font-medium text-green-800">Completing job for {otpTarget?.user_id?.name || 'customer'}</p>
                 <p className="text-xs text-green-600 mt-0.5">
                   Ask the customer for the OTP they received. Enter it below to mark the booking complete.
                 </p>

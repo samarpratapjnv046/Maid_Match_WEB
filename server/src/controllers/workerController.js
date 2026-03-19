@@ -1,5 +1,6 @@
 import Worker from '../models/Worker.js';
 import User from '../models/User.js';
+import Booking from '../models/Booking.js';
 import cloudinary from '../config/cloudinary.js';
 import { AppError } from '../utils/errorHandler.js';
 import { APIFeatures } from '../utils/apiFeatures.js';
@@ -174,6 +175,51 @@ export const searchWorkers = async (req, res, next) => {
       page: pageNum,
       pages: Math.ceil(total / limitNum),
       data: workers,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Check worker availability for a time slot
+// @route   GET /api/workers/:id/availability
+// @access  Public
+export const checkWorkerAvailability = async (req, res, next) => {
+  try {
+    const { start_time, end_time } = req.query;
+    if (!start_time || !end_time) return next(new AppError('start_time and end_time are required.', 400));
+
+    const start = new Date(start_time);
+    const end = new Date(end_time);
+    if (isNaN(start) || isNaN(end) || end <= start) {
+      return next(new AppError('Invalid time range.', 400));
+    }
+
+    const worker = await Worker.findById(req.params.id);
+    if (!worker) return next(new AppError('Worker not found.', 404));
+
+    // Find bookings that overlap with the requested slot
+    // Overlap condition: existing.start_time < requested.end AND existing.end_time > requested.start
+    const conflicts = await Booking.find({
+      worker_id: worker._id,
+      status: { $in: ['accepted', 'pending_payment', 'paid'] },
+      start_time: { $lt: end },
+      end_time: { $gt: start },
+    }).select('start_time end_time service_type duration_type');
+
+    if (conflicts.length === 0) {
+      return res.json({ success: true, available: true });
+    }
+
+    res.json({
+      success: true,
+      available: false,
+      conflicts: conflicts.map((b) => ({
+        start_time: b.start_time,
+        end_time: b.end_time,
+        service_type: b.service_type,
+        duration_type: b.duration_type,
+      })),
     });
   } catch (err) {
     next(err);

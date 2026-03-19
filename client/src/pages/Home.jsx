@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { serviceIcons, serviceLabels } from '../utils/helpers';
+import { useAuth } from '../hooks/useAuth';
 
 const SERVICES = [
   'house_cleaning', 'cooking', 'babysitting',
@@ -26,6 +27,9 @@ const HOW_IT_WORKS = [
 const fadeUp = { initial: { opacity: 0, y: 24 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.45 } };
 
 const Home = () => {
+  const { user } = useAuth();
+  const isWorker = user?.role === 'worker';
+
   return (
     <div className="min-h-screen">
       {/* ── Hero ────────────────────────────────────────────────────────────── */}
@@ -49,18 +53,29 @@ const Home = () => {
                 Verified, background-checked professionals for cleaning, cooking, babysitting, and more. Book in minutes, pay securely.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link
-                  to="/workers"
-                  className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all duration-200 shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
-                >
-                  Find a Worker <ArrowRight size={18} />
-                </Link>
-                <Link
-                  to="/register"
-                  className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all duration-200"
-                >
-                  Join as a Worker
-                </Link>
+                {isWorker ? (
+                  <Link
+                    to="/worker/dashboard"
+                    className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all duration-200 shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
+                  >
+                    Go to Dashboard <ArrowRight size={18} />
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/workers"
+                      className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all duration-200 shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
+                    >
+                      Find a Worker <ArrowRight size={18} />
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all duration-200"
+                    >
+                      Join as a Worker
+                    </Link>
+                  </>
+                )}
               </div>
               <div className="mt-8 flex items-center gap-6 justify-center lg:justify-start">
                 <div className="flex -space-x-2">
@@ -76,30 +91,32 @@ const Home = () => {
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="hidden lg:block"
-            >
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-3xl p-6 shadow-2xl">
-                <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-4">Available Services</p>
-                <div className="grid grid-cols-3 gap-3">
-                  {SERVICES.map((svc) => (
-                    <Link
-                      key={svc}
-                      to={`/workers?service=${svc}`}
-                      className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-center group"
-                    >
-                      <span className="text-2xl leading-none">{serviceIcons[svc]}</span>
-                      <span className="text-xs text-white/80 group-hover:text-white font-medium leading-tight">
-                        {serviceLabels[svc]}
-                      </span>
-                    </Link>
-                  ))}
+            {!isWorker && (
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+                className="hidden lg:block"
+              >
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-3xl p-6 shadow-2xl">
+                  <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-4">Available Services</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {SERVICES.map((svc) => (
+                      <Link
+                        key={svc}
+                        to={`/workers?service=${svc}`}
+                        className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-center group"
+                      >
+                        <span className="text-2xl leading-none">{serviceIcons[svc]}</span>
+                        <span className="text-xs text-white/80 group-hover:text-white font-medium leading-tight">
+                          {serviceLabels[svc]}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            )}
           </div>
         </div>
       </section>
@@ -122,34 +139,36 @@ const Home = () => {
       </section>
 
       {/* ── Services Grid ─────────────────────────────────────────────────────── */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <span className="text-primary-600 text-sm font-semibold uppercase tracking-widest">What We Offer</span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">Services for every need</h2>
-            <p className="mt-3 text-gray-500 max-w-xl mx-auto">
-              From daily house cleaning to long-term elder care, we have verified professionals for everything.
-            </p>
-          </div>
+      {!isWorker && (
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <span className="text-primary-600 text-sm font-semibold uppercase tracking-widest">What We Offer</span>
+              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">Services for every need</h2>
+              <p className="mt-3 text-gray-500 max-w-xl mx-auto">
+                From daily house cleaning to long-term elder care, we have verified professionals for everything.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {SERVICES.map((svc) => (
-              <Link
-                key={svc}
-                to={`/workers?service=${svc}`}
-                className="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-primary-300 hover:shadow-md hover:-translate-y-1 transition-all duration-200"
-              >
-                <div className="w-14 h-14 bg-primary-50 group-hover:bg-primary-100 rounded-2xl flex items-center justify-center transition-colors text-3xl leading-none">
-                  {serviceIcons[svc]}
-                </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-primary-700 text-center leading-tight transition-colors">
-                  {serviceLabels[svc]}
-                </span>
-              </Link>
-            ))}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {SERVICES.map((svc) => (
+                <Link
+                  key={svc}
+                  to={`/workers?service=${svc}`}
+                  className="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-primary-300 hover:shadow-md hover:-translate-y-1 transition-all duration-200"
+                >
+                  <div className="w-14 h-14 bg-primary-50 group-hover:bg-primary-100 rounded-2xl flex items-center justify-center transition-colors text-3xl leading-none">
+                    {serviceIcons[svc]}
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-primary-700 text-center leading-tight transition-colors">
+                    {serviceLabels[svc]}
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── How it Works ──────────────────────────────────────────────────────── */}
       <section className="py-20 bg-white">
@@ -250,18 +269,30 @@ const Home = () => {
             Join thousands of happy customers who trust MaidMatch for their home service needs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/workers"
-              className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all shadow-lg"
-            >
-              Browse Workers <ArrowRight size={18} />
-            </Link>
-            <Link
-              to="/register"
-              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all"
-            >
-              Register as Worker
-            </Link>
+            {!isWorker && (
+              <Link
+                to="/workers"
+                className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all shadow-lg"
+              >
+                Browse Workers <ArrowRight size={18} />
+              </Link>
+            )}
+            {!isWorker && (
+              <Link
+                to="/register"
+                className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all"
+              >
+                Register as Worker
+              </Link>
+            )}
+            {isWorker && (
+              <Link
+                to="/worker/dashboard"
+                className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all shadow-lg"
+              >
+                Go to Dashboard <ArrowRight size={18} />
+              </Link>
+            )}
           </div>
         </div>
       </section>

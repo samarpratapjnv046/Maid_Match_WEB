@@ -134,7 +134,7 @@ export default function WorkerProfile() {
       const profile = data.data?.worker || data.data || data.worker || data;
       setProfileExists(true);
       setVerificationStatus(profile.verification_status || 'pending');
-      setCurrentPhoto(profile.profilePhoto?.url || null);
+      setCurrentPhoto(profile.user_id?.profilePhoto?.url || null);
 
       // Populate form
       setForm({
@@ -219,7 +219,7 @@ export default function WorkerProfile() {
     setPhotoUploading(true);
     try {
       const formData = new FormData();
-      formData.append('photo', file);
+      formData.append('profilePhoto', file);
       const { data } = await api.post('/workers/profile/photo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });

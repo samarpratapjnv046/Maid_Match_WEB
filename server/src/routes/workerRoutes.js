@@ -6,6 +6,7 @@ import {
   getMyWorkerProfile,
   searchWorkers,
   getWorkerById,
+  checkWorkerAvailability,
 } from '../controllers/workerController.js';
 import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
@@ -18,6 +19,7 @@ const router = express.Router();
 
 // Public
 router.get('/search', searchWorkers);
+router.get('/:id/availability', checkWorkerAvailability);
 router.get('/:id', getWorkerById);
 
 // Protected (worker only)

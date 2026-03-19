@@ -22,14 +22,21 @@ export const createOrder = async (req, res, next) => {
 
     const booking = await Booking.findOne({ _id: booking_id, user_id: req.user._id });
     if (!booking) return next(new AppError('Booking not found.', 404));
-    if (booking.status !== 'accepted') {
-      return next(new AppError('Payment can only be initiated for accepted bookings.', 400));
-    }
 
-    // Prevent duplicate order creation
+    // Return existing order if one already exists (handles retries after dismissing Razorpay)
     const existingPayment = await Payment.findOne({ booking_id, status: { $in: ['created', 'authorized', 'captured'] } });
     if (existingPayment) {
-      return res.json({ success: true, order_id: existingPayment.razorpay_order_id, amount: existingPayment.amount });
+      return res.json({
+        success: true,
+        order_id: existingPayment.razorpay_order_id,
+        amount: existingPayment.amount,
+        currency: 'INR',
+        key_id: process.env.RAZORPAY_KEY_ID,
+      });
+    }
+
+    if (!['accepted', 'pending_payment'].includes(booking.status)) {
+      return next(new AppError('Payment can only be initiated for accepted bookings.', 400));
     }
 
     const order = await createRazorpayOrder(

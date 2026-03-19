@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { MapPin, Clock, Star, CheckCircle, Calendar, Phone } from 'lucide-react';
+import { MapPin, Clock, Star, CheckCircle, Calendar, Phone, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import StarRating from '../../components/common/StarRating';
@@ -11,6 +11,7 @@ import {
   serviceLabels,
   formatCurrency,
   formatDate,
+  formatDateTime,
 } from '../../utils/helpers';
 
 const DURATION_TYPES = [
@@ -68,6 +69,11 @@ export default function WorkerProfile() {
   const [form, setForm] = useState(INITIAL_FORM);
   const [formErrors, setFormErrors] = useState({});
 
+  // Availability check state
+  const [availability, setAvailability] = useState(null); // null | 'checking' | 'available' | 'busy'
+  const [conflicts, setConflicts] = useState([]);
+  const availabilityTimerRef = useRef(null);
+
   const fetchWorker = useCallback(async () => {
     try {
       setLoading(true);
@@ -91,6 +97,39 @@ export default function WorkerProfile() {
   useEffect(() => {
     fetchWorker();
   }, [fetchWorker]);
+
+  // Auto-check availability whenever start or end time changes
+  useEffect(() => {
+    const { start_time, end_time } = form;
+    if (!start_time || !end_time || new Date(end_time) <= new Date(start_time)) {
+      setAvailability(null);
+      setConflicts([]);
+      return;
+    }
+
+    // Debounce 600ms so we don't fire on every keystroke
+    clearTimeout(availabilityTimerRef.current);
+    setAvailability('checking');
+    availabilityTimerRef.current = setTimeout(async () => {
+      try {
+        const { data } = await api.get(`/workers/${id}/availability`, {
+          params: { start_time, end_time },
+        });
+        if (data.available) {
+          setAvailability('available');
+          setConflicts([]);
+        } else {
+          setAvailability('busy');
+          setConflicts(data.conflicts || []);
+        }
+      } catch {
+        setAvailability(null);
+        setConflicts([]);
+      }
+    }, 600);
+
+    return () => clearTimeout(availabilityTimerRef.current);
+  }, [form.start_time, form.end_time, id]);
 
   function handleFormChange(e) {
     const { name, value } = e.target;
@@ -589,6 +628,50 @@ export default function WorkerProfile() {
                   />
                 </div>
 
+                {/* Availability status */}
+                {availability === 'checking' && (
+                  <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                    <Loader2 size={15} className="animate-spin text-gray-400 flex-shrink-0" />
+                    <p className="text-sm text-gray-500">Checking availability…</p>
+                  </div>
+                )}
+
+                {availability === 'available' && (
+                  <div className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                    <CheckCircle2 size={16} className="text-green-600 flex-shrink-0" />
+                    <p className="text-sm font-medium text-green-800">Worker is available for this time slot!</p>
+                  </div>
+                )}
+
+                {availability === 'busy' && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-start gap-2.5 mb-3">
+                      <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-amber-900">
+                          Worker is already booked during this period
+                        </p>
+                        <p className="text-xs text-amber-700 mt-0.5">
+                          Your requested time overlaps with {conflicts.length} existing booking{conflicts.length !== 1 ? 's' : ''}. Please choose a different time slot.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {conflicts.map((c, i) => (
+                        <div key={i} className="flex items-center gap-2 bg-amber-100/60 rounded-lg px-3 py-2">
+                          <Calendar size={12} className="text-amber-600 flex-shrink-0" />
+                          <span className="text-xs text-amber-800 font-medium">
+                            {formatDateTime(c.start_time)} → {formatDateTime(c.end_time)}
+                          </span>
+                          <span className="ml-auto text-xs text-amber-600 capitalize bg-amber-200/60 px-2 py-0.5 rounded-full">
+                            {c.duration_type}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Price preview */}
                 {pricePreview !== null && (
                   <div className="bg-[#FAF8F3] border border-[#C9A84C]/25 rounded-xl p-4">
@@ -607,7 +690,7 @@ export default function WorkerProfile() {
                 {/* Submit */}
                 <button
                   type="submit"
-                  disabled={bookingLoading}
+                  disabled={bookingLoading || availability === 'busy' || availability === 'checking'}
                   className="w-full flex items-center justify-center gap-2 bg-[#C9A84C] hover:bg-[#b8923e] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-lg shadow-md shadow-[#C9A84C]/20 transition-all duration-150 hover:-translate-y-0.5 text-sm"
                 >
                   {bookingLoading ? (

@@ -41,6 +41,14 @@ import Profile from './pages/Profile';
 // Spinner for auth loading
 import Spinner from './components/common/Spinner';
 
+// Worker blocked route — redirect workers away, allow everyone else (including guests)
+function WorkerBlockedRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner size="lg" color="navy" /></div>;
+  if (user?.role === 'worker') return <Navigate to="/worker/dashboard" replace />;
+  return children;
+}
+
 // Guest route — redirect to dashboard if already logged in
 function GuestRoute({ children }) {
   const { user, loading } = useAuth();
@@ -69,8 +77,8 @@ function AppRoutes() {
     <Routes>
       {/* ── Public routes ── */}
       <Route path="/" element={<MainLayout><Home /></MainLayout>} />
-      <Route path="/workers" element={<MainLayout><SearchWorkers /></MainLayout>} />
-      <Route path="/workers/:id" element={<MainLayout><WorkerProfile /></MainLayout>} />
+      <Route path="/workers" element={<WorkerBlockedRoute><MainLayout><SearchWorkers /></MainLayout></WorkerBlockedRoute>} />
+      <Route path="/workers/:id" element={<WorkerBlockedRoute><MainLayout><WorkerProfile /></MainLayout></WorkerBlockedRoute>} />
 
       {/* ── Auth routes (guests only) ── */}
       <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />

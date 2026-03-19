@@ -38,7 +38,7 @@ export default function AdminPayments() {
         api.get('/admin/revenue'),
       ]);
       setPayments(paymentsRes.data?.data || []);
-      setRevenue(revenueRes.data);
+      setRevenue(revenueRes.data?.data?.revenue || null);
     } catch (err) {
       toast.error('Failed to load payments');
     } finally {
@@ -51,7 +51,7 @@ export default function AdminPayments() {
   const handleRefundSubmit = async () => {
     setActionLoading(true);
     try {
-      await api.post(`/admin/payments/${refundModal.payment.bookingId || refundModal.payment._id}/refund`, {
+      await api.post(`/admin/payments/${refundModal.payment.booking_id?._id || refundModal.payment._id}/refund`, {
         reason: refundReason,
       });
       toast.success('Refund processed successfully');
@@ -64,9 +64,9 @@ export default function AdminPayments() {
     }
   };
 
-  // Compute platform commission from payments if not in revenue API
-  const totalRevenue    = revenue?.totalRevenue    ?? payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-  const totalCommission = revenue?.totalCommission ?? payments.reduce((sum, p) => sum + (p.platformCommission || p.commission || 0), 0);
+  // Amounts from Payment model are in paise — divide by 100 for display
+  const totalRevenue    = ((revenue?.totalRevenue    ?? payments.reduce((sum, p) => sum + (p.amount || 0), 0))) / 100;
+  const totalCommission = ((revenue?.totalCommission ?? payments.reduce((sum, p) => sum + (p.platform_commission || 0), 0))) / 100;
 
   return (
     <div className="space-y-6">
@@ -108,21 +108,19 @@ export default function AdminPayments() {
                       #{(p.razorpayPaymentId || p._id)?.slice(-8).toUpperCase()}
                     </td>
                     <td className="px-4 py-3 text-xs font-mono text-gray-500 whitespace-nowrap">
-                      #{(p.bookingId?._id || p.bookingId || p.booking)?.toString().slice(-6).toUpperCase()}
+                      #{p.booking_id?._id?.toString().slice(-6).toUpperCase() || '—'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-800 whitespace-nowrap">
-                      {p.user?.name || p.customer?.name || p.bookingId?.user?.name || '—'}
+                      {p.user_id?.name || '—'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-800 whitespace-nowrap">
-                      {p.worker?.name || p.bookingId?.worker?.name || '—'}
+                      {p.worker_id?.user_id?.name || '—'}
                     </td>
                     <td className="px-4 py-3 text-sm font-semibold text-gray-800 whitespace-nowrap">
-                      {p.amount != null ? formatCurrency(p.amount) : '—'}
+                      {p.amount != null ? formatCurrency(p.amount / 100) : '—'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-                      {(p.platformCommission ?? p.commission) != null
-                        ? formatCurrency(p.platformCommission ?? p.commission)
-                        : '—'}
+                      {p.platform_commission != null ? formatCurrency(p.platform_commission / 100) : '—'}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-1 rounded-full font-semibold whitespace-nowrap ${getStatusColor(p.status)}`}>
@@ -165,11 +163,10 @@ export default function AdminPayments() {
             <p className="text-sm text-orange-800 font-medium">
               You are about to refund{' '}
               <span className="font-bold">
-                {refundModal.payment?.amount != null ? formatCurrency(refundModal.payment.amount) : '—'}
+                {refundModal.payment?.amount != null ? formatCurrency(refundModal.payment.amount / 100) : '—'}
               </span>{' '}
               for Booking #
-              {(refundModal.payment?.bookingId?._id || refundModal.payment?.bookingId || refundModal.payment?._id)
-                ?.toString().slice(-6).toUpperCase()}.
+              {refundModal.payment?.booking_id?._id?.toString().slice(-6).toUpperCase() || '—'}.
             </p>
             <p className="text-xs text-orange-700 mt-1">This action cannot be undone.</p>
           </div>

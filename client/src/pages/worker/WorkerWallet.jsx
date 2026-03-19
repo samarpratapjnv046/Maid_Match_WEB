@@ -115,8 +115,8 @@ export default function WorkerWallet() {
     setBalanceLoading(true);
     try {
       const { data } = await api.get('/wallet');
-      const bal = data.data?.balance ?? data.balance ?? data.data ?? 0;
-      setBalance(typeof bal === 'object' ? bal.balance ?? 0 : bal);
+      const bal = data.data?.wallet_balance ?? 0;
+      setBalance(bal);
     } catch (err) {
       toast.error('Failed to load wallet balance.');
       setBalance(0);
