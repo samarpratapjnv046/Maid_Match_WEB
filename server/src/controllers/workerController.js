@@ -102,15 +102,30 @@ export const getMyWorkerProfile = async (req, res, next) => {
 // @access  Public
 export const searchWorkers = async (req, res, next) => {
   try {
-    const {
-      city, service, min_price, max_price, duration_type,
-      min_rating, page, limit, sort, lat, lng, radius_km,
-    } = req.query;
+    const q = req.query;
+    // Accept both snake_case and camelCase param names from frontend
+    const city         = q.city;
+    const servicesRaw  = q.services || q.service; // comma-sep or single
+    const min_price    = q.min_price;
+    const max_price    = q.max_price;
+    const duration_type = q.duration_type || q.durationType;
+    const min_rating   = q.min_rating   || q.minRating;
+    const page         = q.page;
+    const limit        = q.limit;
+    const sort         = q.sort;
+    const lat          = q.lat;
+    const lng          = q.lng;
+    const radius_km    = q.radius_km;
 
     const filter = { is_verified: true, is_available: true };
 
     if (city) filter['location.city'] = { $regex: city, $options: 'i' };
-    if (service) filter.services = service;
+
+    if (servicesRaw) {
+      const serviceList = servicesRaw.split(',').map((s) => s.trim()).filter(Boolean);
+      filter.services = serviceList.length === 1 ? serviceList[0] : { $in: serviceList };
+    }
+
     if (min_rating) filter.rating = { $gte: parseFloat(min_rating) };
 
     if (min_price || max_price) {

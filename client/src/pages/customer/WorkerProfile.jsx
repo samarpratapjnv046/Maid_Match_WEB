@@ -177,7 +177,7 @@ export default function WorkerProfile() {
         <div className="text-center">
           <div className="text-5xl mb-4">😕</div>
           <h2 className="font-serif text-xl font-semibold text-[#1B2B4B] mb-2">Worker not found</h2>
-          <Link to="/search" className="text-[#C9A84C] font-semibold hover:underline text-sm">
+          <Link to="/workers" className="text-[#C9A84C] font-semibold hover:underline text-sm">
             Back to search
           </Link>
         </div>
@@ -185,15 +185,17 @@ export default function WorkerProfile() {
     );
   }
 
-  const photo = worker.profilePhoto?.url;
-  const initials = worker.name?.[0]?.toUpperCase() || '?';
-  const rating = worker.averageRating || 0;
-  const reviewCount = worker.totalReviews || reviews.length;
+  // Backend populates user_id with { name, profilePhoto }
+  const workerName = worker.user_id?.name || 'Worker';
+  const photo = worker.user_id?.profilePhoto?.url;
+  const initials = workerName[0]?.toUpperCase() || '?';
+  const rating = worker.rating || 0;
+  const reviewCount = worker.total_reviews || reviews.length;
   const services = worker.services || [];
   const pricing = worker.pricing || {};
-  const isVerified = worker.isVerified || worker.verificationStatus === 'verified';
-  const city = worker.city || worker.location?.city || '';
-  const experience = worker.experienceYears;
+  const isVerified = worker.is_verified || worker.verification_status === 'verified';
+  const city = worker.location?.city || '';
+  const experience = worker.experience_years;
   const languages = worker.languages || [];
   const bio = worker.bio || '';
   const skills = worker.skills || [];
@@ -216,7 +218,7 @@ export default function WorkerProfile() {
         />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <Link
-            to="/search"
+            to="/workers"
             className="inline-flex items-center gap-1 text-gray-400 hover:text-white text-sm mb-6 transition-colors"
           >
             ← Back to search
@@ -228,7 +230,7 @@ export default function WorkerProfile() {
               {photo ? (
                 <img
                   src={photo}
-                  alt={worker.name}
+                  alt={workerName}
                   className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-[#C9A84C]/50 shadow-lg"
                 />
               ) : (
@@ -247,7 +249,7 @@ export default function WorkerProfile() {
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-1">
                 <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white">
-                  {worker.name}
+                  {workerName}
                 </h1>
                 {isVerified && (
                   <span className="inline-flex items-center gap-1 bg-green-500/20 border border-green-400/30 text-green-300 text-xs font-semibold px-2.5 py-1 rounded-full">
@@ -426,7 +428,7 @@ export default function WorkerProfile() {
           {/* ─── Booking form (right / sticky) ─────────────────────────────── */}
           <div className="lg:w-[380px] xl:w-[420px] flex-shrink-0">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-md lg:sticky lg:top-20 p-6">
-              <h2 className="font-serif text-lg font-semibold text-[#1B2B4B] mb-5">Book {worker.name?.split(' ')[0]}</h2>
+              <h2 className="font-serif text-lg font-semibold text-[#1B2B4B] mb-5">Book {workerName.split(' ')[0]}</h2>
 
               <form onSubmit={handleBookingSubmit} noValidate className="space-y-4">
                 {/* Service type */}

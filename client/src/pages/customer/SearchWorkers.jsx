@@ -46,15 +46,17 @@ function SkeletonCard() {
 }
 
 function WorkerCard({ worker }) {
-  const photo = worker.profilePhoto?.url;
-  const initials = worker.name?.[0]?.toUpperCase() || '?';
-  const rating = worker.averageRating || 0;
-  const reviewCount = worker.totalReviews || 0;
+  // Backend populates user_id with { name, profilePhoto }
+  const photo = worker.user_id?.profilePhoto?.url;
+  const name = worker.user_id?.name || 'Worker';
+  const initials = name[0]?.toUpperCase() || '?';
+  const rating = worker.rating || 0;
+  const reviewCount = worker.total_reviews || 0;
   const services = worker.services || [];
   const pricing = worker.pricing || {};
-  const experience = worker.experienceYears;
-  const city = worker.city || worker.location?.city || '';
-  const isVerified = worker.isVerified || worker.verificationStatus === 'verified';
+  const experience = worker.experience_years;
+  const city = worker.location?.city || '';
+  const isVerified = worker.is_verified || worker.verification_status === 'verified';
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#C9A84C]/30 transition-all duration-200 hover:-translate-y-0.5 p-5 flex flex-col gap-4">
@@ -64,7 +66,7 @@ function WorkerCard({ worker }) {
           {photo ? (
             <img
               src={photo}
-              alt={worker.name}
+              alt={name}
               className="w-16 h-16 rounded-full object-cover border-2 border-[#C9A84C]/30"
             />
           ) : (
@@ -82,7 +84,7 @@ function WorkerCard({ worker }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-serif font-semibold text-[#1B2B4B] text-base leading-tight truncate">
-              {worker.name}
+              {name}
             </h3>
             {isVerified && (
               <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getStatusColor('verified')}`}>
@@ -204,7 +206,11 @@ export default function SearchWorkers() {
         else setLoadingMore(true);
         const params = buildParams(pageNum);
         const { data } = await api.get(`/workers/search?${params.toString()}`);
-        const list = data.data?.workers || data.workers || data.data || [];
+        let list = data.data?.workers || data.workers || data.data || [];
+        // Exclude logged-in worker from their own search results
+        if (user?.role === 'worker') {
+          list = list.filter((w) => w.user_id?._id !== user._id && w.user_id !== user._id);
+        }
         const total = data.data?.total ?? data.total ?? list.length;
         const limitUsed = 9;
         setTotalCount(total);
