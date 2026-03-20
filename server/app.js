@@ -31,6 +31,10 @@ app.use(
   })
 );
 
+app.get('/', (req, res) => {
+  res.send('Backend is running 🚀');
+});
+
 // ─── Body Parsing ─────────────────────────────────────────────────────────────
 // Raw body for Razorpay webhook signature verification
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
