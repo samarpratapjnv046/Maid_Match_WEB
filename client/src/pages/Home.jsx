@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin, Wallet, CalendarCheck, UserCircle, LayoutDashboard, Search, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin, Wallet, CalendarCheck, UserCircle, LayoutDashboard, Search } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { serviceIcons, serviceLabels } from '../utils/helpers';
@@ -138,12 +138,6 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
     setCurrent(idx);
   };
 
-  const prev = () => {
-    const idx = (current - 1 + HERO_SLIDES.length) % HERO_SLIDES.length;
-    setDirection(-1);
-    setCurrent(idx);
-  };
-
   useEffect(() => {
     timerRef.current = setInterval(next, 5000);
     return () => clearInterval(timerRef.current);
@@ -158,7 +152,7 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
   };
 
   return (
-    <section className="relative h-[88vh] max-h-[700px] min-h-[520px] flex items-center overflow-hidden">
+    <section className="relative h-[88vh] max-h-[700px] min-h-[520px] flex items-end sm:items-center overflow-hidden">
       {/* ── Background images ── */}
       <AnimatePresence custom={direction} initial={false}>
         <motion.div
@@ -177,7 +171,7 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
           />
           {/* Dark gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-900/70 to-gray-900/30" />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-950/60 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-950/90 via-gray-950/30 to-transparent" />
         </motion.div>
       </AnimatePresence>
 
@@ -189,7 +183,7 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.9 }}
           transition={{ duration: 0.4 }}
-          className="absolute top-20 right-4 lg:right-12 z-10"
+          className="absolute top-20 right-4 lg:right-12 z-10 hidden sm:block"
         >
           <div className={`${slide.badge} text-white px-4 py-2 rounded-full text-sm font-bold shadow-2xl flex items-center gap-2`}>
             <span className="text-lg">{slide.emoji}</span>
@@ -199,7 +193,7 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
       </AnimatePresence>
 
       {/* ── Main content ── */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 sm:py-10 lg:py-14">
         <div className="max-w-3xl">
           {/* Tag */}
           <motion.div
@@ -234,13 +228,13 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
             near you
           </h1>
 
-          <p className="text-base text-gray-300 max-w-lg mb-6 leading-relaxed">
+          <p className="text-sm sm:text-base text-gray-300 max-w-lg mb-4 sm:mb-6 leading-relaxed">
             Verified, background-checked professionals for cleaning, cooking, babysitting, and more.
             <span className="text-yellow-300 font-semibold"> Book in minutes, pay securely.</span>
           </p>
 
-          {/* Search bar */}
-          <div className="flex flex-col sm:flex-row gap-2 max-w-lg mb-5">
+          {/* Search bar — hidden on mobile, shown sm+ */}
+          <div className="hidden sm:flex flex-col sm:flex-row gap-2 max-w-lg mb-5">
             <div className="relative flex-1">
               <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               <input
@@ -270,8 +264,8 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
             </button>
           </div>
 
-          {/* CTA buttons */}
-          <div className="flex flex-wrap gap-3 mb-6">
+          {/* CTA buttons — hidden on mobile (shown below hero instead) */}
+          <div className="hidden sm:flex flex-wrap gap-3 mb-6">
             <Link
               to="/workers"
               className="inline-flex items-center gap-2 bg-white text-gray-900 font-bold px-7 py-3.5 rounded-xl text-sm transition-all duration-200 shadow-lg hover:-translate-y-0.5 hover:shadow-xl"
@@ -313,35 +307,19 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
         </div>
       </div>
 
-      {/* ── Slider controls ── */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-4">
-        <button
-          onClick={prev}
-          className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white transition-all"
-        >
-          <ChevronLeft size={18} />
-        </button>
-
-        <div className="flex items-center gap-2">
-          {HERO_SLIDES.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => go(i)}
-              className={`transition-all duration-300 rounded-full ${
-                i === current
-                  ? 'w-8 h-2.5 bg-yellow-400'
-                  : 'w-2.5 h-2.5 bg-white/40 hover:bg-white/70'
-              }`}
-            />
-          ))}
-        </div>
-
-        <button
-          onClick={next}
-          className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white transition-all"
-        >
-          <ChevronRight size={18} />
-        </button>
+      {/* ── Slider dots only ── */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2">
+        {HERO_SLIDES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => go(i)}
+            className={`transition-all duration-300 rounded-full ${
+              i === current
+                ? 'w-8 h-2.5 bg-yellow-400'
+                : 'w-2.5 h-2.5 bg-white/40 hover:bg-white/70'
+            }`}
+          />
+        ))}
       </div>
 
       {/* ── Floating service pills (bottom-right, desktop only) ── */}
@@ -439,6 +417,55 @@ const Home = () => {
           navigate={navigate}
           user={user}
         />
+      )}
+
+      {/* ── Mobile strip below hero (search + CTA buttons) — mobile only ──────── */}
+      {!isWorker && (
+        <div className="sm:hidden bg-gray-950 px-4 pt-4 pb-5 flex flex-col gap-3">
+          {/* Search bar */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input
+                type="text"
+                value={searchCity}
+                onChange={(e) => setSearchCity(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchCity.trim())
+                    navigate(`/workers?city=${encodeURIComponent(searchCity.trim())}`);
+                }}
+                placeholder="Search by city…"
+                className="w-full pl-9 pr-4 py-3 rounded-xl text-sm text-gray-900 bg-white border-0 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow placeholder-gray-400"
+              />
+            </div>
+            <button
+              onClick={() =>
+                navigate(searchCity.trim() ? `/workers?city=${encodeURIComponent(searchCity.trim())}` : '/workers')
+              }
+              className="inline-flex items-center justify-center gap-1.5 bg-yellow-400 text-gray-900 font-bold px-5 py-3 rounded-xl text-sm flex-shrink-0"
+            >
+              <Search size={15} />
+              Search
+            </button>
+          </div>
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            <Link
+              to="/workers"
+              className="flex-1 inline-flex items-center justify-center gap-2 bg-white text-gray-900 font-bold py-3 rounded-xl text-sm shadow"
+            >
+              Browse Workers <ArrowRight size={15} />
+            </Link>
+            {!user && (
+              <Link
+                to="/register"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-white/10 text-white font-semibold border border-white/25 py-3 rounded-xl text-sm"
+              >
+                Become a Worker
+              </Link>
+            )}
+          </div>
+        </div>
       )}
 
       {/* ── Services Marquee (customer only) ─────────────────────────────────── */}
@@ -741,6 +768,135 @@ const Home = () => {
               </motion.div>
             ))}
           </motion.div>
+        </div>
+      </section>
+
+      {/* ── App Download ─────────────────────────────────────────────────────── */}
+      <section className="relative py-16 overflow-hidden bg-gradient-to-br from-gray-950 to-gray-900">
+        {/* Decorative glows */}
+        <div className="absolute top-0 left-1/4 w-72 h-72 bg-primary-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+
+            {/* Left — text */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55 }}
+              className="flex-1 text-center lg:text-left"
+            >
+              <span className="inline-block bg-yellow-400/15 text-yellow-300 text-xs font-bold px-4 py-1.5 rounded-full mb-4 tracking-widest uppercase border border-yellow-400/20">
+                Coming Soon
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4 leading-tight">
+                MaidMatch on your{' '}
+                <span className="text-yellow-300">pocket</span>
+              </h2>
+              <p className="text-gray-400 text-base max-w-md mx-auto lg:mx-0 mb-8 leading-relaxed">
+                Book verified home service workers on the go. Search, book, pay and track — all from your phone.
+              </p>
+
+              {/* Store badges */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                {/* Google Play */}
+                <motion.a
+                  whileHover={{ scale: 1.04, y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                  href="#"
+                  className="flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/15 hover:border-white/30 rounded-2xl px-6 py-4 transition-colors group"
+                >
+                  {/* Play Store icon */}
+                  <svg viewBox="0 0 24 24" className="w-10 h-10 flex-shrink-0" fill="none">
+                    <path d="M3.18 23.76a2 2 0 0 1-.68-1.53V1.77A2 2 0 0 1 3.18.24L13.6 12 3.18 23.76z" fill="#4FC3F7"/>
+                    <path d="M17.07 15.93l-3.47-3.93 3.47-3.93 4.14 2.4a2 2 0 0 1 0 3.06l-4.14 2.4z" fill="#FFCA28"/>
+                    <path d="M3.18.24l10.42 11.76L7.29 6.65 3.18.24z" fill="#66BB6A"/>
+                    <path d="M3.18 23.76l4.11-6.41 6.31-5.35L3.18 23.76z" fill="#EF5350"/>
+                  </svg>
+                  <div className="text-left">
+                    <p className="text-gray-400 text-xs leading-none mb-1">GET IT ON</p>
+                    <p className="text-white font-bold text-lg leading-none">Google Play</p>
+                  </div>
+                </motion.a>
+
+                {/* App Store */}
+                <motion.a
+                  whileHover={{ scale: 1.04, y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                  href="#"
+                  className="flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/15 hover:border-white/30 rounded-2xl px-6 py-4 transition-colors group"
+                >
+                  {/* Apple icon */}
+                  <svg viewBox="0 0 24 24" className="w-10 h-10 flex-shrink-0 fill-white">
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                  </svg>
+                  <div className="text-left">
+                    <p className="text-gray-400 text-xs leading-none mb-1">DOWNLOAD ON THE</p>
+                    <p className="text-white font-bold text-lg leading-none">App Store</p>
+                  </div>
+                </motion.a>
+              </div>
+            </motion.div>
+
+            {/* Right — phone mockup */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="flex-shrink-0 flex flex-col items-center gap-4"
+            >
+              {/* QR-style placeholder + phone frame */}
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+                className="relative"
+              >
+                {/* Phone frame */}
+                <div className="w-44 h-80 bg-gradient-to-b from-gray-800 to-gray-900 rounded-[2.5rem] border-4 border-gray-700 shadow-2xl shadow-black/60 flex flex-col items-center justify-center gap-3 relative overflow-hidden">
+                  {/* Screen glow */}
+                  <div className="absolute inset-2 rounded-[2rem] bg-gradient-to-br from-primary-900 to-primary-800 flex flex-col items-center justify-center gap-3 p-4">
+                    <div className="text-5xl">🧹</div>
+                    <p className="text-white font-black text-base text-center leading-tight">Maid<span className="text-yellow-300">Match</span></p>
+                    <div className="w-full space-y-1.5">
+                      {['House Cleaning', 'Cooking', 'Elder Care'].map((s) => (
+                        <div key={s} className="bg-white/10 rounded-lg px-2.5 py-1.5 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                          <span className="text-white/80 text-xs font-medium">{s}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="w-full bg-yellow-400 rounded-xl py-2 text-center">
+                      <span className="text-gray-900 font-bold text-xs">Book Now</span>
+                    </div>
+                  </div>
+                  {/* Notch */}
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-3 bg-gray-900 rounded-full z-10" />
+                </div>
+
+                {/* Floating badges around phone */}
+                <motion.div
+                  animate={{ scale: [1, 1.08, 1], rotate: [0, 3, 0] }}
+                  transition={{ duration: 2.5, repeat: Infinity }}
+                  className="absolute -top-3 -right-6 bg-yellow-400 text-gray-900 text-xs font-black px-3 py-1.5 rounded-xl shadow-lg"
+                >
+                  4.8 ★
+                </motion.div>
+                <motion.div
+                  animate={{ scale: [1, 1.08, 1], rotate: [0, -3, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
+                  className="absolute -bottom-2 -left-8 bg-green-400 text-gray-900 text-xs font-black px-3 py-1.5 rounded-xl shadow-lg"
+                >
+                  2500+ Workers
+                </motion.div>
+              </motion.div>
+            </motion.div>
+
+          </div>
         </div>
       </section>
 
