@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin, Wallet, CalendarCheck, UserCircle, LayoutDashboard, Search } from 'lucide-react';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin, Wallet, CalendarCheck, UserCircle, LayoutDashboard, Search, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { serviceIcons, serviceLabels } from '../utils/helpers';
 import { useAuth } from '../hooks/useAuth';
 
@@ -9,6 +9,49 @@ const SERVICES = [
   'house_cleaning', 'cooking', 'babysitting',
   'elder_care', 'laundry', 'gardening',
   'driver', 'deep_cleaning', 'security_guard',
+];
+
+const HERO_SLIDES = [
+  {
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1920&q=85',
+    service: 'House Cleaning',
+    emoji: '🧹',
+    tagline: 'Spotless homes, every time',
+    accent: 'from-blue-500 to-cyan-500',
+    badge: 'bg-blue-500',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1920&q=85',
+    service: 'Cooking',
+    emoji: '👨‍🍳',
+    tagline: 'Delicious meals, home delivered',
+    accent: 'from-orange-500 to-amber-500',
+    badge: 'bg-orange-500',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1920&q=85',
+    service: 'Babysitting',
+    emoji: '👶',
+    tagline: 'Safe, caring hands for your child',
+    accent: 'from-pink-500 to-rose-500',
+    badge: 'bg-pink-500',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=1920&q=85',
+    service: 'Elder Care',
+    emoji: '❤️',
+    tagline: 'Compassionate care for your loved ones',
+    accent: 'from-violet-500 to-purple-500',
+    badge: 'bg-violet-500',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1920&q=85',
+    service: 'Gardening',
+    emoji: '🌿',
+    tagline: 'Beautiful gardens, expert care',
+    accent: 'from-emerald-500 to-green-500',
+    badge: 'bg-emerald-500',
+  },
 ];
 
 const STATS = [
@@ -57,8 +100,6 @@ const WORKER_QUICK_ACTIONS = [
   { to: '/worker/profile', icon: UserCircle, label: 'Worker Profile', desc: 'Update services & availability', gradient: 'from-violet-500 to-purple-600', lightBg: 'bg-violet-50', iconColor: 'text-violet-600', border: 'hover:border-violet-300 hover:bg-violet-50' },
 ];
 
-const fadeUp = { initial: { opacity: 0, y: 24 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.45 } };
-
 const staggerContainer = {
   animate: { transition: { staggerChildren: 0.08 } },
 };
@@ -68,6 +109,277 @@ const cardFadeUp = {
   animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
+// ── Hero Slider ───────────────────────────────────────────────────────────────
+const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
+  const [current, setCurrent] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const timerRef = useRef(null);
+
+  const go = (idx) => {
+    setDirection(idx > current ? 1 : -1);
+    setCurrent(idx);
+  };
+
+  const next = () => {
+    const idx = (current + 1) % HERO_SLIDES.length;
+    setDirection(1);
+    setCurrent(idx);
+  };
+
+  const prev = () => {
+    const idx = (current - 1 + HERO_SLIDES.length) % HERO_SLIDES.length;
+    setDirection(-1);
+    setCurrent(idx);
+  };
+
+  useEffect(() => {
+    timerRef.current = setInterval(next, 5000);
+    return () => clearInterval(timerRef.current);
+  }, [current]);
+
+  const slide = HERO_SLIDES[current];
+
+  const variants = {
+    enter: (d) => ({ opacity: 0, scale: 1.04, x: d > 0 ? 60 : -60 }),
+    center: { opacity: 1, scale: 1, x: 0, transition: { duration: 0.75, ease: [0.25, 0.46, 0.45, 0.94] } },
+    exit: (d) => ({ opacity: 0, scale: 0.97, x: d > 0 ? -60 : 60, transition: { duration: 0.5 } }),
+  };
+
+  return (
+    <section className="relative min-h-screen flex items-center overflow-hidden">
+      {/* ── Background images ── */}
+      <AnimatePresence custom={direction} initial={false}>
+        <motion.div
+          key={current}
+          custom={direction}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          className="absolute inset-0"
+        >
+          <img
+            src={slide.image}
+            alt={slide.service}
+            className="w-full h-full object-cover"
+          />
+          {/* Dark gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-900/70 to-gray-900/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-950/60 via-transparent to-transparent" />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* ── Floating service badge (top right) ── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`badge-${current}`}
+          initial={{ opacity: 0, y: -20, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10, scale: 0.9 }}
+          transition={{ duration: 0.4 }}
+          className="absolute top-24 right-6 lg:right-16 z-10"
+        >
+          <div className={`${slide.badge} text-white px-4 py-2 rounded-full text-sm font-bold shadow-2xl flex items-center gap-2`}>
+            <span className="text-lg">{slide.emoji}</span>
+            {slide.service}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* ── Main content ── */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+        <div className="max-w-3xl">
+          {/* Tag */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <span className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm text-white text-xs font-semibold px-4 py-2 rounded-full mb-6 border border-white/20">
+              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              India's Trusted Home Services Platform
+            </span>
+          </motion.div>
+
+          {/* Headline */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`text-${current}`}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <p className={`text-sm font-bold uppercase tracking-widest bg-gradient-to-r ${slide.accent} bg-clip-text text-transparent mb-3`}>
+                {slide.tagline}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight">
+            Find the perfect{' '}
+            <span className="text-yellow-300">home helper</span>
+            <br />near you
+          </h1>
+
+          <p className="text-lg sm:text-xl text-gray-300 max-w-xl mb-8 leading-relaxed">
+            Verified, background-checked professionals for cleaning, cooking, babysitting, and more.
+            <span className="text-yellow-300 font-semibold"> Book in minutes, pay securely.</span>
+          </p>
+
+          {/* Search bar */}
+          <div className="flex flex-col sm:flex-row gap-3 max-w-lg mb-8">
+            <div className="relative flex-1">
+              <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input
+                type="text"
+                value={searchCity}
+                onChange={(e) => setSearchCity(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchCity.trim())
+                    navigate(`/workers?city=${encodeURIComponent(searchCity.trim())}`);
+                }}
+                placeholder="Enter your city…"
+                className="w-full pl-10 pr-4 py-4 rounded-xl text-sm text-gray-900 bg-white border-0 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-xl placeholder-gray-400"
+              />
+            </div>
+            <button
+              onClick={() =>
+                navigate(
+                  searchCity.trim()
+                    ? `/workers?city=${encodeURIComponent(searchCity.trim())}`
+                    : '/workers'
+                )
+              }
+              className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-7 py-4 rounded-xl text-sm transition-all duration-200 shadow-xl shadow-yellow-400/30 hover:-translate-y-0.5 flex-shrink-0"
+            >
+              <Search size={16} />
+              Search Workers
+            </button>
+          </div>
+
+          {/* CTA buttons */}
+          <div className="flex flex-wrap gap-3 mb-10">
+            <Link
+              to="/workers"
+              className="inline-flex items-center gap-2 bg-white text-gray-900 font-bold px-7 py-3.5 rounded-xl text-sm transition-all duration-200 shadow-lg hover:-translate-y-0.5 hover:shadow-xl"
+            >
+              Browse All Workers <ArrowRight size={16} />
+            </Link>
+            {!user && (
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-7 py-3.5 rounded-xl text-sm transition-all duration-200 backdrop-blur-sm"
+              >
+                Join as a Worker
+              </Link>
+            )}
+          </div>
+
+          {/* Trust badges */}
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex -space-x-2">
+              {['A', 'R', 'M', 'S', 'P'].map((l, i) => (
+                <div
+                  key={i}
+                  className="w-9 h-9 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-400 border-2 border-gray-900 flex items-center justify-center text-xs font-black text-gray-900"
+                >
+                  {l}
+                </div>
+              ))}
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm">2,500+ verified workers</p>
+              <div className="flex items-center gap-1 mt-0.5">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star key={s} size={12} className="fill-yellow-400 text-yellow-400" />
+                ))}
+                <span className="text-gray-300 text-xs ml-1">4.8 avg rating</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Slider controls ── */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-4">
+        <button
+          onClick={prev}
+          className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white transition-all"
+        >
+          <ChevronLeft size={18} />
+        </button>
+
+        <div className="flex items-center gap-2">
+          {HERO_SLIDES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => go(i)}
+              className={`transition-all duration-300 rounded-full ${
+                i === current
+                  ? 'w-8 h-2.5 bg-yellow-400'
+                  : 'w-2.5 h-2.5 bg-white/40 hover:bg-white/70'
+              }`}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={next}
+          className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white transition-all"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
+      {/* ── Floating service pills (bottom-right, desktop only) ── */}
+      <div className="absolute bottom-20 right-6 lg:right-16 z-10 hidden lg:flex flex-col gap-2">
+        {HERO_SLIDES.map((s, i) => (
+          <motion.div
+            key={s.service}
+            animate={{ opacity: i === current ? 1 : 0.4, scale: i === current ? 1.05 : 1 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs font-semibold px-3.5 py-2 rounded-full cursor-pointer hover:bg-white/20 transition-colors"
+            onClick={() => go(i)}
+          >
+            <span>{s.emoji}</span>
+            {s.service}
+          </motion.div>
+        ))}
+      </div>
+
+      {/* ── Scroll indicator ── */}
+      <motion.div
+        animate={{ y: [0, 8, 0] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+        className="absolute bottom-8 right-8 text-white/50 hidden lg:flex flex-col items-center gap-1 text-xs"
+      >
+        <div className="w-px h-8 bg-gradient-to-b from-transparent to-white/40" />
+        <span>scroll</span>
+      </motion.div>
+    </section>
+  );
+};
+
+// ── Services Marquee ─────────────────────────────────────────────────────────
+const ServicesMarquee = () => (
+  <div className="bg-gray-950 py-4 overflow-hidden border-y border-gray-800">
+    <motion.div
+      animate={{ x: ['0%', '-50%'] }}
+      transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+      className="flex gap-8 whitespace-nowrap"
+    >
+      {[...SERVICES, ...SERVICES].map((svc, i) => (
+        <span key={i} className="inline-flex items-center gap-2 text-gray-400 text-sm font-medium">
+          <span className="text-lg">{serviceIcons[svc]}</span>
+          {serviceLabels[svc]}
+          <span className="text-gray-700 mx-2">•</span>
+        </span>
+      ))}
+    </motion.div>
+  </div>
+);
+
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -76,95 +388,49 @@ const Home = () => {
 
   return (
     <div className="min-h-screen">
-      {/* ── Hero ────────────────────────────────────────────────────────────── */}
-      <section className="relative bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 overflow-hidden pt-20 pb-28">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 70% 40%, white 0%, transparent 55%)' }} />
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-white" style={{ clipPath: 'ellipse(55% 100% at 50% 100%)' }} />
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center">
-            <motion.div {...fadeUp} className="text-center lg:text-left">
-              <span className="inline-block bg-white/15 text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-wider uppercase">
-                India's Trusted Home Services Platform
+      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
+      {isWorker ? (
+        /* Worker hero — compact dashboard entry */
+        <section className="relative bg-gradient-to-br from-gray-950 via-primary-900 to-primary-800 overflow-hidden pt-24 pb-20 min-h-[50vh] flex items-center">
+          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 70% 40%, #6366f1 0%, transparent 60%)' }} />
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, #f59e0b 0%, transparent 50%)' }} />
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white text-xs font-semibold px-4 py-2 rounded-full mb-6 border border-white/20">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                Worker Dashboard
               </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
-                Find the perfect{' '}
-                <span className="text-yellow-300">home helper</span>{' '}
-                near you
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-4">
+                Welcome back,{' '}
+                <span className="text-yellow-300">{user?.name?.split(' ')[0] || 'Worker'}</span> 👋
               </h1>
-              <p className="mt-5 text-lg text-primary-100 max-w-xl mx-auto lg:mx-0">
-                Verified, background-checked professionals for cleaning, cooking, babysitting, and more. Book in minutes, pay securely.
+              <p className="text-lg text-primary-200 mb-8 max-w-lg mx-auto">
+                Manage your bookings, track earnings, and grow your reputation — all in one place.
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                {isWorker ? (
-                  <Link
-                    to="/worker/dashboard"
-                    className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all duration-200 shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
-                  >
-                    Go to Dashboard <ArrowRight size={18} />
-                  </Link>
-                ) : (
-                  <>
-                    <Link
-                      to="/workers"
-                      className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all duration-200 shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
-                    >
-                      Find a Worker <ArrowRight size={18} />
-                    </Link>
-                    {!user && (
-                      <Link
-                        to="/register"
-                        className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all duration-200"
-                      >
-                        Join as a Worker
-                      </Link>
-                    )}
-                  </>
-                )}
-              </div>
-              <div className="mt-8 flex items-center gap-6 justify-center lg:justify-start">
-                <div className="flex -space-x-2">
-                  {['A', 'R', 'M', 'S'].map((l, i) => (
-                    <div key={i} className="w-8 h-8 rounded-full bg-yellow-300 border-2 border-primary-800 flex items-center justify-center text-xs font-bold text-primary-900">
-                      {l}
-                    </div>
-                  ))}
-                </div>
-                <p className="text-sm text-primary-200">
-                  <span className="font-bold text-white">2,500+</span> workers ready to help
-                </p>
-              </div>
-            </motion.div>
-
-            {!isWorker && (
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.15 }}
-                className="hidden lg:block"
+              <Link
+                to="/worker/dashboard"
+                className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-4 rounded-xl text-base transition-all duration-200 shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
               >
-                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-3xl p-6 shadow-2xl">
-                  <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-4">Available Services</p>
-                  <div className="grid grid-cols-3 gap-3">
-                    {SERVICES.map((svc) => (
-                      <Link
-                        key={svc}
-                        to={`/workers?service=${svc}`}
-                        className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-center group"
-                      >
-                        <span className="text-2xl leading-none">{serviceIcons[svc]}</span>
-                        <span className="text-xs text-white/80 group-hover:text-white font-medium leading-tight">
-                          {serviceLabels[svc]}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            )}
+                Go to Dashboard <ArrowRight size={18} />
+              </Link>
+            </motion.div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <HeroSlider
+          searchCity={searchCity}
+          setSearchCity={setSearchCity}
+          navigate={navigate}
+          user={user}
+        />
+      )}
+
+      {/* ── Services Marquee (customer only) ─────────────────────────────────── */}
+      {!isWorker && <ServicesMarquee />}
 
       {/* ── Stats ────────────────────────────────────────────────────────────── */}
       <section className="bg-white border-b border-gray-100">
@@ -194,70 +460,60 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── Book a Worker ─────────────────────────────────────────────────────── */}
-      {!isWorker && (
-        <section className="py-16 bg-gradient-to-r from-primary-900 to-primary-700 relative overflow-hidden">
-          {/* Background decoration */}
-          <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, white 0%, transparent 60%)' }} />
-          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <motion.div {...fadeUp} viewport={{ once: true }}>
-              <span className="inline-block bg-yellow-400/20 text-yellow-300 text-xs font-semibold px-4 py-1.5 rounded-full mb-4 tracking-widest uppercase">
-                Book Instantly
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">
-                Book a Verified Worker Today
-              </h2>
-              <p className="text-primary-200 text-base mb-8 max-w-xl mx-auto">
-                Search by city or service. Browse verified profiles, compare prices, and book in minutes.
-              </p>
-
-              {/* Search bar */}
-              <div className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto mb-8">
-                <div className="relative flex-1">
-                  <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchCity}
-                    onChange={(e) => setSearchCity(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && searchCity.trim()) navigate(`/workers?city=${encodeURIComponent(searchCity.trim())}`); }}
-                    placeholder="Enter your city…"
-                    className="w-full pl-10 pr-4 py-3.5 rounded-xl text-sm text-gray-900 bg-white border-0 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-lg"
-                  />
-                </div>
-                <button
-                  onClick={() => navigate(searchCity.trim() ? `/workers?city=${encodeURIComponent(searchCity.trim())}` : '/workers')}
-                  className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-7 py-3.5 rounded-xl text-sm transition-all duration-200 shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5 flex-shrink-0"
-                >
-                  <Search size={16} />
-                  Search Workers
-                </button>
-              </div>
-
-              {/* Popular service quick-links */}
-              <div className="flex flex-wrap justify-center gap-2">
-                <p className="w-full text-primary-300 text-xs font-semibold uppercase tracking-widest mb-1">Popular services</p>
-                {['house_cleaning', 'cooking', 'babysitting', 'elder_care', 'driver'].map((svc) => (
+      {/* ── Worker Quick Actions ───────────────────────────────────────────────── */}
+      {isWorker && (
+        <section className="py-16 bg-gradient-to-b from-white to-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45 }}
+              className="text-center mb-10"
+            >
+              <span className="inline-block bg-primary-50 text-primary-600 text-sm font-semibold px-4 py-1.5 rounded-full mb-3">Your Workspace</span>
+              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">Quick Actions</h2>
+              <p className="mt-3 text-gray-500 max-w-xl mx-auto">Everything you need, one click away.</p>
+            </motion.div>
+            <motion.div
+              variants={staggerContainer}
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true, margin: '-40px' }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+            >
+              {WORKER_QUICK_ACTIONS.map(({ to, icon: Icon, label, desc, gradient, lightBg, iconColor, border }) => (
+                <motion.div key={to} variants={cardFadeUp}>
                   <Link
-                    key={svc}
-                    to={`/workers?service=${svc}`}
-                    className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-3.5 py-1.5 rounded-full border border-white/20 transition-colors"
+                    to={to}
+                    className={`group flex flex-col items-center gap-4 p-7 bg-white rounded-2xl border border-gray-100 ${border} shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-200 text-center relative overflow-hidden`}
                   >
-                    {serviceIcons[svc]} {serviceLabels[svc]}
+                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradient} rounded-t-2xl`} />
+                    <div className={`w-16 h-16 ${lightBg} rounded-2xl flex items-center justify-center transition-all duration-200 shadow-sm`}>
+                      <Icon size={28} className={`${iconColor}`} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 text-base group-hover:text-gray-800 transition-colors">{label}</p>
+                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{desc}</p>
+                    </div>
+                    <span className={`text-xs font-semibold ${iconColor} opacity-0 group-hover:opacity-100 transition-opacity`}>Go →</span>
                   </Link>
-                ))}
-              </div>
+                </motion.div>
+              ))}
             </motion.div>
           </div>
         </section>
       )}
 
-      {/* ── Services Grid ─────────────────────────────────────────────────────── */}
+      {/* ── Services Grid (customer only) ─────────────────────────────────────── */}
       {!isWorker && (
         <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
-              {...fadeUp}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.45 }}
               className="text-center mb-12"
             >
               <span className="inline-block bg-primary-50 text-primary-600 text-sm font-semibold px-4 py-1.5 rounded-full mb-3 tracking-wide">What We Offer</span>
@@ -297,49 +553,16 @@ const Home = () => {
         </section>
       )}
 
-      {/* ── Worker Quick Actions ───────────────────────────────────────────────── */}
-      {isWorker && (
-        <section className="py-16 bg-gradient-to-b from-white to-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div {...fadeUp} viewport={{ once: true }} className="text-center mb-10">
-              <span className="inline-block bg-primary-50 text-primary-600 text-sm font-semibold px-4 py-1.5 rounded-full mb-3">Your Workspace</span>
-              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">Quick Actions</h2>
-              <p className="mt-3 text-gray-500 max-w-xl mx-auto">Everything you need, one click away.</p>
-            </motion.div>
-            <motion.div
-              variants={staggerContainer}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true, margin: '-40px' }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
-            >
-              {WORKER_QUICK_ACTIONS.map(({ to, icon: Icon, label, desc, gradient, lightBg, iconColor, border }) => (
-                <motion.div key={to} variants={cardFadeUp}>
-                  <Link
-                    to={to}
-                    className={`group flex flex-col items-center gap-4 p-7 bg-white rounded-2xl border border-gray-100 ${border} shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-200 text-center relative overflow-hidden`}
-                  >
-                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradient} rounded-t-2xl`} />
-                    <div className={`w-16 h-16 ${lightBg} rounded-2xl flex items-center justify-center transition-all duration-200 shadow-sm`}>
-                      <Icon size={28} className={`${iconColor}`} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-900 text-base group-hover:text-gray-800 transition-colors">{label}</p>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{desc}</p>
-                    </div>
-                    <span className={`text-xs font-semibold ${iconColor} opacity-0 group-hover:opacity-100 transition-opacity`}>Go →</span>
-                  </Link>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-      )}
-
       {/* ── How it Works ──────────────────────────────────────────────────────── */}
       <section className={`py-20 ${isWorker ? 'bg-gray-50' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeUp} viewport={{ once: true }} className="text-center mb-14">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45 }}
+            className="text-center mb-14"
+          >
             <span className="inline-block bg-primary-50 text-primary-600 text-sm font-semibold px-4 py-1.5 rounded-full mb-3">How It Works</span>
             <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
               {isWorker ? 'Start earning in 4 steps' : 'Book in 4 simple steps'}
@@ -378,7 +601,13 @@ const Home = () => {
       {/* ── Features ──────────────────────────────────────────────────────────── */}
       <section className={`py-20 ${isWorker ? 'bg-white' : 'bg-gradient-to-b from-gray-50 to-white'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeUp} viewport={{ once: true }} className="text-center mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45 }}
+            className="text-center mb-12"
+          >
             <span className="inline-block bg-primary-50 text-primary-600 text-sm font-semibold px-4 py-1.5 rounded-full mb-3">Why MaidMatch</span>
             <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
               {isWorker ? 'Built for workers like you' : 'Built for trust & reliability'}
@@ -398,11 +627,8 @@ const Home = () => {
                 variants={cardFadeUp}
                 className={`group bg-white rounded-2xl border border-gray-100 ${border} shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 p-7 relative overflow-hidden`}
               >
-                {/* Top gradient bar */}
                 <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradient} rounded-t-2xl`} />
-                {/* Subtle background glow on hover */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-300 rounded-2xl`} />
-
                 <div className={`w-12 h-12 rounded-xl ${lightBg} flex items-center justify-center mb-5 relative`}>
                   <Icon size={22} className={iconColor} />
                 </div>
@@ -415,52 +641,68 @@ const Home = () => {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-primary-800 via-primary-700 to-primary-600 py-20 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 30% 60%, white 0%, transparent 50%)' }} />
+      <section className="relative py-24 overflow-hidden">
+        {/* Background image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1920&q=80')" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/95 via-primary-800/90 to-primary-700/85" />
+
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">
-            {isWorker ? 'Ready to grow your income?' : 'Ready to find your perfect match?'}
-          </h2>
-          <p className="text-primary-200 text-lg mb-10">
-            {isWorker
-              ? 'Keep your profile updated, accept more bookings, and watch your wallet grow.'
-              : 'Join thousands of happy customers who trust MaidMatch for their home service needs.'}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {isWorker ? (
-              <>
-                <Link
-                  to="/worker/dashboard"
-                  className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
-                >
-                  Go to Dashboard <ArrowRight size={18} />
-                </Link>
-                <Link
-                  to="/worker/bookings"
-                  className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all"
-                >
-                  View My Bookings
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/workers"
-                  className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
-                >
-                  Browse Workers <ArrowRight size={18} />
-                </Link>
-                {!user && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <span className="inline-block bg-yellow-400/20 text-yellow-300 text-xs font-semibold px-4 py-1.5 rounded-full mb-5 tracking-widest uppercase border border-yellow-400/30">
+              {isWorker ? 'Keep Growing' : 'Get Started Today'}
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-black text-white mb-5 leading-tight">
+              {isWorker ? 'Ready to grow your income?' : 'Ready to find your perfect match?'}
+            </h2>
+            <p className="text-primary-200 text-lg mb-10 max-w-xl mx-auto">
+              {isWorker
+                ? 'Keep your profile updated, accept more bookings, and watch your wallet grow.'
+                : 'Join thousands of happy customers who trust MaidMatch for their home service needs.'}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {isWorker ? (
+                <>
                   <Link
-                    to="/register"
-                    className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all"
+                    to="/worker/dashboard"
+                    className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-4 rounded-xl text-base transition-all shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
                   >
-                    Register as Worker
+                    Go to Dashboard <ArrowRight size={18} />
                   </Link>
-                )}
-              </>
-            )}
-          </div>
+                  <Link
+                    to="/worker/bookings"
+                    className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-4 rounded-xl text-base transition-all backdrop-blur-sm"
+                  >
+                    View My Bookings
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/workers"
+                    className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-4 rounded-xl text-base transition-all shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
+                  >
+                    Browse Workers <ArrowRight size={18} />
+                  </Link>
+                  {!user && (
+                    <Link
+                      to="/register"
+                      className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-4 rounded-xl text-base transition-all backdrop-blur-sm"
+                    >
+                      Register as Worker
+                    </Link>
+                  )}
+                </>
+              )}
+            </div>
+          </motion.div>
         </div>
       </section>
     </div>
