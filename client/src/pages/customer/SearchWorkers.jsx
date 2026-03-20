@@ -212,7 +212,11 @@ export default function SearchWorkers() {
         let list = data.data?.workers || data.workers || data.data || [];
         // Exclude logged-in worker from their own search results
         if (user?.role === 'worker') {
-          list = list.filter((w) => w.user_id?._id !== user._id && w.user_id !== user._id);
+          const userId = user._id || user.id;
+          list = list.filter((w) => {
+            const wUserId = w.user_id?._id || w.user_id;
+            return String(wUserId) !== String(userId);
+          });
         }
         const total = data.data?.total ?? data.total ?? list.length;
         const limitUsed = 9;
@@ -231,7 +235,7 @@ export default function SearchWorkers() {
         setLoadingMore(false);
       }
     },
-    [buildParams]
+    [buildParams, user]
   );
 
   // Initial load + filter changes

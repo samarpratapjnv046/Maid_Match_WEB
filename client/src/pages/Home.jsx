@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin } from 'lucide-react';
+import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin, Wallet, CalendarCheck, UserCircle, LayoutDashboard } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { serviceIcons, serviceLabels } from '../utils/helpers';
 import { useAuth } from '../hooks/useAuth';
@@ -25,6 +25,29 @@ const HOW_IT_WORKS = [
 ];
 
 const fadeUp = { initial: { opacity: 0, y: 24 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.45 } };
+
+const WORKER_HOW_IT_WORKS = [
+  { step: '01', title: 'Complete Your Profile', desc: 'Add your services, pricing, location, and upload a profile photo to attract customers.' },
+  { step: '02', title: 'Get Booking Requests', desc: 'Customers find you through search. You receive booking requests and choose to accept or decline.' },
+  { step: '03', title: 'Complete the Job', desc: 'Arrive on time, do the job, and collect the customer\'s OTP to mark the booking complete.' },
+  { step: '04', title: 'Get Paid Instantly', desc: 'Earnings are credited to your wallet immediately after OTP verification. Withdraw anytime.' },
+];
+
+const WORKER_FEATURES = [
+  { icon: Wallet, title: 'Instant Wallet Payouts', desc: 'Earnings land in your MaidMatch wallet right after job completion. Withdraw to your bank at any time.', color: 'text-green-600 bg-green-50' },
+  { icon: Shield, title: 'Verified Badge', desc: 'Complete Aadhaar verification to get a Verified badge on your profile — boosting customer trust and bookings.', color: 'text-blue-600 bg-blue-50' },
+  { icon: Star, title: 'Build Your Reputation', desc: 'Genuine reviews from completed bookings help you rank higher in search results and earn more.', color: 'text-yellow-600 bg-yellow-50' },
+  { icon: CalendarCheck, title: 'Flexible Scheduling', desc: 'Accept only the bookings you want. Set your own availability and service pricing — hourly, daily, or monthly.', color: 'text-purple-600 bg-purple-50' },
+  { icon: TrendingUp, title: 'Grow Your Income', desc: 'The more bookings you complete and the better your rating, the higher you appear in customer searches.', color: 'text-red-600 bg-red-50' },
+  { icon: MapPin, title: 'Work Locally', desc: 'Customers search by pincode and city — you only get requests from people near you.', color: 'text-indigo-600 bg-indigo-50' },
+];
+
+const WORKER_QUICK_ACTIONS = [
+  { to: '/worker/dashboard', icon: LayoutDashboard, label: 'Dashboard', desc: 'View your overview and stats' },
+  { to: '/worker/bookings', icon: CalendarCheck, label: 'My Bookings', desc: 'Manage pending & active jobs' },
+  { to: '/worker/wallet', icon: Wallet, label: 'My Wallet', desc: 'Check earnings & withdraw' },
+  { to: '/worker/profile', icon: UserCircle, label: 'Worker Profile', desc: 'Update services & availability' },
+];
 
 const Home = () => {
   const { user } = useAuth();
@@ -68,12 +91,14 @@ const Home = () => {
                     >
                       Find a Worker <ArrowRight size={18} />
                     </Link>
-                    <Link
-                      to="/register"
-                      className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all duration-200"
-                    >
-                      Join as a Worker
-                    </Link>
+                    {!user && (
+                      <Link
+                        to="/register"
+                        className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all duration-200"
+                      >
+                        Join as a Worker
+                      </Link>
+                    )}
                   </>
                 )}
               </div>
@@ -170,16 +195,48 @@ const Home = () => {
         </section>
       )}
 
+      {/* ── Worker Quick Actions ───────────────────────────────────────────────── */}
+      {isWorker && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-10">
+              <span className="text-primary-600 text-sm font-semibold uppercase tracking-widest">Your Workspace</span>
+              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">Quick Actions</h2>
+              <p className="mt-3 text-gray-500 max-w-xl mx-auto">Everything you need, one click away.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {WORKER_QUICK_ACTIONS.map(({ to, icon: Icon, label, desc }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="group flex flex-col items-center gap-3 p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:border-primary-300 hover:bg-primary-50 hover:shadow-md hover:-translate-y-1 transition-all duration-200 text-center"
+                >
+                  <div className="w-14 h-14 bg-primary-100 group-hover:bg-primary-200 rounded-2xl flex items-center justify-center transition-colors">
+                    <Icon size={26} className="text-primary-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900 group-hover:text-primary-700 transition-colors">{label}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── How it Works ──────────────────────────────────────────────────────── */}
-      <section className="py-20 bg-white">
+      <section className={`py-20 ${isWorker ? 'bg-gray-50' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="text-primary-600 text-sm font-semibold uppercase tracking-widest">How It Works</span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">Book in 4 simple steps</h2>
+            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
+              {isWorker ? 'Start earning in 4 steps' : 'Book in 4 simple steps'}
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {HOW_IT_WORKS.map(({ step, title, desc }, idx) => (
+            {(isWorker ? WORKER_HOW_IT_WORKS : HOW_IT_WORKS).map(({ step, title, desc }, idx) => (
               <div key={step} className="relative">
                 {idx < HOW_IT_WORKS.length - 1 && (
                   <div className="hidden lg:block absolute top-8 left-full w-full h-px bg-gradient-to-r from-primary-200 to-transparent z-0" />
@@ -198,52 +255,24 @@ const Home = () => {
       </section>
 
       {/* ── Features ──────────────────────────────────────────────────────────── */}
-      <section className="py-20 bg-gray-50">
+      <section className={`py-20 ${isWorker ? 'bg-white' : 'bg-gray-50'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-primary-600 text-sm font-semibold uppercase tracking-widest">Why MaidMatch</span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">Built for trust & reliability</h2>
+            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
+              {isWorker ? 'Built for workers like you' : 'Built for trust & reliability'}
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Shield,
-                title: 'Aadhaar Verified',
-                desc: 'Every worker undergoes mandatory Aadhaar card verification and background checks before being listed.',
-                color: 'text-blue-600 bg-blue-50',
-              },
-              {
-                icon: Star,
-                title: 'Genuine Reviews',
-                desc: 'Only customers who have completed a booking can leave a review — so you always see honest feedback.',
-                color: 'text-yellow-600 bg-yellow-50',
-              },
-              {
-                icon: Clock,
-                title: 'OTP-Protected Completion',
-                desc: 'Payments are secured with a one-time password. Workers get paid only after you confirm the job is done.',
-                color: 'text-green-600 bg-green-50',
-              },
-              {
-                icon: TrendingUp,
-                title: 'Transparent Pricing',
-                desc: 'See hourly, daily, and monthly rates upfront. No hidden fees — what you see is what you pay.',
-                color: 'text-purple-600 bg-purple-50',
-              },
-              {
-                icon: CheckCircle,
-                title: 'Razorpay Secured',
-                desc: 'Payments are processed by India\'s leading payment gateway, Razorpay. Your data is always safe.',
-                color: 'text-green-600 bg-green-50',
-              },
-              {
-                icon: MapPin,
-                title: 'Location-Based Search',
-                desc: 'Find workers near you using our geospatial search. Filter by city, service, rating, and price.',
-                color: 'text-red-600 bg-red-50',
-              },
-            ].map(({ icon: Icon, title, desc, color }) => (
+            {(isWorker ? WORKER_FEATURES : [
+              { icon: Shield, title: 'Aadhaar Verified', desc: 'Every worker undergoes mandatory Aadhaar card verification and background checks before being listed.', color: 'text-blue-600 bg-blue-50' },
+              { icon: Star, title: 'Genuine Reviews', desc: 'Only customers who have completed a booking can leave a review — so you always see honest feedback.', color: 'text-yellow-600 bg-yellow-50' },
+              { icon: Clock, title: 'OTP-Protected Completion', desc: 'Payments are secured with a one-time password. Workers get paid only after you confirm the job is done.', color: 'text-green-600 bg-green-50' },
+              { icon: TrendingUp, title: 'Transparent Pricing', desc: 'See hourly, daily, and monthly rates upfront. No hidden fees — what you see is what you pay.', color: 'text-purple-600 bg-purple-50' },
+              { icon: CheckCircle, title: 'Razorpay Secured', desc: "Payments are processed by India's leading payment gateway, Razorpay. Your data is always safe.", color: 'text-green-600 bg-green-50' },
+              { icon: MapPin, title: 'Location-Based Search', desc: 'Find workers near you using our geospatial search. Filter by city, service, rating, and price.', color: 'text-red-600 bg-red-50' },
+            ]).map(({ icon: Icon, title, desc, color }) => (
               <div
                 key={title}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
@@ -263,35 +292,46 @@ const Home = () => {
       <section className="bg-primary-700 py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">
-            Ready to find your perfect match?
+            {isWorker ? 'Ready to grow your income?' : 'Ready to find your perfect match?'}
           </h2>
           <p className="text-primary-200 text-lg mb-10">
-            Join thousands of happy customers who trust MaidMatch for their home service needs.
+            {isWorker
+              ? 'Keep your profile updated, accept more bookings, and watch your wallet grow.'
+              : 'Join thousands of happy customers who trust MaidMatch for their home service needs.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {!isWorker && (
-              <Link
-                to="/workers"
-                className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all shadow-lg"
-              >
-                Browse Workers <ArrowRight size={18} />
-              </Link>
-            )}
-            {!isWorker && (
-              <Link
-                to="/register"
-                className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all"
-              >
-                Register as Worker
-              </Link>
-            )}
-            {isWorker && (
-              <Link
-                to="/worker/dashboard"
-                className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all shadow-lg"
-              >
-                Go to Dashboard <ArrowRight size={18} />
-              </Link>
+            {isWorker ? (
+              <>
+                <Link
+                  to="/worker/dashboard"
+                  className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all shadow-lg"
+                >
+                  Go to Dashboard <ArrowRight size={18} />
+                </Link>
+                <Link
+                  to="/worker/bookings"
+                  className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all"
+                >
+                  View My Bookings
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/workers"
+                  className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3.5 rounded-xl text-base transition-all shadow-lg"
+                >
+                  Browse Workers <ArrowRight size={18} />
+                </Link>
+                {!user && (
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl text-base transition-all"
+                  >
+                    Register as Worker
+                  </Link>
+                )}
+              </>
             )}
           </div>
         </div>

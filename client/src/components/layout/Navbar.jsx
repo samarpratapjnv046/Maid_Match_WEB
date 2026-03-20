@@ -43,11 +43,11 @@ export default function Navbar() {
   const photo = user?.profilePhoto?.url;
   const initials = user?.name?.[0]?.toUpperCase() || '?';
 
-  const navLinks = user?.role === 'admin'
+  const navLinks = user?.role === 'admin' || user?.role === 'worker'
     ? []
     : [
         { to: '/', label: 'Home' },
-        ...(user?.role !== 'worker' ? [{ to: '/workers', label: 'Find a Maid' }] : []),
+        { to: '/workers', label: 'Find a Maid' },
       ];
 
   const userMenuLinks = user?.role === 'customer'
