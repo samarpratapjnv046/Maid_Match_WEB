@@ -111,8 +111,9 @@ function VerificationBadge({ status }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function WorkerProfile() {
-  const { user } = useAuth();
+  const { user, switchMode } = useAuth();
   const navigate = useNavigate();
+  const isSetupMode = user?.role === 'customer'; // customer completing profile to switch to worker
   const photoInputRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
@@ -294,12 +295,21 @@ export default function WorkerProfile() {
       if (profileExists) {
         await api.patch('/workers/profile', payload);
         toast.success('Profile updated successfully!');
+        fetchProfile();
       } else {
         await api.post('/workers/profile', payload);
-        toast.success('Profile created! You can now receive bookings.');
+        toast.success('Profile created! Switching you to worker mode…');
+        // If a customer just completed setup, switch their role to worker
+        if (isSetupMode) {
+          const result = await switchMode('worker');
+          if (result?.role === 'worker') {
+            navigate('/worker/dashboard');
+            return;
+          }
+        }
         setProfileExists(true);
+        fetchProfile();
       }
-      fetchProfile();
     } catch (err) {
       const msg = err?.response?.data?.message || 'Failed to save profile.';
       toast.error(msg);
@@ -329,13 +339,15 @@ export default function WorkerProfile() {
       <div className="bg-[#1B2B4B] py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           <p className="text-[#C9A84C] text-xs font-semibold uppercase tracking-widest mb-2">
-            Worker Portal
+            {isSetupMode ? 'Become a Worker' : 'Worker Portal'}
           </p>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-white">
-            {profileExists ? 'Edit Profile' : 'Create Profile'}
+            {isSetupMode ? 'Complete Your Worker Profile' : profileExists ? 'Edit Profile' : 'Create Profile'}
           </h1>
           <p className="mt-2 text-gray-400 text-sm">
-            {profileExists
+            {isSetupMode
+              ? 'Fill in your details to start offering services and receiving booking requests.'
+              : profileExists
               ? 'Keep your profile up-to-date to attract more customers.'
               : 'Set up your worker profile to start receiving booking requests.'}
           </p>

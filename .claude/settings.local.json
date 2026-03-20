@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npm install:*)",
       "Bash(npm run:*)",
-      "Bash(find /c/Users/RiteshSingh/Desktop/Maid_Match/client/src -type f \\\\\\(-name *.jsx -o -name *.js -o -name *.tsx -o -name *.ts \\\\\\))"
+      "Bash(find /c/Users/RiteshSingh/Desktop/Maid_Match/client/src -type f \\\\\\(-name *.jsx -o -name *.js -o -name *.tsx -o -name *.ts \\\\\\))",
+      "Bash(grep -r \"className.*card\\\\|className.*Card\" c:UsersRiteshSinghDesktopMaid_Match/client/src --include=*.jsx --include=*.tsx)",
+      "Bash(find c:UsersRiteshSinghDesktopMaid_Match/client -maxdepth 2 -name tailwind.config.* -o -name *.config.js)",
+      "Bash(netstat -ano)"
     ]
   }
 }

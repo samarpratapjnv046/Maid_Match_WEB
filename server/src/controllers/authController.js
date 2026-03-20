@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Worker from '../models/Worker.js';
-import { sendTokens, generateAccessToken } from '../utils/generateToken.js';
+import { sendTokens, generateAccessToken, generateRefreshToken } from '../utils/generateToken.js';
 import { AppError } from '../utils/errorHandler.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 
@@ -72,7 +72,9 @@ export const refreshToken = async (req, res, next) => {
     const user = await User.findById(decoded.id);
     if (!user) return next(new AppError('User not found.', 401));
 
-    const accessToken = generateAccessToken(user._id, user.role);
+    // Preserve the active mode stored in the refresh token (not the DB role)
+    const activeRole = decoded.role || user.role;
+    const accessToken = generateAccessToken(user._id, activeRole);
     res.json({ success: true, accessToken });
   } catch (err) {
     next(err);
@@ -101,7 +103,10 @@ export const logout = async (req, res, next) => {
 export const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
-    res.json({ success: true, data: user });
+    if (!user) return next(new AppError('User not found.', 404));
+    // Return role from JWT (reflects active mode), not the DB field
+    const data = { ...user.toObject(), role: req.user.role };
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }
@@ -139,6 +144,58 @@ export const updateMe = async (req, res, next) => {
     });
 
     res.json({ success: true, data: user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Switch active role (customer ↔ worker)
+// @route   POST /api/auth/switch-mode
+// @access  Private
+export const switchMode = async (req, res, next) => {
+  try {
+    const { mode } = req.body;
+    if (!['customer', 'worker'].includes(mode)) {
+      return next(new AppError('Invalid mode. Must be "customer" or "worker".', 400));
+    }
+
+    // Admins cannot switch modes
+    if (req.user.role === 'admin') {
+      return next(new AppError('Admins cannot switch modes.', 403));
+    }
+
+    if (mode === 'worker') {
+      const workerProfile = await Worker.findOne({ user_id: req.user._id });
+      if (!workerProfile) {
+        // Signal to frontend: redirect to profile setup
+        return res.json({ success: true, needsProfile: true });
+      }
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) return next(new AppError('User not found.', 404));
+
+    const accessToken = generateAccessToken(user._id, mode);
+    // Issue a new refresh token that also carries the switched role so that
+    // token-refresh and page-reload both honour the active mode.
+    const newRefreshToken = generateRefreshToken(user._id, mode);
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    res.json({
+      success: true,
+      accessToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: mode,
+      },
+    });
   } catch (err) {
     next(err);
   }

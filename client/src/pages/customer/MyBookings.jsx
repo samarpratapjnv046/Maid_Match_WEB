@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Calendar, Clock, MapPin, ChevronRight, Trash2 } from 'lucide-react';
 import api from '../../api/axios';
-import { useAuth } from '../../context/AuthContext';
 import Spinner from '../../components/common/Spinner';
 import StarRating from '../../components/common/StarRating';
 import {
@@ -149,7 +148,6 @@ function BookingCard({ booking, onDelete }) {
 }
 
 export default function MyBookings() {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -160,7 +158,6 @@ export default function MyBookings() {
     try {
       const params = new URLSearchParams();
       if (status && status !== 'all') {
-        // Map tab key to status values
         const statusMap = {
           offer_pending: 'offer_pending',
           accepted: 'accepted',
@@ -246,7 +243,7 @@ export default function MyBookings() {
               <h3 className="font-serif text-xl font-semibold text-[#1B2B4B] mb-2">{empty.title}</h3>
               <p className="text-gray-500 text-sm max-w-xs mb-6">{empty.description}</p>
               <Link
-                to="/search"
+                to="/workers"
                 className="inline-flex items-center gap-2 bg-[#C9A84C] hover:bg-[#b8923e] text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors shadow-sm"
               >
                 Find Workers

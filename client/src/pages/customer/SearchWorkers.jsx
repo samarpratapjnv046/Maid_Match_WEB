@@ -210,8 +210,8 @@ export default function SearchWorkers() {
         const params = buildParams(pageNum);
         const { data } = await api.get(`/workers/search?${params.toString()}`);
         let list = data.data?.workers || data.workers || data.data || [];
-        // Exclude logged-in worker from their own search results
-        if (user?.role === 'worker') {
+        // Always exclude the logged-in user's own worker profile (even in customer mode after a switch)
+        if (user) {
           const userId = user._id || user.id;
           list = list.filter((w) => {
             const wUserId = w.user_id?._id || w.user_id;

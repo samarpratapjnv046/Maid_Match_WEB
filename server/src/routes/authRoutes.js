@@ -7,6 +7,7 @@ import {
   getMe,
   updateMe,
   changePassword,
+  switchMode,
   googleRedirect,
   googleCallback,
 } from '../controllers/authController.js';
@@ -33,5 +34,6 @@ router.get('/google/callback', googleCallback);
 router.get('/me', protect, getMe);
 router.patch('/me', protect, uploadProfilePhoto, updateMe);
 router.patch('/change-password', protect, validate(changePasswordSchema), changePassword);
+router.post('/switch-mode', protect, switchMode);
 
 export default router;

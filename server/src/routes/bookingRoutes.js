@@ -24,13 +24,13 @@ const router = express.Router();
 
 router.use(protect); // All booking routes require auth
 
-router.post('/', authorize('customer'), validate(createBookingSchema), createBooking);
+router.post('/', authorize('customer', 'worker'), validate(createBookingSchema), createBooking);
 router.get('/', getMyBookings);
 router.get('/:id', getBookingById);
 router.patch('/:id/respond', authorize('worker'), validate(bookingActionSchema), respondToBooking);
-router.patch('/:id/cancel', authorize('customer'), cancelBooking);
+router.patch('/:id/cancel', authorize('customer', 'worker'), cancelBooking);
 router.post('/:id/complete', authorize('worker'), otpLimiter, validate(otpVerifySchema), completeBookingWithOTP);
-router.post('/:id/review', authorize('customer'), validate(reviewSchema), submitReview);
+router.post('/:id/review', authorize('customer', 'worker'), validate(reviewSchema), submitReview);
 router.delete('/:id', deleteBooking);
 
 export default router;

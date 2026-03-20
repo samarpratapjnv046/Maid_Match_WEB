@@ -1,7 +1,8 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, User as UserIcon, LogOut, LayoutDashboard, Search, ChevronDown } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut, LayoutDashboard, Search, ChevronDown, ArrowLeftRight, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import toast from 'react-hot-toast';
 
 const getDashboardPath = (role) => {
   if (role === 'worker') return '/worker/dashboard';
@@ -12,7 +13,8 @@ const getDashboardPath = (role) => {
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const [switching, setSwitching] = useState(false);
+  const { user, logout, switchMode } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
@@ -39,15 +41,43 @@ export default function Navbar() {
     navigate('/login');
   };
 
+  const handleSwitch = async () => {
+    if (!user || user.role === 'admin' || switching) return;
+    const targetMode = user.role === 'worker' ? 'customer' : 'worker';
+    setSwitching(true);
+    try {
+      const result = await switchMode(targetMode);
+      if (result?.needsProfile) {
+        toast('Complete your worker profile to continue.', { icon: '📋' });
+        navigate('/worker/setup');
+      } else if (result?.role === 'customer') {
+        toast.success('Switched to Customer mode');
+        navigate('/');
+      } else if (result?.role === 'worker') {
+        toast.success('Switched to Worker mode');
+        navigate('/worker/dashboard');
+      }
+    } catch {
+      toast.error('Failed to switch mode. Please try again.');
+    } finally {
+      setSwitching(false);
+    }
+  };
+
   const dashboardPath = getDashboardPath(user?.role);
   const photo = user?.profilePhoto?.url;
   const initials = user?.name?.[0]?.toUpperCase() || '?';
 
-  const navLinks = user?.role === 'admin' || user?.role === 'worker'
+  const navLinks = user?.role === 'admin'
     ? []
+    : user?.role === 'worker'
+    ? [
+        { to: '/', label: 'Home' },
+        { to: '/workers', label: 'Book a Maid' },
+      ]
     : [
         { to: '/', label: 'Home' },
-        { to: '/workers', label: 'Find a Maid' },
+        { to: '/workers', label: 'Book a Worker' },
       ];
 
   const userMenuLinks = user?.role === 'customer'
@@ -70,6 +100,10 @@ export default function Navbar() {
       ]
     : [];
 
+  // Switch button label & style
+  const switchLabel = user?.role === 'worker' ? 'Customer Mode' : 'Worker Mode';
+  const switchSubtitle = user?.role === 'worker' ? 'Currently: Worker' : 'Currently: Customer';
+
   return (
     <nav className="fixed w-full z-50 glass">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -82,7 +116,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-5">
             {navLinks.map(({ to, label }) => (
               <Link
                 key={to}
@@ -96,6 +130,21 @@ export default function Navbar() {
                 {label}
               </Link>
             ))}
+
+            {/* Mode switch toggle — only for customers and workers */}
+            {user && user.role !== 'admin' && (
+              <button
+                onClick={handleSwitch}
+                disabled={switching}
+                title={`Switch to ${switchLabel}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#C9A84C]/60 bg-[#C9A84C]/10 hover:bg-[#C9A84C]/20 text-[#8a6d20] text-xs font-semibold transition-all disabled:opacity-60"
+              >
+                {switching
+                  ? <Loader2 size={12} className="animate-spin" />
+                  : <ArrowLeftRight size={12} />}
+                {switchLabel}
+              </button>
+            )}
 
             {user ? (
               <div className="relative" ref={dropdownRef}>
@@ -115,7 +164,7 @@ export default function Navbar() {
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden py-1 z-50">
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden py-1 z-50">
                     <div className="px-4 py-2.5 border-b border-gray-50">
                       <p className="text-xs font-semibold text-gray-800 truncate">{user.name}</p>
                       <p className="text-xs text-gray-400 truncate">{user.email}</p>
@@ -179,6 +228,20 @@ export default function Navbar() {
                 {label}
               </Link>
             ))}
+
+            {user && user.role !== 'admin' && (
+              <button
+                onClick={handleSwitch}
+                disabled={switching}
+                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-[#8a6d20] bg-[#C9A84C]/10 hover:bg-[#C9A84C]/20 border border-[#C9A84C]/40 transition-all disabled:opacity-60"
+              >
+                {switching
+                  ? <Loader2 size={15} className="animate-spin" />
+                  : <ArrowLeftRight size={15} />}
+                <span>Switch to {switchLabel}</span>
+                <span className="ml-auto text-xs font-normal text-gray-400">{switchSubtitle}</span>
+              </button>
+            )}
 
             {user ? (
               <>

@@ -235,6 +235,7 @@ export default function WorkerDashboard() {
   const [pendingLoading, setPendingLoading] = useState(true);
   const [recentBookings, setRecentBookings] = useState([]);
   const [recentLoading, setRecentLoading] = useState(true);
+  const [bookingStats, setBookingStats] = useState({ active: 0, completed: 0 });
 
   const [actionLoading, setActionLoading] = useState(null); // booking._id being acted on
 
@@ -289,14 +290,21 @@ export default function WorkerDashboard() {
     }
   }, []);
 
-  // ─── Fetch recent bookings ─────────────────────────────────────────────────
+  // ─── Fetch recent bookings + active/completed counts ──────────────────────
   const fetchRecentBookings = useCallback(async () => {
     setRecentLoading(true);
     try {
-      const { data } = await api.get('/bookings');
-      const list = data.data?.bookings || data.data || data.bookings || [];
+      const [activeRes, completedRes, recentRes] = await Promise.all([
+        api.get('/bookings?status=accepted,pending_payment,paid&limit=1'),
+        api.get('/bookings?status=completed&limit=1'),
+        api.get('/bookings?limit=10'),
+      ]);
+      setBookingStats({
+        active: activeRes.data?.total ?? 0,
+        completed: completedRes.data?.total ?? 0,
+      });
+      const list = recentRes.data?.data || recentRes.data?.bookings || recentRes.data || [];
       const arr = Array.isArray(list) ? list : [];
-      // Filter out offer_pending (already shown above) and take last 5
       const filtered = arr.filter((b) => b.status !== 'offer_pending').slice(0, 5);
       setRecentBookings(filtered);
     } catch {
@@ -463,7 +471,7 @@ export default function WorkerDashboard() {
         )}
 
         {/* ─── Stats grid ─────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard
             icon={Wallet}
             label="Wallet Balance"
@@ -482,11 +490,19 @@ export default function WorkerDashboard() {
           />
           <StatCard
             icon={Clock}
-            label="Pending Requests"
-            value={pendingLoading ? '…' : pendingBookings.length}
-            sub="Awaiting your response"
+            label="Active Jobs"
+            value={bookingStats.active}
+            sub="Accepted & ongoing"
             color="amber"
-            loading={pendingLoading}
+            loading={recentLoading}
+          />
+          <StatCard
+            icon={CheckCircle}
+            label="Completed"
+            value={bookingStats.completed}
+            sub="Successfully finished"
+            color="green"
+            loading={recentLoading}
           />
           <StatCard
             icon={Star}

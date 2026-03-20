@@ -22,12 +22,12 @@ router.get('/search', searchWorkers);
 router.get('/:id/availability', checkWorkerAvailability);
 router.get('/:id', getWorkerById);
 
-// Protected (worker only)
-router.get('/profile/me', protect, authorize('worker'), getMyWorkerProfile);
+// Protected
+router.get('/profile/me', protect, authorize('worker', 'customer'), getMyWorkerProfile);
 router.post(
   '/profile',
   protect,
-  authorize('worker'),
+  authorize('worker', 'customer'),
   uploadAadhaar,
   validate(workerProfileSchema),
   createWorkerProfile

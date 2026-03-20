@@ -94,28 +94,41 @@ function BookingRow({ booking }) {
 export default function CustomerDashboard() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
+  const [stats, setStats] = useState({ total: 0, active: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
 
-  const fetchBookings = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get('/bookings?limit=5');
-      const list = res.data?.data || res.data?.bookings || res.data || [];
+      // Fetch total, active, and completed counts alongside the 5 recent bookings
+      const [allRes, activeRes, completedRes, recentRes] = await Promise.all([
+        api.get('/bookings?limit=1'),
+        api.get('/bookings?status=offer_pending,accepted,pending_payment,paid&limit=1'),
+        api.get('/bookings?status=completed&limit=1'),
+        api.get('/bookings?limit=5'),
+      ]);
+      setStats({
+        total: allRes.data?.total ?? 0,
+        active: activeRes.data?.total ?? 0,
+        completed: completedRes.data?.total ?? 0,
+      });
+      const list = recentRes.data?.data || recentRes.data?.bookings || [];
       setBookings(Array.isArray(list) ? list : []);
     } catch {
       setBookings([]);
+      setStats({ total: 0, active: 0, completed: 0 });
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchBookings();
-  }, [fetchBookings]);
+    fetchData();
+  }, [fetchData]);
 
-  const totalBookings = bookings.length;
-  const activeBookings = bookings.filter((b) => ['offer_pending', 'accepted', 'pending_payment', 'paid'].includes(b.status)).length;
-  const completedBookings = bookings.filter((b) => b.status === 'completed').length;
+  const totalBookings = stats.total;
+  const activeBookings = stats.active;
+  const completedBookings = stats.completed;
 
   return (
     <div className="min-h-screen bg-gray-50">

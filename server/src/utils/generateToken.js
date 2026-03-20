@@ -5,14 +5,14 @@ export const generateAccessToken = (id, role) =>
     expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
   });
 
-export const generateRefreshToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, {
+export const generateRefreshToken = (id, role) =>
+  jwt.sign({ id, role }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   });
 
 export const sendTokens = (user, statusCode, res) => {
   const accessToken = generateAccessToken(user._id, user.role);
-  const refreshToken = generateRefreshToken(user._id);
+  const refreshToken = generateRefreshToken(user._id, user.role);
 
   // HttpOnly cookie for refresh token
   res.cookie('refreshToken', refreshToken, {

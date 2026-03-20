@@ -91,6 +91,16 @@ export const AuthProvider = ({ children }) => {
     setUser((prev) => ({ ...prev, ...updatedData }));
   };
 
+  // Switch active role (customer ↔ worker). Returns { needsProfile: true } if
+  // the user wants to switch to worker but has no profile yet.
+  const switchMode = async (mode) => {
+    const res = await api.post('/auth/switch-mode', { mode });
+    if (res.data.needsProfile) return { needsProfile: true };
+    localStorage.setItem('accessToken', res.data.accessToken);
+    setUser(res.data.user);
+    return { role: mode };
+  };
+
   const loginWithToken = async (token) => {
     localStorage.setItem('accessToken', token);
     try {
@@ -105,7 +115,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout, checkAuth, updateUser, loginWithToken }}>
+    <AuthContext.Provider value={{ user, loading, error, login, register, logout, checkAuth, updateUser, loginWithToken, switchMode }}>
       {children}
     </AuthContext.Provider>
   );

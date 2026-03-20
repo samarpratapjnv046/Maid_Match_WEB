@@ -30,6 +30,9 @@ export const protect = async (req, res, next) => {
     }
 
     req.user = user;
+    // Use the role from the JWT (active mode), not the DB field.
+    // This is what makes worker ↔ customer mode switching work correctly.
+    req.user.role = decoded.role;
     next();
   } catch (err) {
     if (err.name === 'JsonWebTokenError') {

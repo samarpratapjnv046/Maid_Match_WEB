@@ -22,6 +22,12 @@ export const createBooking = async (req, res, next) => {
 
     const worker = await Worker.findById(worker_id);
     if (!worker) return next(new AppError('Worker not found.', 404));
+
+    // Prevent a worker from booking themselves
+    if (req.user.role === 'worker' && worker.user_id.equals(req.user._id)) {
+      return next(new AppError('You cannot book yourself.', 400));
+    }
+
     if (!worker.is_verified || !worker.is_available) {
       return next(new AppError('Worker is not available for bookings.', 400));
     }
@@ -123,7 +129,7 @@ export const getMyBookings = async (req, res, next) => {
     const { status, page, limit } = req.query;
     const filter = {};
 
-    if (req.user.role === 'customer') {
+    if (req.user.role === 'customer' || (req.user.role === 'worker' && req.query.view === 'customer')) {
       filter.user_id = req.user._id;
     } else if (req.user.role === 'worker') {
       const worker = await Worker.findOne({ user_id: req.user._id });
@@ -270,14 +276,16 @@ export const deleteBooking = async (req, res, next) => {
     const booking = await Booking.findById(req.params.id);
     if (!booking) return next(new AppError('Booking not found.', 404));
 
-    // Ownership check
+    // Ownership check — workers can delete either as provider or as customer-booker
     if (req.user.role === 'customer') {
       if (!booking.user_id.equals(req.user._id)) {
         return next(new AppError('Access denied.', 403));
       }
     } else if (req.user.role === 'worker') {
-      const worker = await Worker.findOne({ user_id: req.user._id });
-      if (!worker || !booking.worker_id.equals(worker._id)) {
+      const isBooker = booking.user_id.equals(req.user._id);
+      const workerProfile = await Worker.findOne({ user_id: req.user._id });
+      const isProvider = workerProfile && booking.worker_id.equals(workerProfile._id);
+      if (!isBooker && !isProvider) {
         return next(new AppError('Access denied.', 403));
       }
     }

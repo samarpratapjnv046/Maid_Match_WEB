@@ -42,12 +42,19 @@ import Profile from './pages/Profile';
 // Spinner for auth loading
 import Spinner from './components/common/Spinner';
 
-// Public route — redirect workers and admins to their dashboards
+// Public route — only redirects admins (workers can view public pages too)
 function PublicRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner size="lg" color="navy" /></div>;
   if (user?.role === 'admin') return <Navigate to="/admin" replace />;
-  if (user?.role === 'worker') return <Navigate to="/worker/dashboard" replace />;
+  return children;
+}
+
+// Home route — allows workers to see the worker home page; only redirects admins
+function HomeRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner size="lg" color="navy" /></div>;
+  if (user?.role === 'admin') return <Navigate to="/admin" replace />;
   return children;
 }
 
@@ -56,8 +63,8 @@ function GuestRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner size="lg" color="navy" /></div>;
   if (user) {
-    if (user.role === 'worker') return <Navigate to="/worker/dashboard" replace />;
     if (user.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user.role === 'worker') return <Navigate to="/worker/dashboard" replace />;
     return <Navigate to="/dashboard" replace />;
   }
   return children;
@@ -92,9 +99,9 @@ function AppRoutes() {
   return (
     <Routes>
       {/* ── Public routes ── */}
-      <Route path="/" element={<PublicRoute><MainLayout><Home /></MainLayout></PublicRoute>} />
-      <Route path="/workers" element={<PublicRoute><MainLayout><SearchWorkers /></MainLayout></PublicRoute>} />
-      <Route path="/workers/:id" element={<PublicRoute><MainLayout><WorkerProfile /></MainLayout></PublicRoute>} />
+      <Route path="/" element={<HomeRoute><MainLayout><Home /></MainLayout></HomeRoute>} />
+      <Route path="/workers" element={<HomeRoute><MainLayout><SearchWorkers /></MainLayout></HomeRoute>} />
+      <Route path="/workers/:id" element={<HomeRoute><MainLayout><WorkerProfile /></MainLayout></HomeRoute>} />
 
       {/* ── OAuth callback (public, no auth guard) ── */}
       <Route path="/auth/callback" element={<AuthCallback />} />
@@ -145,6 +152,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['worker']}>
             <MainLayout><WorkerDashboard /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      {/* Setup route: customers land here to create their worker profile */}
+      <Route
+        path="/worker/setup"
+        element={
+          <ProtectedRoute allowedRoles={['customer', 'worker']}>
+            <MainLayout><WorkerProfilePage /></MainLayout>
           </ProtectedRoute>
         }
       />
