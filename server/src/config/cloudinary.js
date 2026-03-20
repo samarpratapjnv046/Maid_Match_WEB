@@ -7,4 +7,14 @@ cloudinary.config({
   secure: true,
 });
 
+/**
+ * Upload a buffer to Cloudinary.
+ * Uses base64 data URI — works with multer.memoryStorage() and cloudinary v1/v2.
+ */
+export const uploadToCloudinary = (buffer, options = {}) => {
+  const b64 = Buffer.from(buffer).toString('base64');
+  const dataUri = `data:application/octet-stream;base64,${b64}`;
+  return cloudinary.uploader.upload(dataUri, { resource_type: 'auto', ...options });
+};
+
 export default cloudinary;

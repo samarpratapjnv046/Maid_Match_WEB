@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Worker from '../models/Worker.js';
 import { sendTokens, generateAccessToken } from '../utils/generateToken.js';
 import { AppError } from '../utils/errorHandler.js';
+import { uploadToCloudinary } from '../config/cloudinary.js';
 
 // @desc    Register user (customer or worker)
 // @route   POST /api/auth/register
@@ -118,8 +119,18 @@ export const updateMe = async (req, res, next) => {
     if (address) updates.address = address;
 
     if (req.file) {
-      updates['profilePhoto.url'] = req.file.path;
-      updates['profilePhoto.public_id'] = req.file.filename;
+      let result;
+      try {
+        result = await uploadToCloudinary(req.file.buffer, {
+          folder: 'maidproject/profiles',
+          transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }],
+        });
+      } catch (cloudErr) {
+        console.error('[Cloudinary]', cloudErr.message || cloudErr);
+        return next(new AppError(cloudErr.message || 'Photo upload to Cloudinary failed.', 500));
+      }
+      updates['profilePhoto.url'] = result.secure_url;
+      updates['profilePhoto.public_id'] = result.public_id;
     }
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, {

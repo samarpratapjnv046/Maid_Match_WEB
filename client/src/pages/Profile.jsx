@@ -61,7 +61,7 @@ export default function Profile() {
     try {
       const fd = new FormData();
       fd.append('profilePhoto', file);
-      const res = await api.patch('/auth/me', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const res = await api.patch('/auth/me', fd);
       const updated = res.data?.data || res.data;
       if (updated?.profilePhoto?.url) {
         updateUser({ profilePhoto: updated.profilePhoto });

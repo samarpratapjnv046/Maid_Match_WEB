@@ -60,7 +60,7 @@ function WorkerCard({ worker }) {
   const isVerified = worker.is_verified || worker.verification_status === 'verified';
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_6px_24px_rgba(0,0,0,0.13)] hover:border-[#C9A84C]/40 transition-all duration-200 hover:-translate-y-0.5 p-5 flex flex-col">
+    <div className="bg-[#FDFCF8] rounded-2xl border-l-4 border-l-[#C9A84C] border border-[#E8E2D5] shadow-[0_4px_20px_rgba(201,168,76,0.10),0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.18),0_2px_8px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-200 p-5 flex flex-col">
       {/* Header */}
       <div className="flex items-start gap-4">
         <div className="relative flex-shrink-0">
@@ -68,10 +68,10 @@ function WorkerCard({ worker }) {
             <img
               src={photo}
               alt={name}
-              className="w-16 h-16 rounded-full object-cover border-2 border-[#C9A84C]/30"
+              className="w-16 h-16 rounded-full object-cover ring-2 ring-[#C9A84C]/40 ring-offset-2 ring-offset-[#FDFCF8]"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-[#1B2B4B] flex items-center justify-center border-2 border-[#C9A84C]/30">
+            <div className="w-16 h-16 rounded-full bg-[#1B2B4B] flex items-center justify-center ring-2 ring-[#C9A84C]/40 ring-offset-2 ring-offset-[#FDFCF8]">
               <span className="text-white font-bold text-xl font-serif">{initials}</span>
             </div>
           )}
@@ -107,19 +107,19 @@ function WorkerCard({ worker }) {
         </div>
       </div>
 
-      {/* Service badges — fixed min-height so cards align even with fewer services */}
+      {/* Service badges */}
       <div className="mt-4 flex flex-wrap gap-1.5 min-h-[2rem]">
         {services.slice(0, 4).map((svc) => (
           <span
             key={svc}
-            className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-[#FAF8F3] border border-[#C9A84C]/25 text-[#1B2B4B] rounded-full font-medium"
+            className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-white border border-[#C9A84C]/30 text-[#1B2B4B] rounded-full font-medium shadow-sm"
           >
             <span role="img" aria-label={serviceLabels[svc]}>{serviceIcons[svc]}</span>
             {serviceLabels[svc] || svc}
           </span>
         ))}
         {services.length > 4 && (
-          <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-500 rounded-full font-medium">
+          <span className="text-xs px-2.5 py-1 bg-white border border-gray-200 text-gray-500 rounded-full font-medium shadow-sm">
             +{services.length - 4} more
           </span>
         )}
@@ -135,7 +135,7 @@ function WorkerCard({ worker }) {
           { label: 'Daily', key: 'daily' },
           { label: 'Monthly', key: 'monthly' },
         ].map(({ label, key }) => (
-          <div key={key} className="bg-[#FAF8F3] rounded-lg py-2 px-1">
+          <div key={key} className="bg-white border border-[#E8E2D5] rounded-lg py-2 px-1 shadow-sm">
             <div className="text-xs text-gray-400 font-medium mb-0.5">{label}</div>
             <div className="text-sm font-semibold text-[#1B2B4B]">
               {pricing[key] ? formatCurrency(pricing[key]) : <span className="text-gray-300 text-xs">N/A</span>}
@@ -144,8 +144,8 @@ function WorkerCard({ worker }) {
         ))}
       </div>
 
-      {/* Footer row — always at the bottom */}
-      <div className="mt-4 flex items-center justify-between pt-3 border-t border-gray-50">
+      {/* Footer row */}
+      <div className="mt-4 flex items-center justify-between pt-3 border-t border-[#E8E2D5]">
         <span className="text-xs text-gray-500">
           {experience != null && experience > 0
             ? <><span className="font-semibold text-[#1B2B4B]">{experience}</span> yr{experience !== 1 ? 's' : ''} exp</>

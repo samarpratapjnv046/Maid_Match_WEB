@@ -1,7 +1,7 @@
 import Worker from '../models/Worker.js';
 import User from '../models/User.js';
 import Booking from '../models/Booking.js';
-import cloudinary from '../config/cloudinary.js';
+import cloudinary, { uploadToCloudinary } from '../config/cloudinary.js';
 import { AppError } from '../utils/errorHandler.js';
 import { APIFeatures } from '../utils/apiFeatures.js';
 
@@ -18,11 +18,12 @@ export const createWorkerProfile = async (req, res, next) => {
     const profileData = { ...req.body, user_id: req.user._id };
 
     // Handle Aadhaar upload
-    if (req.files?.aadhaar?.[0]) {
-      profileData.aadhaar = {
-        url: req.files.aadhaar[0].path,
-        public_id: req.files.aadhaar[0].filename,
-      };
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, {
+        folder: 'maidproject/aadhaar',
+        resource_type: 'auto',
+      });
+      profileData.aadhaar = { url: result.secure_url, public_id: result.public_id };
     }
 
     const worker = await Worker.create(profileData);
@@ -41,15 +42,15 @@ export const updateWorkerProfile = async (req, res, next) => {
     if (!worker) return next(new AppError('Worker profile not found.', 404));
 
     // If new Aadhaar uploaded, delete old from cloudinary
-    if (req.files?.aadhaar?.[0]) {
+    if (req.file) {
       if (worker.aadhaar?.public_id) {
         await cloudinary.uploader.destroy(worker.aadhaar.public_id, { resource_type: 'raw' });
       }
-      req.body.aadhaar = {
-        url: req.files.aadhaar[0].path,
-        public_id: req.files.aadhaar[0].filename,
-        verified: false, // re-verify after re-upload
-      };
+      const result = await uploadToCloudinary(req.file.buffer, {
+        folder: 'maidproject/aadhaar',
+        resource_type: 'auto',
+      });
+      req.body.aadhaar = { url: result.secure_url, public_id: result.public_id, verified: false };
     }
 
     const updated = await Worker.findOneAndUpdate(
@@ -71,12 +72,17 @@ export const uploadProfilePhoto = async (req, res, next) => {
   try {
     if (!req.file) return next(new AppError('No file uploaded.', 400));
 
-    await User.findByIdAndUpdate(req.user._id, {
-      'profilePhoto.url': req.file.path,
-      'profilePhoto.public_id': req.file.filename,
+    const result = await uploadToCloudinary(req.file.buffer, {
+      folder: 'maidproject/profiles',
+      transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }],
     });
 
-    res.json({ success: true, message: 'Profile photo updated.', url: req.file.path });
+    await User.findByIdAndUpdate(req.user._id, {
+      'profilePhoto.url': result.secure_url,
+      'profilePhoto.public_id': result.public_id,
+    });
+
+    res.json({ success: true, message: 'Profile photo updated.', url: result.secure_url });
   } catch (err) {
     next(err);
   }
