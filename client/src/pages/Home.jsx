@@ -146,7 +146,7 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section className="relative h-[88vh] max-h-[700px] min-h-[520px] flex items-center overflow-hidden">
       {/* ── Background images ── */}
       <AnimatePresence custom={direction} initial={false}>
         <motion.div
@@ -177,7 +177,7 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.9 }}
           transition={{ duration: 0.4 }}
-          className="absolute top-24 right-6 lg:right-16 z-10"
+          className="absolute top-20 right-4 lg:right-12 z-10"
         >
           <div className={`${slide.badge} text-white px-4 py-2 rounded-full text-sm font-bold shadow-2xl flex items-center gap-2`}>
             <span className="text-lg">{slide.emoji}</span>
@@ -187,7 +187,7 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
       </AnimatePresence>
 
       {/* ── Main content ── */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
         <div className="max-w-3xl">
           {/* Tag */}
           <motion.div
@@ -216,21 +216,21 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
             </motion.div>
           </AnimatePresence>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.1] mb-4 tracking-tight">
             Find the perfect{' '}
-            <span className="text-yellow-300">home helper</span>
-            <br />near you
+            <span className="text-yellow-300">home helper</span>{' '}
+            near you
           </h1>
 
-          <p className="text-lg sm:text-xl text-gray-300 max-w-xl mb-8 leading-relaxed">
+          <p className="text-base text-gray-300 max-w-lg mb-6 leading-relaxed">
             Verified, background-checked professionals for cleaning, cooking, babysitting, and more.
             <span className="text-yellow-300 font-semibold"> Book in minutes, pay securely.</span>
           </p>
 
           {/* Search bar */}
-          <div className="flex flex-col sm:flex-row gap-3 max-w-lg mb-8">
+          <div className="flex flex-col sm:flex-row gap-2 max-w-lg mb-5">
             <div className="relative flex-1">
-              <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               <input
                 type="text"
                 value={searchCity}
@@ -240,7 +240,7 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
                     navigate(`/workers?city=${encodeURIComponent(searchCity.trim())}`);
                 }}
                 placeholder="Enter your city…"
-                className="w-full pl-10 pr-4 py-4 rounded-xl text-sm text-gray-900 bg-white border-0 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-xl placeholder-gray-400"
+                className="w-full pl-9 pr-4 py-3 rounded-xl text-sm text-gray-900 bg-white border-0 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-lg placeholder-gray-400"
               />
             </div>
             <button
@@ -251,15 +251,15 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
                     : '/workers'
                 )
               }
-              className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-7 py-4 rounded-xl text-sm transition-all duration-200 shadow-xl shadow-yellow-400/30 hover:-translate-y-0.5 flex-shrink-0"
+              className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-6 py-3 rounded-xl text-sm transition-all duration-200 shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5 flex-shrink-0"
             >
-              <Search size={16} />
-              Search Workers
+              <Search size={15} />
+              Search
             </button>
           </div>
 
           {/* CTA buttons */}
-          <div className="flex flex-wrap gap-3 mb-10">
+          <div className="flex flex-wrap gap-3 mb-6">
             <Link
               to="/workers"
               className="inline-flex items-center gap-2 bg-white text-gray-900 font-bold px-7 py-3.5 rounded-xl text-sm transition-all duration-200 shadow-lg hover:-translate-y-0.5 hover:shadow-xl"
@@ -277,12 +277,12 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
           </div>
 
           {/* Trust badges */}
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex -space-x-2">
               {['A', 'R', 'M', 'S', 'P'].map((l, i) => (
                 <div
                   key={i}
-                  className="w-9 h-9 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-400 border-2 border-gray-900 flex items-center justify-center text-xs font-black text-gray-900"
+                  className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-400 border-2 border-gray-900 flex items-center justify-center text-xs font-black text-gray-900"
                 >
                   {l}
                 </div>
@@ -333,7 +333,7 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
       </div>
 
       {/* ── Floating service pills (bottom-right, desktop only) ── */}
-      <div className="absolute bottom-20 right-6 lg:right-16 z-10 hidden lg:flex flex-col gap-2">
+      <div className="absolute bottom-16 right-4 lg:right-12 z-10 hidden lg:flex flex-col gap-1.5">
         {HERO_SLIDES.map((s, i) => (
           <motion.div
             key={s.service}
@@ -350,9 +350,9 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
 
       {/* ── Scroll indicator ── */}
       <motion.div
-        animate={{ y: [0, 8, 0] }}
+        animate={{ y: [0, 6, 0] }}
         transition={{ duration: 1.5, repeat: Infinity }}
-        className="absolute bottom-8 right-8 text-white/50 hidden lg:flex flex-col items-center gap-1 text-xs"
+        className="absolute bottom-6 right-6 text-white/40 hidden lg:flex flex-col items-center gap-1 text-xs"
       >
         <div className="w-px h-8 bg-gradient-to-b from-transparent to-white/40" />
         <span>scroll</span>
