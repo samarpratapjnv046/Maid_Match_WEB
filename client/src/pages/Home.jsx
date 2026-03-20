@@ -11,6 +11,18 @@ const SERVICES = [
   'driver', 'deep_cleaning', 'security_guard',
 ];
 
+const SERVICE_THEME = {
+  house_cleaning: { gradient: 'from-blue-500 to-cyan-500',    light: 'from-blue-50 to-cyan-50',    border: 'hover:border-blue-300',    glow: 'hover:shadow-blue-200',    text: 'text-blue-600',    desc: 'Spotless home, every day' },
+  cooking:        { gradient: 'from-orange-500 to-amber-400',  light: 'from-orange-50 to-amber-50',  border: 'hover:border-orange-300',  glow: 'hover:shadow-orange-200',  text: 'text-orange-600',  desc: 'Delicious meals at home' },
+  babysitting:    { gradient: 'from-pink-500 to-rose-400',     light: 'from-pink-50 to-rose-50',     border: 'hover:border-pink-300',    glow: 'hover:shadow-pink-200',    text: 'text-pink-600',    desc: 'Safe, caring childcare' },
+  elder_care:     { gradient: 'from-violet-500 to-purple-500', light: 'from-violet-50 to-purple-50', border: 'hover:border-violet-300',  glow: 'hover:shadow-violet-200',  text: 'text-violet-600',  desc: 'Compassionate senior care' },
+  laundry:        { gradient: 'from-teal-500 to-cyan-500',     light: 'from-teal-50 to-cyan-50',     border: 'hover:border-teal-300',    glow: 'hover:shadow-teal-200',    text: 'text-teal-600',    desc: 'Fresh & folded, always' },
+  gardening:      { gradient: 'from-emerald-500 to-green-500', light: 'from-emerald-50 to-green-50', border: 'hover:border-emerald-300', glow: 'hover:shadow-emerald-200', text: 'text-emerald-600', desc: 'Beautiful gardens & lawns' },
+  driver:         { gradient: 'from-slate-600 to-gray-600',    light: 'from-slate-50 to-gray-100',   border: 'hover:border-slate-300',   glow: 'hover:shadow-slate-200',   text: 'text-slate-600',   desc: 'Reliable rides, any time' },
+  deep_cleaning:  { gradient: 'from-indigo-500 to-blue-600',   light: 'from-indigo-50 to-blue-50',   border: 'hover:border-indigo-300',  glow: 'hover:shadow-indigo-200',  text: 'text-indigo-600',  desc: 'Deep sanitized cleaning' },
+  security_guard: { gradient: 'from-red-500 to-rose-500',      light: 'from-red-50 to-rose-50',      border: 'hover:border-red-300',     glow: 'hover:shadow-red-200',     text: 'text-red-600',     desc: 'Trusted home security' },
+};
+
 const HERO_SLIDES = [
   {
     image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1920&q=85',
@@ -507,19 +519,22 @@ const Home = () => {
 
       {/* ── Services Grid (customer only) ─────────────────────────────────────── */}
       {!isWorker && (
-        <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
+          {/* Subtle bg decoration */}
+          <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 15% 50%, #dbeafe 0%, transparent 40%), radial-gradient(circle at 85% 20%, #fef3c7 0%, transparent 35%)' }} />
+
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.45 }}
-              className="text-center mb-12"
+              className="text-center mb-14"
             >
               <span className="inline-block bg-primary-50 text-primary-600 text-sm font-semibold px-4 py-1.5 rounded-full mb-3 tracking-wide">What We Offer</span>
               <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">Services for every need</h2>
               <p className="mt-3 text-gray-500 max-w-xl mx-auto">
-                From daily house cleaning to long-term elder care, we have verified professionals for everything.
+                From daily house cleaning to long-term elder care — verified professionals for everything.
               </p>
             </motion.div>
 
@@ -528,26 +543,87 @@ const Home = () => {
               initial="initial"
               whileInView="animate"
               viewport={{ once: true, margin: '-40px' }}
-              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5"
             >
-              {SERVICES.map((svc) => (
-                <motion.div key={svc} variants={cardFadeUp}>
-                  <Link
-                    to={`/workers?service=${svc}`}
-                    className="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-primary-200 hover:shadow-lg hover:shadow-primary-100 hover:-translate-y-1.5 transition-all duration-200"
+              {SERVICES.map((svc, idx) => {
+                const theme = SERVICE_THEME[svc];
+                return (
+                  <motion.div
+                    key={svc}
+                    variants={{
+                      initial: { opacity: 0, y: 40, scale: 0.92 },
+                      animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.45, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] } },
+                    }}
                   >
-                    <div className="w-16 h-16 bg-gradient-to-br from-primary-50 to-primary-100 group-hover:from-primary-100 group-hover:to-primary-200 rounded-2xl flex items-center justify-center transition-all duration-200 text-3xl leading-none shadow-sm">
-                      {serviceIcons[svc]}
-                    </div>
-                    <span className="text-sm font-semibold text-gray-700 group-hover:text-primary-700 text-center leading-tight transition-colors">
-                      {serviceLabels[svc]}
-                    </span>
-                    <span className="text-xs text-primary-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity -mt-1">
-                      Browse →
-                    </span>
-                  </Link>
-                </motion.div>
-              ))}
+                    <Link to={`/workers?service=${svc}`} className="group block">
+                      <motion.div
+                        whileHover={{ y: -8, scale: 1.03 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                        className={`relative flex flex-col items-center gap-3 p-6 bg-white rounded-3xl border border-gray-100 ${theme.border} ${theme.glow} shadow-sm hover:shadow-xl overflow-hidden cursor-pointer transition-colors duration-300`}
+                      >
+                        {/* Gradient fill on hover */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${theme.light} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+
+                        {/* Shine sweep */}
+                        <motion.div
+                          initial={{ x: '-120%', opacity: 0 }}
+                          whileHover={{ x: '180%', opacity: 1 }}
+                          transition={{ duration: 0.55, ease: 'easeInOut' }}
+                          className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none"
+                        />
+
+                        {/* Top gradient accent bar */}
+                        <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient} rounded-t-3xl`} />
+
+                        {/* Emoji icon with spring scale */}
+                        <motion.div
+                          whileHover={{ scale: 1.25, rotate: [0, -8, 8, 0] }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                          className="relative z-10 w-16 h-16 flex items-center justify-center text-4xl leading-none mt-1 drop-shadow-sm select-none"
+                        >
+                          {serviceIcons[svc]}
+                        </motion.div>
+
+                        {/* Label */}
+                        <p className={`relative z-10 text-sm font-bold text-gray-800 group-hover:${theme.text} text-center leading-tight transition-colors duration-200`}>
+                          {serviceLabels[svc]}
+                        </p>
+
+                        {/* Short desc — shown on hover */}
+                        <p className="relative z-10 text-xs text-gray-400 group-hover:text-gray-600 text-center leading-snug transition-colors duration-200 line-clamp-1">
+                          {theme.desc}
+                        </p>
+
+                        {/* CTA pill */}
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          whileHover={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.2 }}
+                          className={`relative z-10 inline-flex items-center gap-1 text-xs font-bold ${theme.text} bg-white/70 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm border border-white`}
+                        >
+                          Browse <ArrowRight size={11} />
+                        </motion.span>
+                      </motion.div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+
+            {/* Bottom CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+              className="text-center mt-12"
+            >
+              <Link
+                to="/workers"
+                className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-bold px-8 py-3.5 rounded-xl text-sm transition-all duration-200 shadow-lg hover:-translate-y-0.5 hover:shadow-xl"
+              >
+                View All Services <ArrowRight size={16} />
+              </Link>
             </motion.div>
           </div>
         </section>
