@@ -524,19 +524,47 @@ const Home = () => {
           <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 15% 50%, #dbeafe 0%, transparent 40%), radial-gradient(circle at 85% 20%, #fef3c7 0%, transparent 35%)' }} />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Section label */}
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.45 }}
-              className="text-center mb-14"
+              transition={{ duration: 0.4 }}
+              className="text-center mb-6"
             >
-              <span className="inline-block bg-primary-50 text-primary-600 text-sm font-semibold px-4 py-1.5 rounded-full mb-3 tracking-wide">What We Offer</span>
-              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">Services for every need</h2>
-              <p className="mt-3 text-gray-500 max-w-xl mx-auto">
-                From daily house cleaning to long-term elder care — verified professionals for everything.
-              </p>
+              <span className="inline-block bg-primary-50 text-primary-600 text-sm font-semibold px-4 py-1.5 rounded-full tracking-wide">What We Offer</span>
             </motion.div>
+
+            {/* Running marquee heading */}
+            <div className="relative overflow-hidden mb-4 -mx-4 sm:-mx-6 lg:-mx-8">
+              <div className="bg-gradient-to-r from-primary-600 via-violet-600 to-pink-500 py-4 overflow-hidden">
+                <motion.div
+                  animate={{ x: ['0%', '-50%'] }}
+                  transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+                  className="flex whitespace-nowrap"
+                >
+                  {[...Array(6)].map((_, i) => (
+                    <span key={i} className="inline-flex items-center gap-4 text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight px-8">
+                      Services for Every Need
+                      <span className="text-yellow-300 text-2xl select-none">✦</span>
+                    </span>
+                  ))}
+                </motion.div>
+              </div>
+              {/* Fade edges */}
+              <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-gray-50 to-transparent pointer-events-none" />
+              <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+            </div>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.15 }}
+              className="text-center text-gray-500 max-w-xl mx-auto mb-14"
+            >
+              From daily house cleaning to long-term elder care — verified professionals for everything.
+            </motion.p>
 
             <motion.div
               variants={staggerContainer}
