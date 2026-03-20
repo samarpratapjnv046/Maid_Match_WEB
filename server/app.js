@@ -4,7 +4,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import mongoSanitize from 'express-mongo-sanitize';
-
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/authRoutes.js';
 import workerRoutes from './src/routes/workerRoutes.js';
 import bookingRoutes from './src/routes/bookingRoutes.js';
@@ -15,6 +16,8 @@ import adminRoutes from './src/routes/adminRoutes.js';
 import { globalErrorHandler } from './src/utils/errorHandler.js';
 import { generalLimiter } from './src/middleware/rateLimiter.js';
 import { AppError } from './src/utils/errorHandler.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
@@ -59,10 +62,19 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/admin', adminRoutes);
 
-// ─── 404 Handler ──────────────────────────────────────────────────────────────
-app.all('*', (req, _res, next) => {
-  next(new AppError(`Route ${req.originalUrl} not found.`, 404));
-});
+// ─── Static Files (Production) ────────────────────────────────────────────────
+if (process.env.NODE_ENV === 'production') {
+  const clientDist = path.join(__dirname, '..', 'client', 'dist');
+  app.use(express.static(clientDist));
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+} else {
+  // ─── 404 Handler ────────────────────────────────────────────────────────────
+  app.all('*', (req, _res, next) => {
+    next(new AppError(`Route ${req.originalUrl} not found.`, 404));
+  });
+}
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(globalErrorHandler);
