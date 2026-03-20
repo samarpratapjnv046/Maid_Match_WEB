@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://maid-match-m2xw.onrender.com',
+  baseURL: 'https://maid-match-m2xw.onrender.com/api',
   withCredentials: true,
 });
 
@@ -17,7 +17,7 @@ let isRefreshing = false;
 let queue = [];
 
 // These endpoints must never trigger a token refresh attempt
-const NO_REFRESH_URLS = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh'];
+const NO_REFRESH_URLS = ['/auth/login', '/auth/register', '/auth/refresh'];
 
 api.interceptors.response.use(
   (res) => res,
