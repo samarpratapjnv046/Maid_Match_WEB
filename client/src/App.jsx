@@ -11,6 +11,7 @@ import ProtectedRoute from './components/layout/ProtectedRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import AuthCallback from './pages/AuthCallback';
 
 // Customer pages
@@ -109,6 +110,7 @@ function AppRoutes() {
       {/* ── Auth routes (guests only) ── */}
       <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
       <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* ── Customer routes ── */}
       <Route

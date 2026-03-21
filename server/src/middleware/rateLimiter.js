@@ -23,11 +23,18 @@ export const paymentLimiter = createLimiter(
   'Too many payment requests. Please try again after 10 minutes.'
 );
 
-// OTP verification
+// OTP verification — 5 attempts per 5 minutes
 export const otpLimiter = createLimiter(
-  5 * 60 * 1000, // 5 minutes
+  5 * 60 * 1000,
   5,
   'Too many OTP attempts. Please try again after 5 minutes.'
+);
+
+// Forgot-password OTP send — very strict: 3 requests per 15 minutes in production
+export const forgotPasswordLimiter = createLimiter(
+  15 * 60 * 1000,
+  process.env.NODE_ENV === 'production' ? 3 : 20,
+  'Too many password reset requests. Please try again after 15 minutes.'
 );
 
 // General API

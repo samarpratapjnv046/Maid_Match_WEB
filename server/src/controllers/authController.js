@@ -1,9 +1,11 @@
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Worker from '../models/Worker.js';
 import { sendTokens, generateAccessToken, generateRefreshToken } from '../utils/generateToken.js';
 import { AppError } from '../utils/errorHandler.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
+import { sendOTPEmail } from '../utils/email.js';
 
 // @desc    Register user (customer or worker)
 // @route   POST /api/auth/register
@@ -214,6 +216,109 @@ export const changePassword = async (req, res, next) => {
     }
 
     user.password = newPassword;
+    await user.save();
+
+    sendTokens(user, 200, res);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Send OTP to email for password reset
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) return next(new AppError('Email is required.', 400));
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    // Always respond with the same message to prevent email enumeration
+    const SUCCESS_MSG = 'If that email is registered, an OTP has been sent.';
+    if (!user) return res.json({ success: true, message: SUCCESS_MSG });
+
+    // Use crypto.randomBytes for cryptographically secure OTP
+    const otp = String(crypto.randomInt(100000, 999999));
+    const hashedOTP = crypto.createHash('sha256').update(otp).digest('hex');
+
+    user.passwordResetToken = hashedOTP;
+    user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    user.passwordResetAttempts = 0; // reset attempt counter on fresh OTP
+    await user.save({ validateBeforeSave: false });
+
+    const firstName = user.name.split(' ')[0];
+
+    try {
+      await sendOTPEmail(user.email, firstName, otp);
+    } catch (emailErr) {
+      // Roll back the token so the DB isn't left with a dangling hash
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      user.passwordResetAttempts = 0;
+      await user.save({ validateBeforeSave: false });
+
+      // Log in server — never expose to client
+      console.error('[ForgotPassword] Email delivery failed:', emailErr.message);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEV] OTP for ${user.email}: ${otp}`);
+      }
+
+      return next(new AppError('Failed to send OTP email. Please try again later.', 500));
+    }
+
+    res.json({ success: true, message: SUCCESS_MSG });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Reset password using OTP
+// @route   POST /api/auth/reset-password
+// @access  Public
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      return next(new AppError('Email, OTP, and new password are required.', 400));
+    }
+    if (newPassword.length < 8) {
+      return next(new AppError('Password must be at least 8 characters.', 400));
+    }
+
+    // Find user by email with reset fields (don't hash yet — check attempts first)
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      passwordResetExpires: { $gt: Date.now() },
+    }).select('+passwordResetToken +passwordResetExpires +passwordResetAttempts');
+
+    if (!user || !user.passwordResetToken) {
+      return next(new AppError('OTP has expired. Please request a new one.', 400));
+    }
+
+    // Enforce max 5 wrong attempts per OTP
+    if (user.passwordResetAttempts >= 5) {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      user.passwordResetAttempts = 0;
+      await user.save({ validateBeforeSave: false });
+      return next(new AppError('Too many incorrect attempts. Please request a new OTP.', 429));
+    }
+
+    const hashedOTP = crypto.createHash('sha256').update(String(otp)).digest('hex');
+
+    if (user.passwordResetToken !== hashedOTP) {
+      user.passwordResetAttempts += 1;
+      await user.save({ validateBeforeSave: false });
+      const remaining = 5 - user.passwordResetAttempts;
+      return next(new AppError(`Incorrect OTP. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`, 400));
+    }
+
+    // OTP is valid — update password and clear all reset fields
+    user.password = newPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    user.passwordResetAttempts = 0;
     await user.save();
 
     sendTokens(user, 200, res);
