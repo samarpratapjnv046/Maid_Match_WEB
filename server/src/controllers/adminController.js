@@ -6,6 +6,7 @@ import Review from '../models/Review.js';
 import AuditLog from '../models/AuditLog.js';
 import cloudinary from '../config/cloudinary.js';
 import { AppError } from '../utils/errorHandler.js';
+import { sendWorkerVerifiedEmail } from '../utils/email.js';
 
 const logAction = async (adminId, action, entityType, entityId, before, after, note, ip) => {
   await AuditLog.create({ admin_id: adminId, action, entity_type: entityType, entity_id: entityId, before_state: before, after_state: after, note, ip_address: ip });
@@ -109,7 +110,7 @@ export const getWorkerDetail = async (req, res, next) => {
 // @route PATCH /api/admin/workers/:id/verify
 export const verifyWorker = async (req, res, next) => {
   try {
-    const worker = await Worker.findById(req.params.id);
+    const worker = await Worker.findById(req.params.id).populate('user_id', 'name email');
     if (!worker) return next(new AppError('Worker not found.', 404));
 
     const before = { verification_status: worker.verification_status, is_verified: worker.is_verified };
@@ -120,6 +121,14 @@ export const verifyWorker = async (req, res, next) => {
     await worker.save();
 
     await logAction(req.user._id, 'VERIFY_WORKER', 'worker', worker._id, before, { is_verified: true }, 'Worker verified', req.ip);
+
+    // Send congratulations email to the worker (non-blocking)
+    if (worker.user_id?.email) {
+      sendWorkerVerifiedEmail(worker.user_id.email, worker.user_id.name || 'there').catch((err) =>
+        console.error('Failed to send worker verified email:', err.message)
+      );
+    }
+
     res.json({ success: true, message: 'Worker verified successfully.' });
   } catch (err) { next(err); }
 };

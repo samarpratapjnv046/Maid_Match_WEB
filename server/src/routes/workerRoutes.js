@@ -8,6 +8,7 @@ import {
   getWorkerById,
   checkWorkerAvailability,
   submitAadhaar,
+  toggleAvailability,
 } from '../controllers/workerController.js';
 import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
@@ -42,6 +43,7 @@ router.patch(
   updateWorkerProfile
 );
 router.post('/profile/photo', protect, authorize('worker'), uploadPhoto, uploadProfilePhoto);
+router.patch('/profile/availability', protect, authorize('worker'), toggleAvailability);
 router.post('/aadhaar', protect, authorize('worker', 'customer'), uploadAadhaar, submitAadhaar);
 
 export default router;

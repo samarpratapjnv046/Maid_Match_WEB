@@ -126,12 +126,19 @@ export default function AdminLayout() {
           >
             <Menu size={22} />
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
             <div className="w-7 h-7 bg-[#C9A84C] rounded-md flex items-center justify-center">
               <Shield size={14} className="text-[#1B2B4B]" />
             </div>
             <span className="font-serif font-bold text-base">MaidMatch Admin</span>
           </div>
+          <button
+            onClick={handleLogout}
+            className="p-1.5 rounded-md hover:bg-white/10 transition-colors text-slate-300 hover:text-white"
+            title="Logout"
+          >
+            <LogOut size={20} />
+          </button>
         </header>
 
         {/* Page content — scrollable */}

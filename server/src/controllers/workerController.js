@@ -249,6 +249,28 @@ export const getWorkerById = async (req, res, next) => {
   }
 };
 
+// @desc    Toggle worker active/inactive availability
+// @route   PATCH /api/workers/profile/availability
+// @access  Private (worker)
+export const toggleAvailability = async (req, res, next) => {
+  try {
+    const worker = await Worker.findOne({ user_id: req.user._id });
+    if (!worker) return next(new AppError('Worker profile not found.', 404));
+    if (!worker.is_verified) return next(new AppError('Only verified workers can change availability.', 403));
+
+    worker.is_available = !worker.is_available;
+    await worker.save();
+
+    res.json({
+      success: true,
+      is_available: worker.is_available,
+      message: worker.is_available ? 'You are now Active. Clients can find and book you.' : 'You are now Inactive. Your profile is hidden from bookings.',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc    Upload / update Aadhaar document and number for identity verification
 // @route   POST /api/workers/aadhaar
 // @access  Private (worker, customer-in-setup)

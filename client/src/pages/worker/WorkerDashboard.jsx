@@ -242,6 +242,7 @@ export default function WorkerDashboard() {
   const [bookingStats, setBookingStats] = useState({ active: 0, completed: 0 });
 
   const [actionLoading, setActionLoading] = useState(null); // booking._id being acted on
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
   // Reject modal
   const [rejectModal, setRejectModal] = useState(false);
@@ -325,6 +326,20 @@ export default function WorkerDashboard() {
     fetchRecentBookings();
   }, [fetchWorkerProfile, fetchWallet, fetchPendingBookings, fetchRecentBookings]);
 
+  // ─── Toggle availability ───────────────────────────────────────────────────
+  async function handleToggleAvailability() {
+    setAvailabilityLoading(true);
+    try {
+      const { data } = await api.patch('/workers/profile/availability');
+      setWorkerProfile((prev) => ({ ...prev, is_available: data.is_available }));
+      toast.success(data.message);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to update availability.');
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  }
+
   // ─── Accept booking ────────────────────────────────────────────────────────
   async function handleAccept(bookingId) {
     setActionLoading(bookingId);
@@ -378,6 +393,7 @@ export default function WorkerDashboard() {
   const profileExists = !profileLoading && workerProfile !== null;
   const verificationStatus = workerProfile?.verification_status || 'pending';
   const isVerified = verificationStatus === 'verified';
+  const isAvailable = workerProfile?.is_available ?? true;
   const totalBookings = workerProfile?.total_bookings ?? recentBookings.length;
   const rating = workerProfile?.rating || 0;
   const totalReviews = workerProfile?.total_reviews || 0;
@@ -420,8 +436,8 @@ export default function WorkerDashboard() {
               </p>
             </div>
 
-            {/* Verification badge */}
-            <div className="flex-shrink-0">
+            {/* Verification badge + availability toggle */}
+            <div className="flex-shrink-0 flex flex-col sm:items-end gap-3">
               {profileLoading ? (
                 <div className="h-8 w-32 bg-white/10 rounded-full animate-pulse" />
               ) : !profileExists ? (
@@ -432,7 +448,7 @@ export default function WorkerDashboard() {
               ) : isVerified ? (
                 <span className="inline-flex items-center gap-1.5 bg-green-500/20 border border-green-400/30 text-green-300 text-xs font-semibold px-3 py-1.5 rounded-full">
                   <CheckCircle size={12} />
-                  {t('worker.verifiedWorker')}
+                  Verified Worker
                 </span>
               ) : verificationStatus === 'under_review' ? (
                 <span className="inline-flex items-center gap-1.5 bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold px-3 py-1.5 rounded-full">
@@ -444,6 +460,30 @@ export default function WorkerDashboard() {
                   <AlertCircle size={12} />
                   {t('worker.pendingVerification')}
                 </span>
+              )}
+
+              {/* Active / Inactive toggle — only for verified workers */}
+              {isVerified && profileExists && (
+                <button
+                  onClick={handleToggleAvailability}
+                  disabled={availabilityLoading}
+                  className={`
+                    relative inline-flex items-center gap-3 px-4 py-2 rounded-full text-xs font-semibold
+                    border transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed
+                    ${isAvailable
+                      ? 'bg-green-500/20 border-green-400/40 text-green-300 hover:bg-green-500/30'
+                      : 'bg-red-500/20 border-red-400/40 text-red-300 hover:bg-red-500/30'
+                    }
+                  `}
+                >
+                  {/* Toggle pill */}
+                  <span className={`relative inline-flex w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ${isAvailable ? 'bg-green-400' : 'bg-red-400/60'}`}>
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${isAvailable ? 'translate-x-4' : 'translate-x-0'}`}
+                    />
+                  </span>
+                  {availabilityLoading ? 'Updating…' : isAvailable ? 'Active' : 'Inactive'}
+                </button>
               )}
             </div>
           </div>

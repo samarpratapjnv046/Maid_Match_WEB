@@ -44,10 +44,9 @@ function WorkerDocModal({ workerId, onClose }) {
   const name = worker?.user_id?.name || '—';
   const initials = name[0]?.toUpperCase() || '?';
 
-  // Mask Aadhaar number: show last 4 digits
   const rawNumber = worker?.aadhaar?.number || '';
   const maskedNumber = rawNumber.length === 12
-    ? `XXXX XXXX ${rawNumber.slice(8)}`
+    ? `${rawNumber.slice(0,4)} ${rawNumber.slice(4,8)} ${rawNumber.slice(8)}`
     : rawNumber || 'Not provided';
 
   return (
