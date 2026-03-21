@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import {
   Wallet,
   CalendarCheck,
@@ -82,6 +83,7 @@ function SkeletonCard() {
 
 // ─── Pending request card ─────────────────────────────────────────────────────
 function PendingRequestCard({ booking, onAccept, onReject, actionLoading }) {
+  const { t } = useTranslation();
   const customer = booking.user_id || {};
   const photo = customer.profilePhoto?.url;
   const initials = customer.name?.[0]?.toUpperCase() || '?';
@@ -106,7 +108,7 @@ function PendingRequestCard({ booking, onAccept, onReject, actionLoading }) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-[#1B2B4B] text-sm">{customer.name || 'Customer'}</p>
+          <p className="font-semibold text-[#1B2B4B] text-sm">{customer.name || t('worker.customer')}</p>
           {service && (
             <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
               <span role="img" aria-label={serviceLabels[service]}>{serviceIcons[service]}</span>
@@ -114,7 +116,7 @@ function PendingRequestCard({ booking, onAccept, onReject, actionLoading }) {
             </p>
           )}
           <span className="inline-block mt-1.5 text-xs px-2.5 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-800">
-            Offer Pending
+            {t('worker.offerPending')}
           </span>
         </div>
         {amount != null && (
@@ -158,7 +160,7 @@ function PendingRequestCard({ booking, onAccept, onReject, actionLoading }) {
           ) : (
             <>
               <CheckCircle size={14} />
-              Accept
+              {t('worker.accept')}
             </>
           )}
         </button>
@@ -168,7 +170,7 @@ function PendingRequestCard({ booking, onAccept, onReject, actionLoading }) {
           className="flex-1 flex items-center justify-center gap-1.5 border border-red-200 hover:border-red-400 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed text-red-600 font-semibold py-2.5 rounded-lg text-sm transition-all duration-150"
         >
           <XCircle size={14} />
-          Reject
+          {t('worker.reject')}
         </button>
       </div>
     </div>
@@ -177,6 +179,7 @@ function PendingRequestCard({ booking, onAccept, onReject, actionLoading }) {
 
 // ─── Recent booking row ───────────────────────────────────────────────────────
 function RecentBookingRow({ booking }) {
+  const { t } = useTranslation();
   const customer = booking.user_id || {};
   const service = booking.service_type;
   const status = booking.status;
@@ -203,7 +206,7 @@ function RecentBookingRow({ booking }) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-[#1B2B4B] truncate">{customer.name || 'Customer'}</p>
+        <p className="text-sm font-medium text-[#1B2B4B] truncate">{customer.name || t('worker.customer')}</p>
         <p className="text-xs text-gray-400 flex items-center gap-1">
           {service && <span>{serviceIcons[service]}</span>}
           {serviceLabels[service] || service}
@@ -226,6 +229,7 @@ function RecentBookingRow({ booking }) {
 export default function WorkerDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [workerProfile, setWorkerProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -380,11 +384,11 @@ export default function WorkerDashboard() {
 
   // Profile completeness
   const completenessItems = [
-    { label: 'Profile photo', done: !!workerProfile?.profilePhoto?.url },
-    { label: 'Bio added', done: !!workerProfile?.bio },
-    { label: 'Services selected', done: (workerProfile?.services || []).length > 0 },
-    { label: 'Pricing set', done: !!(workerProfile?.pricing?.hourly || workerProfile?.pricing?.daily) },
-    { label: 'Location added', done: !!(workerProfile?.location?.city || workerProfile?.city) },
+    { label: t('worker.profilePhoto'), done: !!workerProfile?.profilePhoto?.url },
+    { label: t('worker.bioAdded'), done: !!workerProfile?.bio },
+    { label: t('worker.servicesSelected'), done: (workerProfile?.services || []).length > 0 },
+    { label: t('worker.pricingSet'), done: !!(workerProfile?.pricing?.hourly || workerProfile?.pricing?.daily) },
+    { label: t('worker.locationAdded'), done: !!(workerProfile?.location?.city || workerProfile?.city) },
   ];
   const completedItems = completenessItems.filter((i) => i.done).length;
   const completenessPercent = Math.round((completedItems / completenessItems.length) * 100);
@@ -406,10 +410,10 @@ export default function WorkerDashboard() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
             <div>
               <p className="text-[#C9A84C] text-xs font-semibold uppercase tracking-widest mb-2">
-                Worker Dashboard
+                {t('worker.dashboard')}
               </p>
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white">
-                Welcome back, {user?.name?.split(' ')[0] || 'Worker'}!
+                {t('worker.welcomeBack')}, {user?.name?.split(' ')[0] || 'Worker'}!
               </h1>
               <p className="text-gray-400 text-sm mt-1.5">
                 {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -423,22 +427,22 @@ export default function WorkerDashboard() {
               ) : !profileExists ? (
                 <span className="inline-flex items-center gap-1.5 bg-gray-500/20 border border-gray-400/30 text-gray-300 text-xs font-semibold px-3 py-1.5 rounded-full">
                   <AlertCircle size={12} />
-                  No Profile Yet
+                  {t('worker.noProfileYet')}
                 </span>
               ) : isVerified ? (
                 <span className="inline-flex items-center gap-1.5 bg-green-500/20 border border-green-400/30 text-green-300 text-xs font-semibold px-3 py-1.5 rounded-full">
                   <CheckCircle size={12} />
-                  Verified Worker
+                  {t('worker.verifiedWorker')}
                 </span>
               ) : verificationStatus === 'under_review' ? (
                 <span className="inline-flex items-center gap-1.5 bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold px-3 py-1.5 rounded-full">
                   <Clock size={12} />
-                  Under Review
+                  {t('worker.underReview')}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-full">
                   <AlertCircle size={12} />
-                  Pending Verification
+                  {t('worker.pendingVerification')}
                 </span>
               )}
             </div>
@@ -455,16 +459,16 @@ export default function WorkerDashboard() {
               <AlertCircle size={20} className="text-amber-600" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-amber-900 text-sm">Complete your profile to start receiving bookings</p>
+              <p className="font-semibold text-amber-900 text-sm">{t('worker.completeProfileBanner')}</p>
               <p className="text-amber-700 text-xs mt-0.5">
-                You haven't created a worker profile yet. Set it up to get discovered by customers.
+                {t('worker.completeProfileBannerDesc')}
               </p>
             </div>
             <Link
               to="/worker/profile"
               className="flex-shrink-0 inline-flex items-center gap-1.5 bg-[#C9A84C] hover:bg-[#b8923e] text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
             >
-              Create Profile
+              {t('worker.createProfile')}
               <ChevronRight size={14} />
             </Link>
           </div>
@@ -474,41 +478,41 @@ export default function WorkerDashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard
             icon={Wallet}
-            label="Wallet Balance"
+            label={t('worker.walletBalance')}
             value={walletBalance !== null ? formatCurrency(walletBalance) : '—'}
-            sub="Available to withdraw"
+            sub={t('worker.availableToWithdraw')}
             color="gold"
             loading={walletLoading}
           />
           <StatCard
             icon={CalendarCheck}
-            label="Total Bookings"
+            label={t('worker.totalBookings')}
             value={totalBookings}
-            sub="All time"
+            sub={t('worker.allTime')}
             color="navy"
             loading={profileLoading}
           />
           <StatCard
             icon={Clock}
-            label="Active Jobs"
+            label={t('worker.activeJobs')}
             value={bookingStats.active}
-            sub="Accepted & ongoing"
+            sub={t('worker.acceptedOngoing')}
             color="amber"
             loading={recentLoading}
           />
           <StatCard
             icon={CheckCircle}
-            label="Completed"
+            label={t('worker.completed')}
             value={bookingStats.completed}
-            sub="Successfully finished"
+            sub={t('worker.successfullyFinished')}
             color="green"
             loading={recentLoading}
           />
           <StatCard
             icon={Star}
-            label="Your Rating"
+            label={t('worker.yourRating')}
             value={rating > 0 ? `${rating.toFixed(1)} ★` : '—'}
-            sub={totalReviews > 0 ? `${totalReviews} review${totalReviews !== 1 ? 's' : ''}` : 'No reviews yet'}
+            sub={totalReviews > 0 ? `${totalReviews} ${totalReviews !== 1 ? t('worker.reviews') : t('worker.review')}` : t('worker.noReviewsYet')}
             color="green"
             loading={profileLoading}
           />
@@ -522,7 +526,7 @@ export default function WorkerDashboard() {
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-serif text-lg font-semibold text-[#1B2B4B]">
-                  Pending Booking Requests
+                  {t('worker.pendingRequests')}
                   {pendingBookings.length > 0 && (
                     <span className="ml-2 inline-flex items-center justify-center w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full">
                       {pendingBookings.length}
@@ -533,7 +537,7 @@ export default function WorkerDashboard() {
                   to="/worker/bookings"
                   className="text-[#C9A84C] hover:text-[#a8832a] text-xs font-semibold transition-colors"
                 >
-                  View all
+                  {t('worker.viewAll')}
                 </Link>
               </div>
 
@@ -545,9 +549,9 @@ export default function WorkerDashboard() {
               ) : pendingBookings.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center justify-center py-12 px-4 text-center">
                   <div className="text-4xl mb-3">📋</div>
-                  <p className="font-semibold text-[#1B2B4B] text-sm">No pending requests</p>
+                  <p className="font-semibold text-[#1B2B4B] text-sm">{t('worker.noPendingRequests')}</p>
                   <p className="text-gray-400 text-xs mt-1 max-w-xs">
-                    New booking requests from customers will appear here for you to accept or reject.
+                    {t('worker.noPendingDesc')}
                   </p>
                 </div>
               ) : (
@@ -568,12 +572,12 @@ export default function WorkerDashboard() {
             {/* Recent bookings */}
             <section>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-serif text-lg font-semibold text-[#1B2B4B]">Recent Bookings</h2>
+                <h2 className="font-serif text-lg font-semibold text-[#1B2B4B]">{t('worker.recentBookings')}</h2>
                 <Link
                   to="/worker/bookings"
                   className="text-[#C9A84C] hover:text-[#a8832a] text-xs font-semibold transition-colors flex items-center gap-1"
                 >
-                  See all <ChevronRight size={12} />
+                  {t('worker.seeAll')} <ChevronRight size={12} />
                 </Link>
               </div>
 
@@ -594,7 +598,7 @@ export default function WorkerDashboard() {
                 ) : recentBookings.length === 0 ? (
                   <div className="text-center py-8">
                     <CalendarCheck size={32} className="mx-auto text-gray-200 mb-2" />
-                    <p className="text-gray-400 text-sm">No bookings yet.</p>
+                    <p className="text-gray-400 text-sm">{t('worker.noBookingsYet')}</p>
                   </div>
                 ) : (
                   <div>
@@ -612,7 +616,7 @@ export default function WorkerDashboard() {
             {/* Profile completeness card */}
             {profileExists && (
               <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <h3 className="font-serif text-base font-semibold text-[#1B2B4B] mb-4">Profile Completeness</h3>
+                <h3 className="font-serif text-base font-semibold text-[#1B2B4B] mb-4">{t('worker.profileCompleteness')}</h3>
 
                 {/* Progress bar */}
                 <div className="mb-4">
@@ -651,7 +655,7 @@ export default function WorkerDashboard() {
                   className="w-full flex items-center justify-center gap-1.5 border border-[#1B2B4B]/20 hover:border-[#1B2B4B]/40 hover:bg-[#1B2B4B]/5 text-[#1B2B4B] font-semibold py-2 rounded-lg text-xs transition-colors"
                 >
                   <User size={13} />
-                  Edit Profile
+                  {t('worker.editProfile')}
                 </Link>
               </section>
             )}

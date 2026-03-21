@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin, Wallet, CalendarCheck, UserCircle, LayoutDashboard, Search } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { serviceIcons, serviceLabels } from '../utils/helpers';
 import { useAuth } from '../hooks/useAuth';
 
@@ -122,7 +123,7 @@ const cardFadeUp = {
 };
 
 // ── Hero Slider ───────────────────────────────────────────────────────────────
-const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
+const HeroSlider = ({ searchCity, setSearchCity, navigate, user, t }) => {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
   const timerRef = useRef(null);
@@ -260,7 +261,7 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
               className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-6 py-3 rounded-xl text-sm transition-all duration-200 shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5 flex-shrink-0"
             >
               <Search size={15} />
-              Search
+              {t ? t('common.search') : 'Search'}
             </button>
           </div>
 
@@ -270,14 +271,14 @@ const HeroSlider = ({ searchCity, setSearchCity, navigate, user }) => {
               to="/workers"
               className="inline-flex items-center gap-2 bg-white text-gray-900 font-bold px-7 py-3.5 rounded-xl text-sm transition-all duration-200 shadow-lg hover:-translate-y-0.5 hover:shadow-xl"
             >
-              Browse All Workers <ArrowRight size={16} />
+              {t('home.findWorkers')} <ArrowRight size={16} />
             </Link>
             {!user && (
               <Link
                 to="/register"
                 className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-7 py-3.5 rounded-xl text-sm transition-all duration-200 backdrop-blur-sm"
               >
-                Join as a Worker
+                {t('home.becomePro')}
               </Link>
             )}
           </div>
@@ -373,6 +374,7 @@ const ServicesMarquee = () => (
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const isWorker = user?.role === 'worker';
   const [searchCity, setSearchCity] = useState('');
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -444,6 +446,7 @@ const Home = () => {
           setSearchCity={setSearchCity}
           navigate={navigate}
           user={user}
+          t={t}
         />
       )}
 
@@ -482,14 +485,14 @@ const Home = () => {
               to="/workers"
               className="flex-1 inline-flex items-center justify-center gap-2 bg-white text-gray-900 font-bold py-3 rounded-xl text-sm shadow"
             >
-              Browse Workers <ArrowRight size={15} />
+              {t('home.findWorkers')} <ArrowRight size={15} />
             </Link>
             {!user && (
               <Link
                 to="/register"
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-white/10 text-white font-semibold border border-white/25 py-3 rounded-xl text-sm"
               >
-                Become a Worker
+                {t('home.becomePro')}
               </Link>
             )}
           </div>
@@ -916,10 +919,10 @@ const Home = () => {
             transition={{ duration: 0.4 }}
             className="text-center mb-16"
           >
-            <span className="inline-block bg-primary-50 text-primary-600 text-xs font-bold px-4 py-1.5 rounded-full mb-4 tracking-widest uppercase">How It Works</span>
+            <span className="inline-block bg-primary-50 text-primary-600 text-xs font-bold px-4 py-1.5 rounded-full mb-4 tracking-widest uppercase">{t('home.howItWorks')}</span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900">
               {isWorker ? 'Start earning in ' : 'Book in '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-violet-600">4 simple steps</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-violet-600">{t('home.howItWorksSubtitle')}</span>
             </h2>
           </motion.div>
 
@@ -1198,12 +1201,10 @@ const Home = () => {
               {isWorker ? 'Keep Growing' : 'Get Started Today'}
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mb-5 leading-tight">
-              {isWorker ? 'Ready to grow your income?' : 'Ready to find your perfect match?'}
+              {t('home.readyToStart')}
             </h2>
             <p className="text-primary-200 text-lg mb-10 max-w-xl mx-auto">
-              {isWorker
-                ? 'Keep your profile updated, accept more bookings, and watch your wallet grow.'
-                : 'Join thousands of happy customers who trust MaidMatch for their home service needs.'}
+              {t('home.readySubtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {isWorker ? (
@@ -1212,13 +1213,13 @@ const Home = () => {
                     to="/worker/dashboard"
                     className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-4 rounded-xl text-base transition-all shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
                   >
-                    Go to Dashboard <ArrowRight size={18} />
+                    {t('nav.dashboard')} <ArrowRight size={18} />
                   </Link>
                   <Link
                     to="/worker/bookings"
                     className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-4 rounded-xl text-base transition-all backdrop-blur-sm"
                   >
-                    View My Bookings
+                    {t('nav.myBookings')}
                   </Link>
                 </>
               ) : (
@@ -1227,14 +1228,14 @@ const Home = () => {
                     to="/workers"
                     className="inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-4 rounded-xl text-base transition-all shadow-lg shadow-yellow-400/30 hover:-translate-y-0.5"
                   >
-                    Browse Workers <ArrowRight size={18} />
+                    {t('home.findWorkers')} <ArrowRight size={18} />
                   </Link>
                   {!user && (
                     <Link
                       to="/register"
                       className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30 px-8 py-4 rounded-xl text-base transition-all backdrop-blur-sm"
                     >
-                      Register as Worker
+                      {t('home.becomePro')}
                     </Link>
                   )}
                 </>

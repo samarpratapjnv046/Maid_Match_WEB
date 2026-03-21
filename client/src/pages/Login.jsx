@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import {
   Mail, Lock, Eye, EyeOff, Loader2, AlertCircle,
   Sparkles, Shield, Star, Clock,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import LanguageSwitcher from '../components/common/LanguageSwitcher';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -15,10 +17,10 @@ const getDashboardPath = (role) => {
   return '/dashboard';
 };
 
-const FEATURES = [
-  { icon: Shield, text: 'Verified & background-checked professionals' },
-  { icon: Star,   text: 'Top-rated maids in your area' },
-  { icon: Clock,  text: 'Book in minutes, available 24/7' },
+const FEATURE_KEYS = [
+  { icon: Shield, key: 'login.featureVerified' },
+  { icon: Star,   key: 'login.featureRated' },
+  { icon: Clock,  key: 'login.featureBook' },
 ];
 
 function ParticleCanvas() {
@@ -81,6 +83,7 @@ export default function Login() {
   const { login } = useAuth();
   const navigate  = useNavigate();
   const location  = useLocation();
+  const { t } = useTranslation();
   const from      = location.state?.from?.pathname;
 
   const handleChange = (e) => { setFormData({ ...formData, [e.target.name]: e.target.value }); setError(''); };
@@ -91,7 +94,7 @@ export default function Login() {
       const data = await login(formData);
       navigate(from || getDashboardPath(data?.user?.role), { replace: true });
     } catch (err) {
-      setError(typeof err === 'string' ? err : 'Invalid email or password.');
+      setError(typeof err === 'string' ? err : t('login.invalidCredentials'));
     } finally { setBusy(false); }
   };
 
@@ -103,6 +106,11 @@ export default function Login() {
       className="h-screen flex overflow-hidden relative"
       style={{ background: 'linear-gradient(105deg,#0f172a 0%,#1e3a5f 30%,#2563eb 58%,#bfdbfe 80%,#f0f9ff 100%)' }}
     >
+      {/* Language switcher — fixed top-right */}
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSwitcher variant="dark" />
+      </div>
+
       <ParticleCanvas />
 
       {/* ambient blobs */}
@@ -123,23 +131,21 @@ export default function Login() {
 
         {/* Centre copy */}
         <motion.div initial={{ opacity:0,y:28 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.6 }}>
-          <p className="text-blue-300 text-xs font-bold tracking-[0.2em] uppercase mb-4">Welcome back</p>
+          <p className="text-blue-300 text-xs font-bold tracking-[0.2em] uppercase mb-4">{t('login.welcomeBack')}</p>
           <h1 className="text-4xl xl:text-[2.6rem] font-black text-white leading-tight mb-4 drop-shadow-md">
-            Your perfect<br/>
-            <span className="text-transparent bg-clip-text" style={{ backgroundImage:'linear-gradient(90deg,#93c5fd,#c4b5fd)' }}>home helper</span><br/>
-            is waiting.
+            {t('login.tagline')}
           </h1>
           <p className="text-white/55 text-sm leading-relaxed max-w-xs mb-7">
-            Thousands of verified professionals ready to serve you across India.
+            {t('login.taglineDesc')}
           </p>
           <div className="space-y-3">
-            {FEATURES.map(({ icon: Icon, text }, i) => (
-              <motion.div key={text} initial={{ opacity:0,x:-14 }} animate={{ opacity:1,x:0 }}
+            {FEATURE_KEYS.map(({ icon: Icon, key }, i) => (
+              <motion.div key={key} initial={{ opacity:0,x:-14 }} animate={{ opacity:1,x:0 }}
                 transition={{ delay:0.3+i*0.1,duration:0.4 }} className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
                   <Icon size={13} className="text-blue-300" />
                 </div>
-                <span className="text-sm text-white/70">{text}</span>
+                <span className="text-sm text-white/70">{t(key)}</span>
               </motion.div>
             ))}
           </div>
@@ -152,7 +158,7 @@ export default function Login() {
               <div key={c} className="w-5 h-5 rounded-full border-2 border-white/20" style={{ background:c }} />
             ))}
           </div>
-          <span className="text-xs text-white/65">10,000+ happy customers</span>
+          <span className="text-xs text-white/65">{t('login.happyCustomers')}</span>
         </div>
       </div>
 
@@ -171,10 +177,10 @@ export default function Login() {
             </Link>
           </div>
 
-          <h2 className="text-xl font-black text-gray-900 mb-0.5">Sign in</h2>
+          <h2 className="text-xl font-black text-gray-900 mb-0.5">{t('login.title')}</h2>
           <p className="text-xs text-gray-500 mb-5">
-            New here?{' '}
-            <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">Create a free account</Link>
+            {t('login.subtitle')}{' '}
+            <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">{t('login.createAccount')}</Link>
           </p>
 
           {error && (
@@ -186,23 +192,23 @@ export default function Login() {
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Email address</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">{t('login.email')}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Mail size={15} className="text-gray-400" /></div>
                 <input name="email" type="email" required autoComplete="email" className={inp}
-                  placeholder="you@example.com" value={formData.email} onChange={handleChange} />
+                  placeholder={t('login.emailPlaceholder')} value={formData.email} onChange={handleChange} />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-gray-700">Password</label>
-                <Link to="/forgot-password" state={{ email: formData.email }} className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors">Forgot password?</Link>
+                <label className="text-xs font-semibold text-gray-700">{t('login.password')}</label>
+                <Link to="/forgot-password" state={{ email: formData.email }} className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors">{t('login.forgotPassword')}</Link>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock size={15} className="text-gray-400" /></div>
                 <input name="password" type={showPwd ? 'text' : 'password'} required autoComplete="current-password"
-                  className={inpPr} placeholder="••••••••" value={formData.password} onChange={handleChange} />
+                  className={inpPr} placeholder={t('login.passwordPlaceholder')} value={formData.password} onChange={handleChange} />
                 <button type="button" onClick={() => setShowPwd(v => !v)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
                   {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -214,13 +220,13 @@ export default function Login() {
               className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-bold text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ background:busy?'#93c5fd':'linear-gradient(135deg,#1e3a5f 0%,#1d4ed8 60%,#2563eb 100%)',boxShadow:'0 5px 18px rgba(29,78,216,0.35)' }}
             >
-              {busy ? <><Loader2 size={15} className="animate-spin" /> Signing in…</> : 'Sign in to MaidMatch'}
+              {busy ? <><Loader2 size={15} className="animate-spin" /> {t('login.submitting')}</> : t('login.submit')}
             </button>
           </form>
 
           <div className="flex items-center gap-2 my-4">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400">or</span>
+            <span className="text-xs text-gray-400">{t('login.or')}</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
@@ -235,13 +241,13 @@ export default function Login() {
               <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
               <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
             </svg>
-            Continue with Google
+            {t('login.continueWithGoogle')}
           </button>
 
           <p className="mt-4 text-center text-xs text-gray-400">
-            By signing in, you agree to our{' '}
-            <span className="text-blue-600 cursor-pointer hover:underline">Terms</span> &amp;{' '}
-            <span className="text-blue-600 cursor-pointer hover:underline">Privacy Policy</span>
+            {t('login.termsPrefix')}{' '}
+            <Link to="/terms" className="text-blue-600 hover:underline">{t('login.terms')}</Link> &amp;{' '}
+            <Link to="/privacy" className="text-blue-600 hover:underline">{t('login.privacyPolicy')}</Link>
           </p>
         </motion.div>
       </div>

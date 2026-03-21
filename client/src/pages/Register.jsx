@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/common/LanguageSwitcher';
 import api from '../api/axios';
 import {
   User, Mail, Lock, Phone, Eye, EyeOff, Loader2, AlertCircle,
@@ -56,6 +58,7 @@ const Register = () => {
   const [step2Loading, setStep2Loading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -165,7 +168,12 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
+      {/* Language switcher — fixed top-right */}
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSwitcher />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -177,13 +185,13 @@ const Register = () => {
             Maid<span className="text-gray-900">Match</span>
           </Link>
           <h2 className="text-3xl font-extrabold text-gray-900">
-            {step === 1 ? 'Create your account' : 'Set up your worker profile'}
+            {step === 1 ? t('register.step1Title') : t('register.step2Title')}
           </h2>
           {step === 1 ? (
             <p className="mt-2 text-sm text-gray-600">
-              Already have an account?{' '}
+              {t('register.alreadyHaveAccount')}{' '}
               <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500 transition-colors">
-                Sign in
+                {t('register.signIn')}
               </Link>
             </p>
           ) : (
@@ -233,8 +241,8 @@ const Register = () => {
                 {/* Role selector */}
                 <div className="flex gap-3 mb-2">
                   {[
-                    { value: 'customer', label: 'I need a Maid', icon: ShoppingBag },
-                    { value: 'worker', label: 'I am a Worker', icon: Briefcase },
+                    { value: 'customer', label: t('register.customerDesc'), icon: ShoppingBag },
+                    { value: 'worker', label: t('register.workerDesc'), icon: Briefcase },
                   ].map(({ value, label, icon: Icon }) => (
                     <button
                       key={value}
@@ -252,46 +260,46 @@ const Register = () => {
                   ))}
                 </div>
 
-                <InputField label="Full Name" icon={User}>
+                <InputField label={t('register.fullName')} icon={User}>
                   <input
                     name="name" type="text" required autoComplete="name"
-                    className="input-field pl-10" placeholder="John Doe"
+                    className="input-field pl-10" placeholder={t('register.namePlaceholder')}
                     value={formData.name} onChange={handleChange}
                   />
                 </InputField>
 
-                <InputField label="Email address" icon={Mail}>
+                <InputField label={t('register.email')} icon={Mail}>
                   <input
                     name="email" type="email" required autoComplete="email"
-                    className="input-field pl-10" placeholder="you@example.com"
+                    className="input-field pl-10" placeholder={t('register.emailPlaceholder')}
                     value={formData.email} onChange={handleChange}
                   />
                 </InputField>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <InputField label="Phone Number" icon={Phone}>
+                  <InputField label={t('register.phone')} icon={Phone}>
                     <input
                       name="phone" type="tel" required autoComplete="tel"
-                      className="input-field pl-10" placeholder="9876543210" maxLength={10}
+                      className="input-field pl-10" placeholder={t('register.phonePlaceholder')} maxLength={10}
                       value={formData.phone} onChange={handleChange}
                     />
                   </InputField>
 
-                  <InputField label={<>Pincode <span className="text-red-500">*</span></>} icon={MapPin}>
+                  <InputField label={<>{t('register.pincode')} <span className="text-red-500">*</span></>} icon={MapPin}>
                     <input
                       name="pincode" type="text" required maxLength={6}
-                      className="input-field pl-10" placeholder="e.g. 400001"
+                      className="input-field pl-10" placeholder={t('register.pincodePlaceholder')}
                       value={formData.pincode} onChange={handleChange}
                     />
                   </InputField>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <InputField label="Password" icon={Lock}>
+                  <InputField label={t('register.password')} icon={Lock}>
                     <input
                       name="password" type={showPassword ? 'text' : 'password'}
                       required autoComplete="new-password"
-                      className="input-field pl-10 pr-10" placeholder="Min. 8 chars"
+                      className="input-field pl-10 pr-10" placeholder={t('register.passwordPlaceholder')}
                       value={formData.password} onChange={handleChange}
                     />
                     <button type="button" onClick={() => setShowPassword((v) => !v)}
@@ -300,11 +308,11 @@ const Register = () => {
                     </button>
                   </InputField>
 
-                  <InputField label="Confirm Password" icon={Lock}>
+                  <InputField label={t('register.confirmPassword')} icon={Lock}>
                     <input
                       name="confirmPassword" type={showConfirm ? 'text' : 'password'}
                       required autoComplete="new-password"
-                      className="input-field pl-10 pr-10" placeholder="Repeat"
+                      className="input-field pl-10 pr-10" placeholder={t('register.confirmPasswordPlaceholder')}
                       value={formData.confirmPassword} onChange={handleChange}
                     />
                     <button type="button" onClick={() => setShowConfirm((v) => !v)}
@@ -320,18 +328,18 @@ const Register = () => {
                   className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-sm shadow-primary-200 mt-2"
                 >
                   {step1Loading ? (
-                    <><Loader2 size={16} className="animate-spin" /> Creating account…</>
+                    <><Loader2 size={16} className="animate-spin" /> {t('register.creating')}</>
                   ) : formData.role === 'worker' ? (
-                    <><span>Continue</span><ChevronRight size={16} /></>
+                    <><span>{t('register.continue')}</span><ChevronRight size={16} /></>
                   ) : (
-                    'Create Account'
+                    t('register.createAccount')
                   )}
                 </button>
 
                 {/* Divider */}
                 <div className="flex items-center gap-3 mt-2">
                   <div className="flex-1 h-px bg-gray-200" />
-                  <span className="text-xs text-gray-400 font-medium">or</span>
+                  <span className="text-xs text-gray-400 font-medium">{t('login.or')}</span>
                   <div className="flex-1 h-px bg-gray-200" />
                 </div>
 
@@ -347,7 +355,7 @@ const Register = () => {
                     <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
                     <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
                   </svg>
-                  Continue with Google as {formData.role === 'worker' ? 'Worker' : 'Customer'}
+                  {t('login.continueWithGoogle')} ({formData.role === 'worker' ? t('register.worker') : t('register.customer')})
                 </button>
               </motion.form>
             ) : (
@@ -500,7 +508,7 @@ const Register = () => {
                     onClick={() => { setStep(1); setLocalError(''); }}
                     className="flex items-center gap-1.5 px-5 py-3 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all"
                   >
-                    <ChevronLeft size={16} /> Back
+                    <ChevronLeft size={16} /> {t('register.back')}
                   </button>
                   <button
                     type="submit"
@@ -508,9 +516,9 @@ const Register = () => {
                     className="flex-1 flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-sm shadow-primary-200"
                   >
                     {step2Loading ? (
-                      <><Loader2 size={16} className="animate-spin" /> Saving profile…</>
+                      <><Loader2 size={16} className="animate-spin" /> {t('register.submitting')}</>
                     ) : (
-                      'Complete Registration'
+                      t('register.createAccount')
                     )}
                   </button>
                 </div>
@@ -520,10 +528,10 @@ const Register = () => {
 
           {step === 1 && (
             <p className="mt-6 text-center text-xs text-gray-400">
-              By creating an account, you agree to our{' '}
-              <span className="text-primary-600 cursor-pointer hover:underline">Terms of Service</span>
-              {' '}and{' '}
-              <span className="text-primary-600 cursor-pointer hover:underline">Privacy Policy</span>
+              {t('register.termsPrefix')}{' '}
+              <Link to="/terms" className="text-primary-600 hover:underline">{t('register.termsOfService')}</Link>
+              {' '}{t('register.and')}{' '}
+              <Link to="/privacy" className="text-primary-600 hover:underline">{t('register.privacyPolicy')}</Link>
             </p>
           )}
         </div>

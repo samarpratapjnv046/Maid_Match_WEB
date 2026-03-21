@@ -1,8 +1,10 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User as UserIcon, LogOut, LayoutDashboard, Search, ChevronDown, ArrowLeftRight, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
+import LanguageSwitcher from '../common/LanguageSwitcher';
 
 const getDashboardPath = (role) => {
   if (role === 'worker') return '/worker/dashboard';
@@ -18,6 +20,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
+  const { t } = useTranslation();
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -48,17 +51,17 @@ export default function Navbar() {
     try {
       const result = await switchMode(targetMode);
       if (result?.needsProfile) {
-        toast('Complete your worker profile to continue.', { icon: '📋' });
+        toast(t('nav.completeProfile'), { icon: '📋' });
         navigate('/worker/setup');
       } else if (result?.role === 'customer') {
-        toast.success('Switched to Customer mode');
+        toast.success(t('nav.switchedToCustomer'));
         navigate('/');
       } else if (result?.role === 'worker') {
-        toast.success('Switched to Worker mode');
+        toast.success(t('nav.switchedToWorker'));
         navigate('/worker/dashboard');
       }
     } catch {
-      toast.error('Failed to switch mode. Please try again.');
+      toast.error(t('nav.switchFailed'));
     } finally {
       setSwitching(false);
     }
@@ -72,38 +75,37 @@ export default function Navbar() {
     ? []
     : user?.role === 'worker'
     ? [
-        { to: '/', label: 'Home' },
-        { to: '/workers', label: 'Book a Maid' },
+        { to: '/', label: t('nav.home') },
+        { to: '/workers', label: t('nav.bookMaid') },
       ]
     : [
-        { to: '/', label: 'Home' },
-        { to: '/workers', label: 'Book a Worker' },
+        { to: '/', label: t('nav.home') },
+        { to: '/workers', label: t('nav.bookWorker') },
       ];
 
   const userMenuLinks = user?.role === 'customer'
     ? [
-        { to: '/dashboard', label: 'Dashboard' },
-        { to: '/bookings', label: 'My Bookings' },
-        { to: '/favorites', label: 'My Favorites' },
-        { to: '/profile', label: 'Profile' },
+        { to: '/dashboard', label: t('nav.dashboard') },
+        { to: '/bookings', label: t('nav.myBookings') },
+        { to: '/favorites', label: t('nav.myFavorites') },
+        { to: '/profile', label: t('nav.profile') },
       ]
     : user?.role === 'worker'
     ? [
-        { to: '/worker/dashboard', label: 'Dashboard' },
-        { to: '/worker/bookings', label: 'My Bookings' },
-        { to: '/worker/wallet', label: 'My Wallet' },
-        { to: '/worker/profile', label: 'Worker Profile' },
-        { to: '/profile', label: 'Account Settings' },
+        { to: '/worker/dashboard', label: t('nav.dashboard') },
+        { to: '/worker/bookings', label: t('nav.myBookings') },
+        { to: '/worker/wallet', label: t('nav.myWallet') },
+        { to: '/worker/profile', label: t('nav.workerProfile') },
+        { to: '/profile', label: t('nav.accountSettings') },
       ]
     : user?.role === 'admin'
     ? [
-        { to: '/admin', label: 'Admin Panel' },
+        { to: '/admin', label: t('nav.adminPanel') },
       ]
     : [];
 
-  // Switch button label & style
-  const switchLabel = user?.role === 'worker' ? 'Customer Mode' : 'Worker Mode';
-  const switchSubtitle = user?.role === 'worker' ? 'Currently: Worker' : 'Currently: Customer';
+  const switchLabel = user?.role === 'worker' ? t('nav.switchToCustomer') : t('nav.switchToWorker');
+  const switchSubtitle = user?.role === 'worker' ? t('nav.currentlyWorker') : t('nav.currentlyCustomer');
 
   return (
     <nav className="fixed w-full z-50 glass">
@@ -117,7 +119,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center space-x-5">
+          <div className="hidden md:flex items-center space-x-4">
             {navLinks.map(({ to, label }) => (
               <Link
                 key={to}
@@ -132,6 +134,9 @@ export default function Navbar() {
               </Link>
             ))}
 
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             {/* Mode switch toggle — only for customers and workers */}
             {user && user.role !== 'admin' && (
               <button
@@ -143,7 +148,7 @@ export default function Navbar() {
                 {switching
                   ? <Loader2 size={12} className="animate-spin" />
                   : <ArrowLeftRight size={12} />}
-                {switchLabel}
+                {switching ? t('nav.switchingMode') : switchLabel}
               </button>
             )}
 
@@ -189,7 +194,7 @@ export default function Navbar() {
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <LogOut size={14} />
-                        Sign out
+                        {t('nav.signOut')}
                       </button>
                     </div>
                   </div>
@@ -198,9 +203,9 @@ export default function Navbar() {
             ) : (
               <div className="flex items-center gap-3">
                 <Link to="/login" className="text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
-                  Sign in
+                  {t('nav.signIn')}
                 </Link>
-                <Link to="/register" className="btn-primary text-sm">Get Started</Link>
+                <Link to="/register" className="btn-primary text-sm">{t('nav.getStarted')}</Link>
               </div>
             )}
           </div>
@@ -230,6 +235,11 @@ export default function Navbar() {
               </Link>
             ))}
 
+            {/* Mobile language switcher */}
+            <div className="px-3 py-2">
+              <LanguageSwitcher className="w-full" />
+            </div>
+
             {user && user.role !== 'admin' && (
               <button
                 onClick={handleSwitch}
@@ -239,7 +249,7 @@ export default function Navbar() {
                 {switching
                   ? <Loader2 size={15} className="animate-spin" />
                   : <ArrowLeftRight size={15} />}
-                <span>Switch to {switchLabel}</span>
+                <span>{switching ? t('nav.switchingMode') : `Switch to ${switchLabel}`}</span>
                 <span className="ml-auto text-xs font-normal text-gray-400">{switchSubtitle}</span>
               </button>
             )}
@@ -275,17 +285,17 @@ export default function Navbar() {
                     className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 mt-1"
                   >
                     <LogOut size={15} />
-                    Sign out
+                    {t('nav.signOut')}
                   </button>
                 </div>
               </>
             ) : (
               <div className="border-t border-gray-100 pt-3 mt-2 space-y-2">
                 <Link to="/login" className="block px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
-                  Sign in
+                  {t('nav.signIn')}
                 </Link>
                 <Link to="/register" className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 text-center">
-                  Get Started
+                  {t('nav.getStarted')}
                 </Link>
               </div>
             )}
