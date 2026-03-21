@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { MapPin, Clock, Star, CheckCircle, Calendar, Phone, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
+import { MapPin, Clock, Star, CheckCircle, Calendar, Phone, AlertTriangle, CheckCircle2, Loader2, Heart } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import StarRating from '../../components/common/StarRating';
@@ -66,6 +66,8 @@ export default function WorkerProfile() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [favorited, setFavorited] = useState(false);
+  const [togglingFav, setTogglingFav] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
   const [formErrors, setFormErrors] = useState({});
 
@@ -97,6 +99,31 @@ export default function WorkerProfile() {
   useEffect(() => {
     fetchWorker();
   }, [fetchWorker]);
+
+  // Check if this worker is already favorited (customers only)
+  useEffect(() => {
+    if (user?.role !== 'customer') return;
+    api.get('/favorites')
+      .then(({ data }) => {
+        const ids = (data.data || []).map((w) => w._id);
+        setFavorited(ids.includes(id));
+      })
+      .catch(() => {});
+  }, [id, user]);
+
+  const handleFavoriteToggle = async () => {
+    if (togglingFav) return;
+    setTogglingFav(true);
+    try {
+      const { data } = await api.post(`/favorites/${id}`);
+      setFavorited(data.favorited);
+      toast.success(data.message);
+    } catch {
+      toast.error('Failed to update favorites.');
+    } finally {
+      setTogglingFav(false);
+    }
+  };
 
   // Auto-check availability whenever start or end time changes
   useEffect(() => {
@@ -295,6 +322,23 @@ export default function WorkerProfile() {
                     <CheckCircle size={11} />
                     Verified
                   </span>
+                )}
+                {user?.role === 'customer' && (
+                  <button
+                    onClick={handleFavoriteToggle}
+                    disabled={togglingFav}
+                    title={favorited ? 'Remove from favorites' : 'Add to favorites'}
+                    className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full border transition-all disabled:opacity-50 ${
+                      favorited
+                        ? 'bg-red-500/20 border-red-400/40 text-red-300 hover:bg-red-500/30'
+                        : 'bg-white/10 border-white/20 text-gray-300 hover:text-red-300 hover:border-red-400/40'
+                    }`}
+                  >
+                    {togglingFav
+                      ? <Loader2 size={14} className="animate-spin" />
+                      : <Heart size={14} className={favorited ? 'fill-current' : ''} />}
+                    {favorited ? 'Saved' : 'Save'}
+                  </button>
                 )}
               </div>
 

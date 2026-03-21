@@ -14,6 +14,9 @@ export const registerSchema = Joi.object({
     'string.pattern.base': 'Please provide a valid 10-digit Indian mobile number.',
   }),
   role: Joi.string().valid('customer', 'worker').default('customer'),
+  pincode: Joi.string().pattern(/^\d{6}$/).required().messages({
+    'string.pattern.base': 'Please provide a valid 6-digit pincode.',
+  }),
 });
 
 export const loginSchema = Joi.object({

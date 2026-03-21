@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Filter, Search, MapPin, Star, ChevronDown, CheckCircle } from 'lucide-react';
+import { Filter, Search, MapPin, Star, ChevronDown, CheckCircle, Heart } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import StarRating from '../../components/common/StarRating';
@@ -45,7 +45,32 @@ function SkeletonCard() {
   );
 }
 
-function WorkerCard({ worker }) {
+function WorkerCard({ worker, isFavorited, onFavoriteToggle }) {
+  const { user } = useAuth();
+  const isCustomer = user?.role === 'customer';
+  const [favorited, setFavorited] = useState(isFavorited);
+  const [togglingFav, setTogglingFav] = useState(false);
+
+  useEffect(() => {
+    setFavorited(isFavorited);
+  }, [isFavorited]);
+
+  const handleFavoriteToggle = async (e) => {
+    e.preventDefault();
+    if (!isCustomer || togglingFav) return;
+    setTogglingFav(true);
+    try {
+      const { data } = await api.post(`/favorites/${worker._id}`);
+      setFavorited(data.favorited);
+      onFavoriteToggle?.(worker._id, data.favorited);
+      toast.success(data.message);
+    } catch {
+      toast.error('Failed to update favorites.');
+    } finally {
+      setTogglingFav(false);
+    }
+  };
+
   // Backend populates user_id with { name, profilePhoto }
   const photo = worker.user_id?.profilePhoto?.url;
   const name = worker.user_id?.name || 'Worker';
@@ -60,9 +85,21 @@ function WorkerCard({ worker }) {
   const isVerified = worker.is_verified || worker.verification_status === 'verified';
 
   return (
-    <div className="bg-[#FDFCF8] rounded-2xl border-l-4 border-l-[#C9A84C] border border-[#E8E2D5] shadow-[0_4px_20px_rgba(201,168,76,0.10),0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.18),0_2px_8px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-200 p-5 flex flex-col">
+    <div className="relative bg-[#FDFCF8] rounded-2xl border-l-4 border-l-[#C9A84C] border border-[#E8E2D5] shadow-[0_4px_20px_rgba(201,168,76,0.10),0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.18),0_2px_8px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-200 p-5 flex flex-col">
       {/* Header */}
       <div className="flex items-start gap-4">
+        {isCustomer && (
+          <button
+            onClick={handleFavoriteToggle}
+            disabled={togglingFav}
+            title={favorited ? 'Remove from favorites' : 'Add to favorites'}
+            className={`absolute top-4 right-4 p-1.5 rounded-full transition-colors disabled:opacity-50 ${
+              favorited ? 'text-red-500 hover:text-red-600' : 'text-gray-300 hover:text-red-400'
+            }`}
+          >
+            <Heart size={18} className={favorited ? 'fill-current' : ''} />
+          </button>
+        )}
         <div className="relative flex-shrink-0">
           {photo ? (
             <img
@@ -185,6 +222,7 @@ export default function SearchWorkers() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
 
   const buildParams = useCallback(
     (pageNum = 1) => {
@@ -201,6 +239,17 @@ export default function SearchWorkers() {
     },
     [filters, ratingRange]
   );
+
+  // Fetch customer's existing favorites once
+  useEffect(() => {
+    if (user?.role !== 'customer') return;
+    api.get('/favorites')
+      .then(({ data }) => {
+        const ids = (data.data || []).map((w) => w._id);
+        setFavoriteIds(new Set(ids));
+      })
+      .catch(() => {});
+  }, [user]);
 
   const fetchWorkers = useCallback(
     async (pageNum = 1, append = false) => {
@@ -563,7 +612,18 @@ export default function SearchWorkers() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
                   {workers.map((worker) => (
-                    <WorkerCard key={worker._id} worker={worker} />
+                    <WorkerCard
+                      key={worker._id}
+                      worker={worker}
+                      isFavorited={favoriteIds.has(worker._id)}
+                      onFavoriteToggle={(id, favorited) => {
+                        setFavoriteIds((prev) => {
+                          const next = new Set(prev);
+                          if (favorited) next.add(id); else next.delete(id);
+                          return next;
+                        });
+                      }}
+                    />
                   ))}
                 </div>
 

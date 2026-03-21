@@ -13,6 +13,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import AuthCallback from './pages/AuthCallback';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 
 // Customer pages
 import SearchWorkers from './pages/customer/SearchWorkers';
@@ -20,6 +22,7 @@ import WorkerProfile from './pages/customer/WorkerProfile';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
 import MyBookings from './pages/customer/MyBookings';
 import BookingDetail from './pages/customer/BookingDetail';
+import FavoriteWorkers from './pages/customer/FavoriteWorkers';
 
 // Worker pages
 import WorkerDashboard from './pages/worker/WorkerDashboard';
@@ -104,6 +107,9 @@ function AppRoutes() {
       <Route path="/workers" element={<HomeRoute><MainLayout><SearchWorkers /></MainLayout></HomeRoute>} />
       <Route path="/workers/:id" element={<HomeRoute><MainLayout><WorkerProfile /></MainLayout></HomeRoute>} />
 
+      <Route path="/terms" element={<MainLayout><Terms /></MainLayout>} />
+      <Route path="/privacy" element={<MainLayout><Privacy /></MainLayout>} />
+
       {/* ── OAuth callback (public, no auth guard) ── */}
       <Route path="/auth/callback" element={<AuthCallback />} />
 
@@ -126,6 +132,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['customer']}>
             <MainLayout><MyBookings /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/favorites"
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <MainLayout><FavoriteWorkers /></MainLayout>
           </ProtectedRoute>
         }
       />

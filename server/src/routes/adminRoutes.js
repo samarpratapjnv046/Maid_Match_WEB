@@ -4,6 +4,7 @@ import {
   banUser,
   unbanUser,
   getAllWorkers,
+  getWorkerDetail,
   verifyWorker,
   rejectWorker,
   getAllBookings,
@@ -28,6 +29,7 @@ router.patch('/users/:id/unban', unbanUser);
 
 // Workers
 router.get('/workers', getAllWorkers);
+router.get('/workers/:id', getWorkerDetail);
 router.patch('/workers/:id/verify', verifyWorker);
 router.patch('/workers/:id/reject', rejectWorker);
 

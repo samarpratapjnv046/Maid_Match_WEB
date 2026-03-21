@@ -277,7 +277,6 @@ export default function Login() {
             <Link to="/privacy" className="underline hover:text-gray-600 transition-colors">
               Privacy Policy
             </Link>
-            .
           </p>
         </div>
       </div>

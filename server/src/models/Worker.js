@@ -55,9 +55,11 @@ const workerSchema = new mongoose.Schema(
     },
     // Aadhaar - stored securely, excluded in all public queries via .select('-aadhaar')
     aadhaar: {
-      url: { type: String },
-      public_id: { type: String },
+      url: { type: String, default: '' },
+      public_id: { type: String, default: '' },
+      number: { type: String, default: '' }, // full Aadhaar number, admin-only
       verified: { type: Boolean, default: false },
+      submitted_at: { type: Date },
     },
     is_verified: { type: Boolean, default: false },
     is_available: { type: Boolean, default: true },

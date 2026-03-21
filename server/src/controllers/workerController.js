@@ -93,10 +93,9 @@ export const uploadProfilePhoto = async (req, res, next) => {
 // @access  Private (worker)
 export const getMyWorkerProfile = async (req, res, next) => {
   try {
-    const worker = await Worker.findOne({ user_id: req.user._id }).populate(
-      'user_id',
-      'name email phone profilePhoto'
-    );
+    const worker = await Worker.findOne({ user_id: req.user._id })
+      .select('-aadhaar.number -aadhaar.public_id')
+      .populate('user_id', 'name email phone profilePhoto');
     if (!worker) return next(new AppError('Worker profile not found.', 404));
     res.json({ success: true, data: worker });
   } catch (err) {
@@ -245,6 +244,59 @@ export const getWorkerById = async (req, res, next) => {
 
     if (!worker) return next(new AppError('Worker not found.', 404));
     res.json({ success: true, data: worker });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Upload / update Aadhaar document and number for identity verification
+// @route   POST /api/workers/aadhaar
+// @access  Private (worker, customer-in-setup)
+export const submitAadhaar = async (req, res, next) => {
+  try {
+    const worker = await Worker.findOne({ user_id: req.user._id });
+    if (!worker) return next(new AppError('Worker profile not found. Create your profile first.', 404));
+
+    const { aadhaar_number } = req.body;
+
+    // Validate Aadhaar number (12 digits)
+    if (!aadhaar_number || !/^\d{12}$/.test(aadhaar_number.replace(/\s/g, ''))) {
+      return next(new AppError('Aadhaar number must be exactly 12 digits.', 400));
+    }
+
+    if (!req.file) {
+      return next(new AppError('Please upload your Aadhaar document.', 400));
+    }
+
+    // Delete old Aadhaar from Cloudinary if exists
+    if (worker.aadhaar?.public_id) {
+      await cloudinary.uploader.destroy(worker.aadhaar.public_id, { resource_type: 'raw' }).catch(() => {});
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, {
+      folder: 'maidproject/aadhaar',
+      resource_type: 'auto',
+    });
+
+    worker.aadhaar = {
+      url: result.secure_url,
+      public_id: result.public_id,
+      number: aadhaar_number.replace(/\s/g, ''),
+      verified: false,
+      submitted_at: new Date(),
+    };
+    worker.verification_status = 'under_review';
+    await worker.save();
+
+    res.json({
+      success: true,
+      message: 'Aadhaar submitted. Your profile is now under admin review.',
+      data: {
+        submitted: true,
+        verification_status: worker.verification_status,
+        submitted_at: worker.aadhaar.submitted_at,
+      },
+    });
   } catch (err) {
     next(err);
   }

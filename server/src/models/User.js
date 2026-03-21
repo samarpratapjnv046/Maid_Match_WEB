@@ -46,6 +46,7 @@ const userSchema = new mongoose.Schema(
         coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]
       },
     },
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Worker' }],
     is_active: { type: Boolean, default: true },
     is_banned: { type: Boolean, default: false },
     ban_reason: { type: String, default: '' },

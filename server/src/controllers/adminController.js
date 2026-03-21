@@ -94,6 +94,18 @@ export const getAllWorkers = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// @route GET /api/admin/workers/:id
+export const getWorkerDetail = async (req, res, next) => {
+  try {
+    const worker = await Worker.findById(req.params.id)
+      .select('+aadhaar.url +aadhaar.public_id +aadhaar.number +aadhaar.verified +aadhaar.submitted_at')
+      .populate('user_id', 'name email phone profilePhoto');
+
+    if (!worker) return next(new AppError('Worker not found.', 404));
+    res.json({ success: true, data: worker });
+  } catch (err) { next(err); }
+};
+
 // @route PATCH /api/admin/workers/:id/verify
 export const verifyWorker = async (req, res, next) => {
   try {

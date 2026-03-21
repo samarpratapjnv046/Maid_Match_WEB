@@ -12,6 +12,7 @@ import bookingRoutes from './src/routes/bookingRoutes.js';
 import paymentRoutes from './src/routes/paymentRoutes.js';
 import walletRoutes from './src/routes/walletRoutes.js';
 import adminRoutes from './src/routes/adminRoutes.js';
+import favoriteRoutes from './src/routes/favoriteRoutes.js';
 
 import { globalErrorHandler } from './src/utils/errorHandler.js';
 import { generalLimiter } from './src/middleware/rateLimiter.js';
@@ -68,6 +69,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/favorites', favoriteRoutes);
 
 // ─── Static Files (Production) ────────────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {

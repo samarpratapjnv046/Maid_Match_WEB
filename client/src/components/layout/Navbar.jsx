@@ -84,6 +84,7 @@ export default function Navbar() {
     ? [
         { to: '/dashboard', label: 'Dashboard' },
         { to: '/bookings', label: 'My Bookings' },
+        { to: '/favorites', label: 'My Favorites' },
         { to: '/profile', label: 'Profile' },
       ]
     : user?.role === 'worker'
