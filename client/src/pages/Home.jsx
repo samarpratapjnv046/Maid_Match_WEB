@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { serviceIcons, serviceLabels } from '../utils/helpers';
 import { useAuth } from '../hooks/useAuth';
+import WorkerDemoSection from '../components/common/WorkerDemoSection';
 
 const SERVICES = [
   'house_cleaning', 'cooking', 'babysitting',
@@ -981,6 +982,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* ── Worker Demo ───────────────────────────────────────────────────────── */}
+      <WorkerDemoSection />
 
       {/* ── Features ──────────────────────────────────────────────────────────── */}
       <section className="py-20 bg-gray-950 relative overflow-hidden">
