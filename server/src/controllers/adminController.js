@@ -4,9 +4,10 @@ import Booking from '../models/Booking.js';
 import Payment from '../models/Payment.js';
 import Review from '../models/Review.js';
 import AuditLog from '../models/AuditLog.js';
+import WithdrawalRequest from '../models/WithdrawalRequest.js';
 import cloudinary from '../config/cloudinary.js';
 import { AppError } from '../utils/errorHandler.js';
-import { sendWorkerVerifiedEmail } from '../utils/email.js';
+import { sendWorkerVerifiedEmail, sendRefundConfirmationEmail, sendWithdrawalApprovedEmail } from '../utils/email.js';
 
 const logAction = async (adminId, action, entityType, entityId, before, after, note, ip) => {
   await AuditLog.create({ admin_id: adminId, action, entity_type: entityType, entity_id: entityId, before_state: before, after_state: after, note, ip_address: ip });
@@ -301,5 +302,234 @@ export const getAuditLogs = async (req, res, next) => {
       AuditLog.countDocuments(filter),
     ]);
     res.json({ success: true, total, page: pageNum, pages: Math.ceil(total / limitNum), data: logs });
+  } catch (err) { next(err); }
+};
+
+// ─── WITHDRAWALS ──────────────────────────────────────────────────────────────
+
+// @route GET /api/admin/withdrawals
+export const getAllWithdrawals = async (req, res, next) => {
+  try {
+    const { status, page, limit } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [withdrawals, total] = await Promise.all([
+      WithdrawalRequest.find(filter)
+        .populate({ path: 'worker_id', select: 'user_id wallet_balance', populate: { path: 'user_id', select: 'name email phone' } })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum),
+      WithdrawalRequest.countDocuments(filter),
+    ]);
+
+    res.json({ success: true, total, page: pageNum, pages: Math.ceil(total / limitNum), data: withdrawals });
+  } catch (err) { next(err); }
+};
+
+// @route PATCH /api/admin/withdrawals/:id/approve
+export const approveWithdrawal = async (req, res, next) => {
+  try {
+    const { utr_number, admin_notes } = req.body;
+
+    // Plain fetch first — no populate to avoid save issues
+    const withdrawal = await WithdrawalRequest.findById(req.params.id);
+    if (!withdrawal) return next(new AppError('Withdrawal request not found.', 404));
+    if (withdrawal.status !== 'pending' && withdrawal.status !== 'processing') {
+      return next(new AppError('This withdrawal has already been finalised.', 400));
+    }
+
+    // Fetch worker separately to deduct wallet
+    const worker = await Worker.findById(withdrawal.worker_id)
+      .populate('user_id', 'name email');
+    if (!worker) return next(new AppError('Worker not found.', 404));
+
+    if (worker.wallet_balance < withdrawal.amount) {
+      return next(new AppError(
+        `Insufficient worker balance (₹${worker.wallet_balance.toFixed(2)}) to cover withdrawal of ₹${withdrawal.amount}.`, 400,
+      ));
+    }
+
+    const balanceBefore = worker.wallet_balance;
+    const balanceAfter  = balanceBefore - withdrawal.amount;
+
+    // Deduct wallet
+    worker.wallet_balance = balanceAfter;
+    await worker.save();
+
+    // Record transaction
+    await Transaction.create({
+      worker_id:    worker._id,
+      type:         'debit',
+      amount:       withdrawal.amount,
+      balance_after: balanceAfter,
+      description:  `Withdrawal approved — UTR: ${utr_number || 'N/A'}`,
+    });
+
+    // Atomic update of withdrawal record
+    await WithdrawalRequest.findByIdAndUpdate(withdrawal._id, {
+      $set: {
+        status:       'completed',
+        utr_number:   utr_number || '',
+        admin_notes:  admin_notes || '',
+        processed_at: new Date(),
+      },
+    });
+
+    await logAction(req.user._id, 'APPROVE_WITHDRAWAL', 'withdrawal', withdrawal._id,
+      { status: withdrawal.status },
+      { status: 'completed', utr_number },
+      admin_notes, req.ip,
+    );
+
+    // Email worker
+    if (worker.user_id?.email) {
+      sendWithdrawalApprovedEmail(
+        worker.user_id.email,
+        worker.user_id.name,
+        withdrawal.amount,
+        utr_number || 'N/A',
+        withdrawal.bank_snapshot?.bank_name || '',
+      ).catch(() => {});
+    }
+
+    res.json({ success: true, message: 'Withdrawal approved. Amount deducted from wallet and worker notified.' });
+  } catch (err) { next(err); }
+};
+
+// @route PATCH /api/admin/withdrawals/:id/reject
+export const rejectWithdrawal = async (req, res, next) => {
+  try {
+    const { reason } = req.body;
+    const withdrawal = await WithdrawalRequest.findById(req.params.id);
+
+    if (!withdrawal) return next(new AppError('Withdrawal request not found.', 404));
+    if (withdrawal.status === 'completed' || withdrawal.status === 'rejected') {
+      return next(new AppError('This withdrawal has already been finalised.', 400));
+    }
+
+    const before = { status: withdrawal.status };
+
+    await WithdrawalRequest.findByIdAndUpdate(withdrawal._id, {
+      $set: {
+        status: 'rejected',
+        rejection_reason: reason || 'Rejected by admin.',
+        processed_at: new Date(),
+      },
+    });
+
+    await logAction(req.user._id, 'REJECT_WITHDRAWAL', 'withdrawal', withdrawal._id, before, { status: 'rejected' }, reason, req.ip);
+    res.json({ success: true, message: 'Withdrawal request rejected.' });
+  } catch (err) { next(err); }
+};
+
+// @route PATCH /api/admin/withdrawals/:id/processing
+export const markWithdrawalProcessing = async (req, res, next) => {
+  try {
+    const withdrawal = await WithdrawalRequest.findById(req.params.id);
+    if (!withdrawal) return next(new AppError('Withdrawal request not found.', 404));
+    if (withdrawal.status !== 'pending') return next(new AppError('Only pending requests can be marked as processing.', 400));
+
+    withdrawal.status = 'processing';
+    await withdrawal.save();
+
+    res.json({ success: true, message: 'Withdrawal marked as processing.' });
+  } catch (err) { next(err); }
+};
+
+// ─── REFUND REQUESTS ─────────────────────────────────────────────────────────
+
+// @route GET /api/admin/refund-requests
+export const getRefundRequests = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const filter = { status: 'cancellation_requested' };
+    const [bookings, total] = await Promise.all([
+      Booking.find(filter)
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(Number(limit))
+        .populate('user_id', 'name email phone'),
+      Booking.countDocuments(filter),
+    ]);
+
+    res.json({ success: true, total, data: bookings });
+  } catch (err) { next(err); }
+};
+
+// @route PATCH /api/admin/refund-requests/:bookingId/process
+export const processManualRefund = async (req, res, next) => {
+  try {
+    const { utr_number, admin_notes } = req.body;
+    if (!utr_number?.trim()) {
+      return next(new AppError('UTR / transaction reference number is required.', 400));
+    }
+
+    // Step 1: plain fetch (no populate) — just to check status
+    const existing = await Booking.findById(req.params.bookingId);
+    if (!existing) return next(new AppError('Booking not found.', 404));
+    if (existing.status !== 'cancellation_requested') {
+      return next(new AppError(
+        `This booking is not pending a refund (current status: ${existing.status}).`, 400,
+      ));
+    }
+
+    // Step 2: atomic update — avoids populate-then-save cast issues
+    const updated = await Booking.findByIdAndUpdate(
+      req.params.bookingId,
+      {
+        $set: {
+          status:             'refunded',
+          refund_utr:         utr_number.trim(),
+          refund_admin_notes: admin_notes?.trim() || '',
+          refunded_at:        new Date(),
+        },
+        $push: {
+          status_history: {
+            status:     'refunded',
+            changed_by: req.user._id,
+            changed_at: new Date(),
+            note:       `Manual refund processed by admin. UTR: ${utr_number.trim()}`,
+          },
+        },
+      },
+      { new: true, runValidators: false },
+    );
+
+    await logAction(
+      req.user._id, 'MANUAL_REFUND', 'Booking', updated._id,
+      { status: 'cancellation_requested' },
+      { status: 'refunded', utr_number },
+      `Manual refund — UTR: ${utr_number}`,
+      req.ip,
+    );
+
+    // Step 3: fetch customer + price data separately for the email
+    const forEmail = await Booking.findById(updated._id)
+      .populate('user_id', 'name email');
+
+    if (forEmail?.user_id?.email) {
+      const price     = forEmail.price || {};
+      const refundAmt = price.worker_payout != null
+        ? Number(price.worker_payout)
+        : Number(price.base_amount ?? 0) - Number(price.platform_commission ?? 0);
+
+      sendRefundConfirmationEmail(
+        forEmail.user_id.email,
+        forEmail.user_id.name,
+        refundAmt.toFixed(2),
+        utr_number.trim(),
+        forEmail.refund_bank_details?.bank_name || '',
+        forEmail._id,
+      ).catch(() => {});
+    }
+
+    res.json({ success: true, message: 'Refund marked as processed and customer notified.', data: updated });
   } catch (err) { next(err); }
 };

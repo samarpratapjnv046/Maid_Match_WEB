@@ -8,6 +8,7 @@ const BOOKING_STATUSES = [
   'paid',
   'completed',
   'cancelled',
+  'cancellation_requested',
   'refunded',
 ];
 
@@ -76,6 +77,18 @@ const bookingSchema = new mongoose.Schema(
       is_used: { type: Boolean, default: false, select: false },
     },
     rejection_reason: { type: String, default: '' },
+    cancellation_reason: { type: String, default: '' },
+    // Bank details provided by customer when requesting a refund
+    refund_bank_details: {
+      account_holder_name: { type: String, default: '' },
+      account_number:      { type: String, default: '' },
+      ifsc_code:           { type: String, default: '' },
+      bank_name:           { type: String, default: '' },
+    },
+    // Set by admin when processing manual refund
+    refund_utr:         { type: String, default: '' },
+    refund_admin_notes: { type: String, default: '' },
+    refunded_at:        { type: Date },
     payment_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Payment',

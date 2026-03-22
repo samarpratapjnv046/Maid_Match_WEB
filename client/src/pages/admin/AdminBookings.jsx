@@ -14,9 +14,10 @@ const STATUS_OPTIONS = [
   { value: 'pending_payment', label: 'Pending Payment' },
   { value: 'paid',            label: 'Paid' },
   { value: 'completed',       label: 'Completed' },
-  { value: 'cancelled',       label: 'Cancelled' },
-  { value: 'rejected',        label: 'Rejected' },
-  { value: 'refunded',        label: 'Refunded' },
+  { value: 'cancelled',               label: 'Cancelled' },
+  { value: 'cancellation_requested',  label: 'Refund Pending' },
+  { value: 'rejected',                label: 'Rejected' },
+  { value: 'refunded',                label: 'Refunded' },
 ];
 
 export default function AdminBookings() {

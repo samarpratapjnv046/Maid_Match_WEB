@@ -13,6 +13,9 @@ import {
 import { generateAndStoreOTP } from '../services/otpService.js';
 import { AppError } from '../utils/errorHandler.js';
 import logger from '../utils/logger.js';
+import { sendCompletionOTPEmail } from '../utils/email.js';
+import { sendOTPSMS } from '../utils/sms.js';
+import User from '../models/User.js';
 
 // @desc    Create Razorpay order
 // @route   POST /api/payments/create-order
@@ -115,11 +118,24 @@ export const verifyPayment = async (req, res, next) => {
 
     await session.commitTransaction();
 
-    // Return OTP to customer (in production: send via SMS/notification)
+    // Fire-and-forget: send OTP via email + SMS (never block payment response)
+    const user = await User.findById(req.user._id).select('name email phone');
+    if (user) {
+      sendCompletionOTPEmail(user.email, user.name, otp, {
+        service_type: booking.service_type,
+        start_time: booking.start_time,
+        _id: booking._id,
+      }).catch((err) => logger.error('OTP email failed:', err.message));
+
+      if (user.phone) {
+        sendOTPSMS(user.phone, otp).catch((err) => logger.error('OTP SMS failed:', err.message));
+      }
+    }
+
     res.json({
       success: true,
-      message: 'Payment successful! Share this OTP with your worker when they arrive.',
-      otp, // In production, send via SMS — returned here for development
+      message: 'Payment successful! Your OTP has been sent to your email. Share it with your worker when they arrive.',
+      otp,
       booking_id: booking._id,
     });
   } catch (err) {

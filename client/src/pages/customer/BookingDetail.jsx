@@ -161,6 +161,12 @@ export default function BookingDetail() {
   const [cancelModal, setCancelModal] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [refundBank, setRefundBank] = useState({
+    account_holder_name: '',
+    account_number: '',
+    ifsc_code: '',
+    bank_name: '',
+  });
 
   // Review modal
   const [reviewModal, setReviewModal] = useState(false);
@@ -201,12 +207,30 @@ export default function BookingDetail() {
 
   // ─── Cancel handler ─────────────────────────────────────────────────────────
   async function handleCancel() {
+    // Validate bank details when booking is paid
+    if (status === 'paid') {
+      const { account_holder_name, account_number, ifsc_code, bank_name } = refundBank;
+      if (!account_holder_name.trim() || !account_number.trim() || !ifsc_code.trim() || !bank_name.trim()) {
+        toast.error('Please fill in all bank account details for the refund.');
+        return;
+      }
+      const ifscPattern = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+      if (!ifscPattern.test(ifsc_code.toUpperCase())) {
+        toast.error('Please enter a valid IFSC code (e.g. SBIN0001234).');
+        return;
+      }
+    }
+
     setCancelLoading(true);
     try {
-      await api.patch(`/bookings/${id}/cancel`, { reason: cancelReason });
-      toast.success('Booking cancelled successfully.');
+      const payload = { reason: cancelReason };
+      if (status === 'paid') payload.refund_bank_details = { ...refundBank, ifsc_code: refundBank.ifsc_code.toUpperCase() };
+
+      const { data } = await api.patch(`/bookings/${id}/cancel`, payload);
+      toast.success(data.message || 'Booking cancelled successfully.');
       setCancelModal(false);
       setCancelReason('');
+      setRefundBank({ account_holder_name: '', account_number: '', ifsc_code: '', bank_name: '' });
       fetchBooking();
     } catch (err) {
       const msg = err?.response?.data?.message || 'Failed to cancel booking.';
@@ -392,7 +416,7 @@ export default function BookingDetail() {
   const existingReview = booking.review;
 
   // Determine which actions to show
-  const canCancel = user?.role === 'customer' && ['offer_pending', 'accepted'].includes(status);
+  const canCancel = user?.role === 'customer' && ['offer_pending', 'accepted', 'pending_payment', 'paid'].includes(status) && status !== 'cancellation_requested';
   const canPay = user?.role === 'customer' && ['accepted', 'pending_payment'].includes(status);
   const canReview = status === 'completed' && !reviewSubmitted && !existingReview;
   const isPaid = ['paid', 'pending_payment', 'completed'].includes(status);
@@ -823,22 +847,107 @@ export default function BookingDetail() {
             </p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-[#1B2B4B] mb-1.5">
-              Reason for cancellation (optional)
-            </label>
-            <textarea
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-              rows={3}
-              placeholder="Let us know why you're cancelling…"
-              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400 transition-colors resize-none"
-            />
-          </div>
+          {/* Bank details form for paid bookings */}
+          {status === 'paid' ? (
+            <div className="space-y-3">
+              {/* Refund amount breakdown */}
+              <div className="border border-blue-100 rounded-xl overflow-hidden text-xs">
+                <div className="flex justify-between px-3 py-2 bg-blue-50">
+                  <span className="text-blue-700">Amount paid</span>
+                  <span className="font-semibold text-blue-800">₹{booking.price?.base_amount ?? '—'}</span>
+                </div>
+                <div className="flex justify-between px-3 py-2 border-t border-blue-100 bg-blue-50/50">
+                  <span className="text-blue-700">Platform fee <span className="text-orange-500">(non-refundable)</span></span>
+                  <span className="font-semibold text-red-500">− ₹{booking.price?.platform_commission ?? '—'}</span>
+                </div>
+                <div className="flex justify-between px-3 py-2.5 border-t-2 border-blue-200 bg-green-50">
+                  <span className="font-bold text-green-800">You will receive</span>
+                  <span className="font-bold text-green-700">₹{booking.price?.worker_payout ?? '—'}</span>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500">
+                Enter your bank account details below. Our team will manually transfer the refund within 3–5 business days.
+              </p>
+
+              <p className="text-xs font-semibold text-[#1B2B4B] uppercase tracking-wider">Your Bank Account Details</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Account Holder Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={refundBank.account_holder_name}
+                    onChange={(e) => setRefundBank((b) => ({ ...b, account_holder_name: e.target.value }))}
+                    placeholder="As per bank records"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40 focus:border-[#C9A84C]"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Bank Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={refundBank.bank_name}
+                    onChange={(e) => setRefundBank((b) => ({ ...b, bank_name: e.target.value }))}
+                    placeholder="e.g. State Bank of India"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40 focus:border-[#C9A84C]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Account Number <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={refundBank.account_number}
+                    onChange={(e) => setRefundBank((b) => ({ ...b, account_number: e.target.value }))}
+                    placeholder="Account number"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40 focus:border-[#C9A84C] font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">IFSC Code <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={refundBank.ifsc_code}
+                    onChange={(e) => setRefundBank((b) => ({ ...b, ifsc_code: e.target.value.toUpperCase() }))}
+                    placeholder="e.g. SBIN0001234"
+                    maxLength={11}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40 focus:border-[#C9A84C] font-mono uppercase"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Reason for cancellation (optional)</label>
+                <textarea
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  rows={2}
+                  placeholder="Let us know why you're cancelling…"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400 resize-none"
+                />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-[#1B2B4B] mb-1.5">
+                Reason for cancellation (optional)
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={3}
+                placeholder="Let us know why you're cancelling…"
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400 transition-colors resize-none"
+              />
+            </div>
+          )}
 
           <div className="flex gap-3">
             <button
-              onClick={() => { setCancelModal(false); setCancelReason(''); }}
+              onClick={() => {
+                setCancelModal(false);
+                setCancelReason('');
+                setRefundBank({ account_holder_name: '', account_number: '', ifsc_code: '', bank_name: '' });
+              }}
               disabled={cancelLoading}
               className="flex-1 border border-gray-200 hover:border-gray-300 text-gray-600 font-semibold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50"
             >
@@ -852,10 +961,10 @@ export default function BookingDetail() {
               {cancelLoading ? (
                 <>
                   <Spinner size="sm" color="white" />
-                  Cancelling…
+                  Submitting…
                 </>
               ) : (
-                'Yes, Cancel'
+                status === 'paid' ? 'Submit Refund Request' : 'Yes, Cancel'
               )}
             </button>
           </div>

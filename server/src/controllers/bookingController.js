@@ -287,21 +287,57 @@ export const completeBookingWithOTP = async (req, res, next) => {
 // @access  Private (customer)
 export const cancelBooking = async (req, res, next) => {
   try {
-    const booking = await Booking.findOne({ _id: req.params.id, user_id: req.user._id });
+    const { reason, refund_bank_details } = req.body;
+
+    // Find booking — customer must own it, worker must be the assigned worker
+    let booking;
+    if (req.user.role === 'worker') {
+      const workerProfile = await Worker.findOne({ user_id: req.user._id });
+      if (!workerProfile) return next(new AppError('Worker profile not found.', 404));
+      booking = await Booking.findOne({ _id: req.params.id, worker_id: workerProfile._id });
+    } else {
+      booking = await Booking.findOne({ _id: req.params.id, user_id: req.user._id });
+    }
+
     if (!booking) return next(new AppError('Booking not found.', 404));
 
-    const cancellableStatuses = ['offer_pending', 'accepted'];
+    const cancellableStatuses = ['offer_pending', 'accepted', 'pending_payment', 'paid'];
     if (!cancellableStatuses.includes(booking.status)) {
       return next(new AppError(`Cannot cancel booking with status: ${booking.status}.`, 400));
     }
 
-    pushStatus(booking, 'cancelled', req.user._id, 'Cancelled by customer');
+    const cancelledBy = req.user.role === 'worker' ? 'worker' : 'customer';
+    const cancelNote  = reason ? `Cancelled by ${cancelledBy}: ${reason}` : `Cancelled by ${cancelledBy}`;
+
+    // ── Paid booking: request manual refund — collect bank details ───────────
+    if (booking.status === 'paid') {
+      const { account_holder_name, account_number, ifsc_code, bank_name } = refund_bank_details || {};
+      if (!account_holder_name || !account_number || !ifsc_code || !bank_name) {
+        return next(new AppError('Bank account details are required to process a refund.', 400));
+      }
+
+      booking.refund_bank_details = { account_holder_name, account_number, ifsc_code, bank_name };
+      booking.cancellation_reason = cancelNote;
+      pushStatus(booking, 'cancellation_requested', req.user._id, cancelNote);
+      await booking.save();
+
+      await Message.deleteMany({ booking_id: booking._id });
+
+      return res.json({
+        success: true,
+        message: 'Cancellation request submitted. Our team will review and transfer the refund to your bank account within 3–5 business days.',
+        data: booking,
+      });
+    }
+
+    // ── Unpaid bookings: cancel immediately ──────────────────────────────────
+    booking.cancellation_reason = cancelNote;
+    pushStatus(booking, 'cancelled', req.user._id, cancelNote);
     await booking.save();
 
-    // Delete chat messages on cancellation
     await Message.deleteMany({ booking_id: booking._id });
 
-    res.json({ success: true, message: 'Booking cancelled.', data: booking });
+    res.json({ success: true, message: 'Booking cancelled successfully.', data: booking });
   } catch (err) {
     next(err);
   }

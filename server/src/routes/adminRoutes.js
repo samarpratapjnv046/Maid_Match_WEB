@@ -13,6 +13,12 @@ import {
   getAllReviews,
   hideReview,
   getAuditLogs,
+  getAllWithdrawals,
+  approveWithdrawal,
+  rejectWithdrawal,
+  markWithdrawalProcessing,
+  getRefundRequests,
+  processManualRefund,
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
@@ -47,5 +53,15 @@ router.patch('/reviews/:id/hide', hideReview);
 
 // Audit Logs
 router.get('/audit-logs', getAuditLogs);
+
+// Refund requests (cancelled paid bookings awaiting manual bank transfer)
+router.get('/refund-requests', getRefundRequests);
+router.patch('/refund-requests/:bookingId/process', processManualRefund);
+
+// Withdrawals
+router.get('/withdrawals', getAllWithdrawals);
+router.patch('/withdrawals/:id/approve', approveWithdrawal);
+router.patch('/withdrawals/:id/reject', rejectWithdrawal);
+router.patch('/withdrawals/:id/processing', markWithdrawalProcessing);
 
 export default router;

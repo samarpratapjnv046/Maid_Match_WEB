@@ -43,6 +43,8 @@ import AdminBookings from './pages/admin/AdminBookings';
 import AdminPayments from './pages/admin/AdminPayments';
 import AdminReviews from './pages/admin/AdminReviews';
 import AdminAuditLogs from './pages/admin/AdminAuditLogs';
+import AdminWithdrawals from './pages/admin/AdminWithdrawals';
+import AdminRefundRequests from './pages/admin/AdminRefundRequests';
 
 // Profile page (all authenticated users)
 import Profile from './pages/Profile';
@@ -223,6 +225,8 @@ function AppRoutes() {
         <Route path="workers" element={<AdminWorkers />} />
         <Route path="bookings" element={<AdminBookings />} />
         <Route path="payments" element={<AdminPayments />} />
+        <Route path="withdrawals" element={<AdminWithdrawals />} />
+        <Route path="refund-requests" element={<AdminRefundRequests />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="audit-logs" element={<AdminAuditLogs />} />
         <Route path="profile" element={<Profile />} />
