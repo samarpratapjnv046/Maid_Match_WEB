@@ -1,6 +1,10 @@
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import { useAuth } from './hooks/useAuth';
+import MessageNotifications from './components/chat/MessageNotifications';
+import ChatWindow from './components/chat/ChatWindow';
 
 // Layout
 import Navbar from './components/layout/Navbar';
@@ -230,11 +234,36 @@ function AppRoutes() {
   );
 }
 
+// Global notification + chat layer (rendered once, outside routes)
+function GlobalChat() {
+  const [chatFromNotif, setChatFromNotif] = useState(null);
+
+  return (
+    <>
+      <MessageNotifications
+        onOpenChat={(notif) =>
+          setChatFromNotif({ bookingId: notif.bookingId, otherPartyName: notif.senderName })
+        }
+      />
+      {chatFromNotif && (
+        <ChatWindow
+          bookingId={chatFromNotif.bookingId}
+          otherPartyName={chatFromNotif.otherPartyName}
+          onClose={() => setChatFromNotif(null)}
+        />
+      )}
+    </>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <AppRoutes />
+        <SocketProvider>
+          <AppRoutes />
+          <GlobalChat />
+        </SocketProvider>
       </Router>
     </AuthProvider>
   );

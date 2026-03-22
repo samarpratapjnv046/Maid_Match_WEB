@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { MapPin, Clock, Calendar, CheckCircle, Phone, Mail, AlertTriangle, Trash2, Lock } from 'lucide-react';
+import { MapPin, Clock, Calendar, CheckCircle, Phone, Mail, AlertTriangle, Trash2, Lock, MessageCircle } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
 import StarRating from '../../components/common/StarRating';
 import Spinner from '../../components/common/Spinner';
+import ChatWindow from '../../components/chat/ChatWindow';
 import {
   serviceIcons,
   serviceLabels,
@@ -109,6 +111,7 @@ export default function BookingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { unreadCounts } = useSocket() || {};
 
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -124,6 +127,9 @@ export default function BookingDetail() {
   const [reviewComment, setReviewComment] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+  // Chat
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Payment
   const [payLoading, setPayLoading] = useState(false);
@@ -508,6 +514,23 @@ export default function BookingDetail() {
                   View Profile
                 </Link>
               </div>
+
+              {['accepted', 'pending_payment', 'paid'].includes(status) && (
+                <div className="mt-4 pt-3 border-t border-gray-100">
+                  <button
+                    onClick={() => setChatOpen(true)}
+                    className="relative w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#1B2B4B] text-white text-sm font-semibold hover:bg-[#263d6b] transition-colors"
+                  >
+                    <MessageCircle size={16} className="text-[#C9A84C]" />
+                    Chat with Worker
+                    {(unreadCounts?.[id] || 0) > 0 && (
+                      <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center leading-none">
+                        {unreadCounts[id] > 99 ? '99+' : unreadCounts[id]}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
 
               {contactsVisible && (
                 <div className="space-y-2.5 pt-3 border-t border-gray-100">
@@ -904,6 +927,15 @@ export default function BookingDetail() {
           </div>
         </form>
       </Modal>
+
+      {/* ─── Chat Window ────────────────────────────────────────────────────── */}
+      {chatOpen && (
+        <ChatWindow
+          bookingId={id}
+          otherPartyName={worker.name || 'Worker'}
+          onClose={() => setChatOpen(false)}
+        />
+      )}
     </div>
   );
 }

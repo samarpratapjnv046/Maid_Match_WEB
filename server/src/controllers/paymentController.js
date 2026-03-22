@@ -3,6 +3,7 @@ import Booking from '../models/Booking.js';
 import Payment from '../models/Payment.js';
 import Worker from '../models/Worker.js';
 import Transaction from '../models/Transaction.js';
+import Message from '../models/Message.js';
 import {
   createRazorpayOrder,
   verifyPaymentSignature,
@@ -189,6 +190,10 @@ export const processRefund = async (req, res, next) => {
     }
 
     await session.commitTransaction();
+
+    // Delete chat messages on refund
+    await Message.deleteMany({ booking_id: booking._id });
+
     res.json({ success: true, message: 'Refund initiated successfully.', refund_id: refund.id });
   } catch (err) {
     await session.abortTransaction();

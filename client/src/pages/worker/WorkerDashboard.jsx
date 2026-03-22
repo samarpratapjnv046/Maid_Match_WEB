@@ -394,7 +394,7 @@ export default function WorkerDashboard() {
   const verificationStatus = workerProfile?.verification_status || 'pending';
   const isVerified = verificationStatus === 'verified';
   const isAvailable = workerProfile?.is_available ?? true;
-  const totalBookings = workerProfile?.total_bookings ?? recentBookings.length;
+  const totalBookings = bookingStats.active + bookingStats.completed;
   const rating = workerProfile?.rating || 0;
   const totalReviews = workerProfile?.total_reviews || 0;
 
@@ -530,7 +530,7 @@ export default function WorkerDashboard() {
             value={totalBookings}
             sub={t('worker.allTime')}
             color="navy"
-            loading={profileLoading}
+            loading={recentLoading}
           />
           <StatCard
             icon={Clock}

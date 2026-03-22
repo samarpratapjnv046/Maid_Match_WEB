@@ -12,10 +12,13 @@ import {
   ChevronLeft,
   AlertCircle,
   Trash2,
+  MessageCircle,
 } from 'lucide-react';
 import api from '../../api/axios';
 import Spinner from '../../components/common/Spinner';
 import Modal from '../../components/common/Modal';
+import ChatWindow from '../../components/chat/ChatWindow';
+import { useSocket } from '../../context/SocketContext';
 import {
   formatCurrency,
   formatDate,
@@ -66,7 +69,7 @@ function SkeletonCard() {
 }
 
 // ─── Booking card ──────────────────────────────────────────────────────────────
-function BookingCard({ booking, onAccept, onOpenReject, onOpenComplete, onDelete, actionLoading }) {
+function BookingCard({ booking, onAccept, onOpenReject, onOpenComplete, onDelete, onOpenChat, unreadCounts, actionLoading }) {
   const customer = booking.user_id || {};
   const photo = customer.profilePhoto?.url;
   const initials = customer.name?.[0]?.toUpperCase() || '?';
@@ -154,6 +157,25 @@ function BookingCard({ booking, onAccept, onOpenReject, onOpenComplete, onDelete
           <ChevronRight size={12} />
         </Link>
 
+        {/* Chat with customer */}
+        {['accepted', 'pending_payment', 'paid'].includes(status) && (() => {
+          const unread = unreadCounts?.[booking._id] || 0;
+          return (
+            <button
+              onClick={() => onOpenChat(booking)}
+              className="relative flex items-center gap-1.5 border border-[#1B2B4B]/20 hover:border-[#1B2B4B] hover:bg-[#1B2B4B] hover:text-white text-[#1B2B4B] font-medium px-3 py-2 rounded-lg text-xs transition-colors"
+            >
+              <MessageCircle size={12} className="text-[#C9A84C]" />
+              Chat
+              {unread > 0 && (
+                <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                  {unread > 99 ? '99+' : unread}
+                </span>
+              )}
+            </button>
+          );
+        })()}
+
         {/* Delete */}
         <button
           onClick={() => onDelete(booking._id)}
@@ -205,6 +227,7 @@ function BookingCard({ booking, onAccept, onOpenReject, onOpenComplete, onDelete
 
 // ─── Main component ────────────────────────────────────────────────────────────
 export default function WorkerBookings() {
+  const { unreadCounts } = useSocket() || {};
   const [activeTab, setActiveTab] = useState('all');
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -224,6 +247,9 @@ export default function WorkerBookings() {
   const [otpTarget, setOtpTarget] = useState(null);
   const [otp, setOtp] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
+
+  // Chat
+  const [chatBooking, setChatBooking] = useState(null);
 
   // ─── Fetch bookings ─────────────────────────────────────────────────────────
   const fetchBookings = useCallback(async (tab, pageNum) => {
@@ -410,6 +436,8 @@ export default function WorkerBookings() {
                   onOpenReject={openRejectModal}
                   onOpenComplete={openOtpModal}
                   onDelete={handleDelete}
+                  onOpenChat={setChatBooking}
+                  unreadCounts={unreadCounts}
                   actionLoading={actionLoading}
                 />
               ))}
@@ -567,6 +595,15 @@ export default function WorkerBookings() {
           </div>
         </div>
       </Modal>
+
+      {/* ─── Chat Window ────────────────────────────────────────────────────── */}
+      {chatBooking && (
+        <ChatWindow
+          bookingId={chatBooking._id}
+          otherPartyName={chatBooking.user_id?.name || 'Customer'}
+          onClose={() => setChatBooking(null)}
+        />
+      )}
     </div>
   );
 }

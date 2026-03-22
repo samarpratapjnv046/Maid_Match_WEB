@@ -4,6 +4,7 @@ import Worker from '../models/Worker.js';
 import Payment from '../models/Payment.js';
 import Review from '../models/Review.js';
 import Transaction from '../models/Transaction.js';
+import Message from '../models/Message.js';
 import { generateAndStoreOTP, verifyOTP } from '../services/otpService.js';
 import { calculateCommission, calculateDistanceCharge, MAX_DISTANCE_KM } from '../services/paymentService.js';
 import { getDistanceBetweenPincodes } from '../utils/geocodeService.js';
@@ -268,6 +269,10 @@ export const completeBookingWithOTP = async (req, res, next) => {
     );
 
     await session.commitTransaction();
+
+    // Delete chat messages now that the booking is complete
+    await Message.deleteMany({ booking_id: booking._id });
+
     res.json({ success: true, message: 'Booking completed. Earnings credited to wallet.', data: booking });
   } catch (err) {
     await session.abortTransaction();
@@ -292,6 +297,9 @@ export const cancelBooking = async (req, res, next) => {
 
     pushStatus(booking, 'cancelled', req.user._id, 'Cancelled by customer');
     await booking.save();
+
+    // Delete chat messages on cancellation
+    await Message.deleteMany({ booking_id: booking._id });
 
     res.json({ success: true, message: 'Booking cancelled.', data: booking });
   } catch (err) {
