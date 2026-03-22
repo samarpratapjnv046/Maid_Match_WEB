@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { MapPin, Clock, Star, CheckCircle, Calendar, Phone, AlertTriangle, CheckCircle2, Loader2, Heart } from 'lucide-react';
+import { MapPin, Clock, Star, CheckCircle, Calendar, Phone, AlertTriangle, CheckCircle2, Loader2, Heart, Navigation } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import StarRating from '../../components/common/StarRating';
@@ -75,6 +75,11 @@ export default function WorkerProfile() {
   const [availability, setAvailability] = useState(null); // null | 'checking' | 'available' | 'busy'
   const [conflicts, setConflicts] = useState([]);
   const availabilityTimerRef = useRef(null);
+
+  // Distance check state
+  const [distanceInfo, setDistanceInfo] = useState(null); // null | { distance_km, distance_charge, within_limit }
+  const [distanceLoading, setDistanceLoading] = useState(false);
+  const distanceTimerRef = useRef(null);
 
   const fetchWorker = useCallback(async () => {
     try {
@@ -158,6 +163,35 @@ export default function WorkerProfile() {
     return () => clearTimeout(availabilityTimerRef.current);
   }, [form.start_time, form.end_time, id]);
 
+  // Check distance whenever the customer's pincode changes (and worker is loaded)
+  useEffect(() => {
+    const customerPincode = form.address.pincode.trim();
+    const workerPincode = worker?.location?.pincode;
+
+    if (!customerPincode || customerPincode.length !== 6 || !workerPincode) {
+      setDistanceInfo(null);
+      setDistanceLoading(false);
+      return;
+    }
+
+    clearTimeout(distanceTimerRef.current);
+    setDistanceLoading(true);
+    distanceTimerRef.current = setTimeout(async () => {
+      try {
+        const { data } = await api.get('/bookings/distance-preview', {
+          params: { customerPincode, workerPincode },
+        });
+        setDistanceInfo(data.data);
+      } catch {
+        setDistanceInfo(null);
+      } finally {
+        setDistanceLoading(false);
+      }
+    }, 700);
+
+    return () => clearTimeout(distanceTimerRef.current);
+  }, [form.address.pincode, worker?.location?.pincode]);
+
   function handleFormChange(e) {
     const { name, value } = e.target;
     if (name.startsWith('address.')) {
@@ -182,6 +216,10 @@ export default function WorkerProfile() {
     if (!form.address.city.trim()) errors['address.city'] = 'City is required.';
     if (!form.address.state.trim()) errors['address.state'] = 'State is required.';
     if (!form.address.pincode.trim()) errors['address.pincode'] = 'Pincode is required.';
+    else if (form.address.pincode.trim().length !== 6) errors['address.pincode'] = 'Enter a valid 6-digit pincode.';
+    else if (distanceInfo && !distanceInfo.within_limit) {
+      errors['address.pincode'] = `Worker is ${distanceInfo.distance_km} km away — max allowed is 20 km.`;
+    }
     return errors;
   }
 
@@ -221,9 +259,11 @@ export default function WorkerProfile() {
     }
   }
 
-  const pricePreview = worker
+  const basePreview = worker
     ? computePrice(worker.pricing || {}, form.duration_type, form.start_time, form.end_time)
     : null;
+  const distanceChargePreview = distanceInfo?.within_limit ? (distanceInfo.distance_charge || 0) : 0;
+  const pricePreview = basePreview !== null ? basePreview + distanceChargePreview : null;
 
   // ─── Loading state ─────────────────────────────────────────────────────────
   if (loading) {
@@ -717,16 +757,46 @@ export default function WorkerProfile() {
                 )}
 
                 {/* Price preview */}
-                {pricePreview !== null && (
-                  <div className="bg-[#FAF8F3] border border-[#C9A84C]/25 rounded-xl p-4">
+                {basePreview !== null && (
+                  <div className="bg-[#FAF8F3] border border-[#C9A84C]/25 rounded-xl p-4 space-y-1.5">
+                    {/* Base amount row */}
                     <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Base charge</span>
+                      <span className="text-sm font-semibold text-gray-700">{formatCurrency(basePreview)}</span>
+                    </div>
+
+                    {/* Distance charge row */}
+                    {distanceLoading && (
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <Loader2 size={11} className="animate-spin" />
+                        Calculating distance charge…
+                      </div>
+                    )}
+                    {!distanceLoading && distanceInfo && distanceInfo.within_limit && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1 text-gray-500">
+                          <Navigation size={11} />
+                          Distance charge ({distanceInfo.distance_km} km × ₹4/km)
+                        </span>
+                        <span className="font-semibold text-gray-700">+{formatCurrency(distanceInfo.distance_charge)}</span>
+                      </div>
+                    )}
+                    {!distanceLoading && distanceInfo && !distanceInfo.within_limit && (
+                      <div className="flex items-center gap-1.5 text-xs text-red-600 font-medium">
+                        <AlertTriangle size={11} />
+                        Worker is {distanceInfo.distance_km} km away — exceeds 20 km limit
+                      </div>
+                    )}
+
+                    {/* Total row */}
+                    <div className="flex items-center justify-between border-t border-[#C9A84C]/20 pt-2 mt-1">
                       <span className="text-sm text-gray-600 font-medium">Estimated Total</span>
                       <span className="font-serif text-xl font-bold text-[#1B2B4B]">
                         {formatCurrency(pricePreview)}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Based on {form.duration_type} rate of {pricing[form.duration_type] ? formatCurrency(pricing[form.duration_type]) : '—'}
+                    <p className="text-xs text-gray-400">
+                      Based on {form.duration_type} rate · distance charge ₹4/km
                     </p>
                   </div>
                 )}
@@ -734,7 +804,13 @@ export default function WorkerProfile() {
                 {/* Submit */}
                 <button
                   type="submit"
-                  disabled={bookingLoading || availability === 'busy' || availability === 'checking'}
+                  disabled={
+                    bookingLoading ||
+                    availability === 'busy' ||
+                    availability === 'checking' ||
+                    distanceLoading ||
+                    (distanceInfo !== null && !distanceInfo.within_limit)
+                  }
                   className="w-full flex items-center justify-center gap-2 bg-[#C9A84C] hover:bg-[#b8923e] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-lg shadow-md shadow-[#C9A84C]/20 transition-all duration-150 hover:-translate-y-0.5 text-sm"
                 >
                   {bookingLoading ? (

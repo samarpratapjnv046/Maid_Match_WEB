@@ -5,7 +5,8 @@ import Payment from '../models/Payment.js';
 import Review from '../models/Review.js';
 import Transaction from '../models/Transaction.js';
 import { generateAndStoreOTP, verifyOTP } from '../services/otpService.js';
-import { calculateCommission } from '../services/paymentService.js';
+import { calculateCommission, calculateDistanceCharge, MAX_DISTANCE_KM } from '../services/paymentService.js';
+import { getDistanceBetweenPincodes } from '../utils/geocodeService.js';
 import { AppError } from '../utils/errorHandler.js';
 
 const pushStatus = (booking, status, userId, note = '') => {
@@ -64,7 +65,35 @@ export const createBooking = async (req, res, next) => {
 
     if (baseAmount <= 0) return next(new AppError('Invalid time range for duration type.', 400));
 
-    const { commissionRate, platformCommission, workerPayout } = calculateCommission(baseAmount);
+    // Distance-based surcharge
+    const workerPincode = worker.location?.pincode;
+    const customerPincode = address?.pincode;
+
+    if (!workerPincode || !customerPincode) {
+      return next(new AppError('Both worker and customer pincodes are required to calculate the distance charge.', 400));
+    }
+
+    let distanceKm = 0;
+    let distanceCharge = 0;
+    try {
+      distanceKm = await getDistanceBetweenPincodes(workerPincode, customerPincode);
+    } catch (geoErr) {
+      return next(new AppError(`Could not calculate distance: ${geoErr.message}`, 400));
+    }
+
+    if (distanceKm > MAX_DISTANCE_KM) {
+      return next(
+        new AppError(
+          `The worker is ${distanceKm} km away. Bookings are only allowed within ${MAX_DISTANCE_KM} km.`,
+          400
+        )
+      );
+    }
+
+    distanceCharge = calculateDistanceCharge(distanceKm);
+    const totalAmount = baseAmount + distanceCharge;
+
+    const { commissionRate, platformCommission, workerPayout } = calculateCommission(totalAmount);
 
     const booking = await Booking.create({
       user_id: req.user._id,
@@ -76,7 +105,9 @@ export const createBooking = async (req, res, next) => {
       address,
       special_instructions,
       price: {
-        base_amount: baseAmount,
+        base_amount: totalAmount,
+        distance_km: distanceKm,
+        distance_charge: distanceCharge,
         platform_commission: platformCommission,
         commission_rate: commissionRate,
         worker_payout: workerPayout,
@@ -293,6 +324,42 @@ export const deleteBooking = async (req, res, next) => {
 
     await booking.deleteOne();
     res.json({ success: true, message: 'Booking deleted.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Preview distance and surcharge between two pincodes
+// @route   GET /api/bookings/distance-preview?customerPincode=xxx&workerPincode=yyy
+// @access  Private
+export const getDistancePreview = async (req, res, next) => {
+  try {
+    const { customerPincode, workerPincode } = req.query;
+
+    if (!customerPincode || !workerPincode) {
+      return next(new AppError('Both customerPincode and workerPincode are required.', 400));
+    }
+
+    let distanceKm;
+    try {
+      distanceKm = await getDistanceBetweenPincodes(workerPincode, customerPincode);
+    } catch (geoErr) {
+      return next(new AppError(`Could not resolve pincode: ${geoErr.message}`, 400));
+    }
+
+    const distanceCharge = calculateDistanceCharge(distanceKm);
+    const withinLimit = distanceKm <= MAX_DISTANCE_KM;
+
+    res.json({
+      success: true,
+      data: {
+        distance_km: distanceKm,
+        distance_charge: distanceCharge,
+        within_limit: withinLimit,
+        max_distance_km: MAX_DISTANCE_KM,
+        charge_per_km: 4,
+      },
+    });
   } catch (err) {
     next(err);
   }

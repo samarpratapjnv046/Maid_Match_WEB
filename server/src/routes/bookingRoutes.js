@@ -8,6 +8,7 @@ import {
   cancelBooking,
   deleteBooking,
   submitReview,
+  getDistancePreview,
 } from '../controllers/bookingController.js';
 import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
@@ -25,6 +26,7 @@ const router = express.Router();
 router.use(protect); // All booking routes require auth
 
 router.post('/', authorize('customer', 'worker'), validate(createBookingSchema), createBooking);
+router.get('/distance-preview', getDistancePreview); // must be before /:id
 router.get('/', getMyBookings);
 router.get('/:id', getBookingById);
 router.patch('/:id/respond', authorize('worker'), validate(bookingActionSchema), respondToBooking);

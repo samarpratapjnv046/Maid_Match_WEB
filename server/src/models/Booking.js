@@ -42,6 +42,8 @@ const bookingSchema = new mongoose.Schema(
     },
     price: {
       base_amount: { type: Number, required: true },
+      distance_km: { type: Number, default: 0 },
+      distance_charge: { type: Number, default: 0 },
       platform_commission: { type: Number, required: true },
       commission_rate: { type: Number, required: true }, // 0.10 - 0.20
       worker_payout: { type: Number, required: true },

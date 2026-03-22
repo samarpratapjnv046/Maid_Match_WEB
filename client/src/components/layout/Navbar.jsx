@@ -71,13 +71,12 @@ export default function Navbar() {
   const photo = user?.profilePhoto?.url;
   const initials = user?.name?.[0]?.toUpperCase() || '?';
 
+  const isWorker = user?.role === 'worker';
+
   const navLinks = user?.role === 'admin'
     ? []
-    : user?.role === 'worker'
-    ? [
-        { to: '/', label: t('nav.home') },
-        { to: '/workers', label: t('nav.bookMaid') },
-      ]
+    : isWorker
+    ? [{ to: '/', label: t('nav.home') }]
     : [
         { to: '/', label: t('nav.home') },
         { to: '/workers', label: t('nav.bookWorker') },

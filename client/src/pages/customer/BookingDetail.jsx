@@ -336,6 +336,9 @@ export default function BookingDetail() {
   const totalAmount = booking.price?.base_amount;
   const platformFee = booking.price?.platform_commission;
   const workerPayout = booking.price?.worker_payout;
+  const distanceKm = booking.price?.distance_km || 0;
+  const distanceCharge = booking.price?.distance_charge || 0;
+  const baseCharge = totalAmount != null ? totalAmount - distanceCharge : null;
   const durationType = booking.duration_type;
   const specialInstructions = booking.special_instructions;
   const payment = booking.payment_id || {};
@@ -652,6 +655,15 @@ export default function BookingDetail() {
             <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h2 className="font-serif text-base font-semibold text-[#1B2B4B] mb-3">Price Breakdown</h2>
               <div>
+                {baseCharge != null && (
+                  <PriceRow label="Base Charge" value={formatCurrency(baseCharge)} />
+                )}
+                {distanceCharge > 0 && (
+                  <PriceRow
+                    label={`Distance Charge (${distanceKm} km × ₹4/km)`}
+                    value={`+${formatCurrency(distanceCharge)}`}
+                  />
+                )}
                 {workerPayout != null && (
                   <PriceRow label="Worker Earnings" value={formatCurrency(workerPayout)} />
                 )}

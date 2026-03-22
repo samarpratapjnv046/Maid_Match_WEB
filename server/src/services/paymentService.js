@@ -1,4 +1,15 @@
 import Razorpay from 'razorpay';
+
+export const DISTANCE_CHARGE_PER_KM = 4; // ₹4 per km
+export const MAX_DISTANCE_KM = 20;       // bookings beyond 20 km are rejected
+
+/**
+ * Calculates the distance surcharge.
+ * Returns 0 for same-pincode (0 km) bookings.
+ */
+export const calculateDistanceCharge = (distanceKm) =>
+  Math.round(distanceKm * DISTANCE_CHARGE_PER_KM);
+
 import crypto from 'crypto';
 import { AppError } from '../utils/errorHandler.js';
 
