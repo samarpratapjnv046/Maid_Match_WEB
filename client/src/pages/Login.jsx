@@ -75,9 +75,13 @@ function ParticleCanvas() {
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }} />;
 }
 
+const REMEMBER_KEY = 'mm_remembered_email';
+
 export default function Login() {
-  const [formData, setFormData]   = useState({ email: '', password: '' });
+  const savedEmail = localStorage.getItem(REMEMBER_KEY) || '';
+  const [formData, setFormData]   = useState({ email: savedEmail, password: '' });
   const [showPwd, setShowPwd]     = useState(false);
+  const [rememberMe, setRememberMe] = useState(!!savedEmail);
   const [error, setError]         = useState('');
   const [busy, setBusy]           = useState(false);
   const { login } = useAuth();
@@ -92,6 +96,11 @@ export default function Login() {
     e.preventDefault(); setError(''); setBusy(true);
     try {
       const data = await login(formData);
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, formData.email);
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
       navigate(from || getDashboardPath(data?.user?.role), { replace: true });
     } catch (err) {
       setError(typeof err === 'string' ? err : t('login.invalidCredentials'));
@@ -214,6 +223,20 @@ export default function Login() {
                   {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
+            </div>
+
+            {/* Remember me */}
+            <div className="flex items-center">
+              <input
+                id="rememberMe"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600"
+              />
+              <label htmlFor="rememberMe" className="ml-2 text-xs text-gray-600 cursor-pointer select-none">
+                Remember me
+              </label>
             </div>
 
             <button type="submit" disabled={busy}

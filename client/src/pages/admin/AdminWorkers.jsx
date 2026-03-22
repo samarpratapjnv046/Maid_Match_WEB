@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Star, Eye, FileText, ShieldCheck, ShieldX, User, Phone, Mail, MapPin, Clock, ExternalLink } from 'lucide-react';
+import { Star, Eye, FileText, ShieldCheck, ShieldX, User, Phone, Mail, MapPin, Clock, ExternalLink, Landmark, CheckCircle } from 'lucide-react';
 import api from '../../api/axios';
 import Modal from '../../components/common/Modal';
 import Spinner from '../../components/common/Spinner';
@@ -31,6 +31,7 @@ function WorkerDocModal({ workerId, onClose }) {
   const [worker, setWorker] = useState(null);
   const [loading, setLoading] = useState(true);
   const [aadhaarExpanded, setAadhaarExpanded] = useState(false);
+  const [passbookExpanded, setPassbookExpanded] = useState(false);
 
   useEffect(() => {
     api.get(`/admin/workers/${workerId}`)
@@ -171,6 +172,95 @@ function WorkerDocModal({ workerId, onClose }) {
                 <div className="flex-1">
                   <FileText size={24} className="text-gray-300 mx-auto mb-1" />
                   <p className="text-sm text-gray-400">No Aadhaar document uploaded yet.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Bank Details section */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Bank Details</p>
+            {worker?.bank_details?.submitted_at ? (
+              <div className="space-y-2">
+                {/* Verified badge */}
+                {worker.bank_details.is_verified && (
+                  <div className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5 w-fit">
+                    <CheckCircle size={12} />
+                    OTP Verified
+                  </div>
+                )}
+
+                {/* Details grid */}
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { label: 'Account Holder', value: worker.bank_details.account_holder_name },
+                    { label: 'Bank Name', value: worker.bank_details.bank_name },
+                    { label: 'Account Number', value: worker.bank_details.account_number },
+                    { label: 'IFSC Code', value: worker.bank_details.ifsc_code },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                      <p className="text-xs text-gray-400 leading-none">{label}</p>
+                      <p className="text-sm font-semibold text-[#1B2B4B] mt-0.5 tracking-wide">{value || '—'}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Submission date */}
+                <p className="text-xs text-gray-400 flex items-center gap-1">
+                  <Clock size={10} />
+                  Submitted: {new Date(worker.bank_details.submitted_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
+
+                {/* Passbook document */}
+                {worker.bank_details.passbook?.url ? (
+                  (() => {
+                    const pbUrl = worker.bank_details.passbook.url;
+                    const isPbPdf = pbUrl.includes('/raw/') || pbUrl.toLowerCase().endsWith('.pdf');
+                    return isPbPdf ? (
+                      <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
+                        <FileText size={22} className="text-orange-500 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-800">Bank Passbook (PDF)</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Click to open and review</p>
+                        </div>
+                        <a href={pbUrl} target="_blank" rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                          <ExternalLink size={12} /> Open PDF
+                        </a>
+                      </div>
+                    ) : (
+                      <div>
+                        <div
+                          className="relative group cursor-pointer rounded-xl overflow-hidden border border-gray-200 shadow-sm"
+                          onClick={() => setPassbookExpanded(!passbookExpanded)}
+                        >
+                          <img
+                            src={pbUrl}
+                            alt="Bank passbook"
+                            className={`w-full object-contain bg-gray-50 transition-all duration-300 ${passbookExpanded ? 'max-h-[500px]' : 'max-h-48'}`}
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <span className="opacity-0 group-hover:opacity-100 bg-white/90 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full shadow transition-opacity">
+                              {passbookExpanded ? 'Click to collapse' : 'Click to expand'}
+                            </span>
+                          </div>
+                        </div>
+                        <a href={pbUrl} target="_blank" rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 mt-2 text-xs text-[#1B2B4B] hover:text-[#C9A84C] font-medium transition-colors">
+                          <ExternalLink size={11} /> Open in new tab
+                        </a>
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <p className="text-xs text-gray-400 italic">No passbook uploaded.</p>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 bg-gray-50 border border-dashed border-gray-300 rounded-xl px-4 py-5 text-center">
+                <div className="flex-1">
+                  <Landmark size={22} className="text-gray-300 mx-auto mb-1" />
+                  <p className="text-sm text-gray-400">Bank details not submitted yet.</p>
                 </div>
               </div>
             )}

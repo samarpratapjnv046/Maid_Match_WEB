@@ -15,6 +15,9 @@ import {
   ShieldCheck,
   FileText,
   X,
+  Landmark,
+  Send,
+  KeyRound,
 } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
@@ -135,6 +138,26 @@ export default function WorkerProfile() {
   const [aadhaarFile, setAadhaarFile] = useState(null);
   const [aadhaarPreview, setAadhaarPreview] = useState(null);
 
+  // Bank details state
+  const passbookInputRef = useRef(null);
+  const [bankForm, setBankForm] = useState({
+    account_holder_name: '',
+    account_number: '',
+    ifsc_code: '',
+    bank_name: '',
+    otp: '',
+  });
+  const [bankErrors, setBankErrors] = useState({});
+  const [passbookFile, setPassbookFile] = useState(null);
+  const [passbookPreview, setPassbookPreview] = useState(null);
+  const [bankVerified, setBankVerified] = useState(false);
+  const [bankSubmittedAt, setBankSubmittedAt] = useState(null);
+  const [bankMaskedAccount, setBankMaskedAccount] = useState('');
+  const [bankOtpSent, setBankOtpSent] = useState(false);
+  const [bankOtpSending, setBankOtpSending] = useState(false);
+  const [bankSaving, setBankSaving] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0); // seconds remaining
+
   // ─── Fetch existing profile ─────────────────────────────────────────────────
   const fetchProfile = useCallback(async () => {
     setLoading(true);
@@ -149,6 +172,20 @@ export default function WorkerProfile() {
       if (profile.aadhaar?.submitted_at || profile.aadhaar?.url) {
         setAadhaarStatus(profile.aadhaar?.verified ? 'verified' : 'submitted');
         setAadhaarSubmittedAt(profile.aadhaar?.submitted_at || null);
+      }
+
+      // Load bank details
+      const bd = profile.bank_details;
+      if (bd?.is_verified || bd?.submitted_at) {
+        setBankVerified(!!bd.is_verified);
+        setBankSubmittedAt(bd.submitted_at || null);
+        setBankMaskedAccount(bd.account_number_masked || (bd.account_number ? `xxxx xxxx ${bd.account_number.slice(-4)}` : ''));
+        setBankForm((prev) => ({
+          ...prev,
+          account_holder_name: bd.account_holder_name || '',
+          ifsc_code: bd.ifsc_code || '',
+          bank_name: bd.bank_name || '',
+        }));
       }
 
       setForm({
@@ -237,6 +274,91 @@ export default function WorkerProfile() {
       setPhotoPreview(null);
     } finally {
       setPhotoUploading(false);
+    }
+  }
+
+  // ─── OTP cooldown timer ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const t = setTimeout(() => setOtpCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [otpCooldown]);
+
+  // ─── Bank form handlers ─────────────────────────────────────────────────────
+  function handleBankChange(e) {
+    const { name, value } = e.target;
+    setBankForm((prev) => ({ ...prev, [name]: name === 'ifsc_code' ? value.toUpperCase() : value }));
+    setBankErrors((prev) => ({ ...prev, [name]: '' }));
+  }
+
+  function handlePassbookChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error('Passbook file must be under 5 MB.'); return; }
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!allowed.includes(file.type)) { toast.error('Only JPG, PNG or PDF accepted.'); return; }
+    setPassbookFile(file);
+    setPassbookPreview(file.type.startsWith('image/') ? URL.createObjectURL(file) : 'pdf');
+    setBankErrors((prev) => ({ ...prev, passbook: '' }));
+  }
+
+  async function handleSendBankOTP() {
+    // Basic pre-check — account number must be filled before sending OTP
+    if (!bankForm.account_number.trim()) {
+      setBankErrors((prev) => ({ ...prev, account_number: 'Enter account number before requesting OTP.' }));
+      return;
+    }
+    setBankOtpSending(true);
+    try {
+      const { data } = await api.post('/workers/bank/send-otp');
+      toast.success(data.message || 'OTP sent to your email.');
+      setBankOtpSent(true);
+      setOtpCooldown(60); // 60s re-send cooldown
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to send OTP.');
+    } finally {
+      setBankOtpSending(false);
+    }
+  }
+
+  async function handleBankSubmit(e) {
+    e.preventDefault();
+    const errs = {};
+    if (!bankForm.account_holder_name.trim()) errs.account_holder_name = 'Account holder name is required.';
+    if (!bankForm.account_number.trim()) errs.account_number = 'Account number is required.';
+    if (!bankForm.ifsc_code.trim()) errs.ifsc_code = 'IFSC code is required.';
+    else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankForm.ifsc_code)) errs.ifsc_code = 'Invalid IFSC (e.g. SBIN0001234).';
+    if (!bankForm.bank_name.trim()) errs.bank_name = 'Bank name is required.';
+    if (!bankForm.otp.trim()) errs.otp = 'Enter the OTP sent to your email.';
+    if (!passbookFile && !bankVerified) errs.passbook = 'Please upload your bank passbook.';
+    if (Object.keys(errs).length) { setBankErrors(errs); return; }
+
+    setBankSaving(true);
+    try {
+      const fd = new FormData();
+      fd.append('account_holder_name', bankForm.account_holder_name.trim());
+      fd.append('account_number', bankForm.account_number.trim());
+      fd.append('ifsc_code', bankForm.ifsc_code.trim());
+      fd.append('bank_name', bankForm.bank_name.trim());
+      fd.append('otp', bankForm.otp.trim());
+      if (passbookFile) fd.append('passbook', passbookFile);
+
+      const { data } = await api.post('/workers/bank', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      toast.success('Bank details verified and saved!');
+      setBankVerified(true);
+      setBankSubmittedAt(data.data?.submitted_at);
+      setBankMaskedAccount(data.data?.account_number_masked || '');
+      setBankOtpSent(false);
+      setPassbookFile(null);
+      setPassbookPreview(null);
+      setBankForm((prev) => ({ ...prev, otp: '' }));
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to save bank details.');
+    } finally {
+      setBankSaving(false);
     }
   }
 
@@ -577,22 +699,21 @@ export default function WorkerProfile() {
                   <p className="text-xs text-green-700 mt-0.5">Your identity has been verified by MaidMatch.</p>
                 </div>
               </div>
+            ) : aadhaarStatus === 'submitted' ? (
+              <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <Clock size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm text-blue-800">Aadhaar Under Review</p>
+                  <p className="text-xs text-blue-700 mt-0.5">
+                    Submitted on{' '}
+                    {aadhaarSubmittedAt
+                      ? new Date(aadhaarSubmittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                      : '—'}. Our admin team is reviewing your document.
+                  </p>
+                </div>
+              </div>
             ) : (
               <div className="space-y-4">
-                {/* Show submitted status if already submitted */}
-                {aadhaarStatus === 'submitted' && (
-                  <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-3">
-                    <Clock size={16} className="text-blue-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-blue-800">
-                      Aadhaar submitted on{' '}
-                      {aadhaarSubmittedAt
-                        ? new Date(aadhaarSubmittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                        : '—'} and is under review.
-                      You can resubmit below if needed.
-                    </p>
-                  </div>
-                )}
-
                 {/* Aadhaar Number */}
                 <div>
                   <FieldLabel required={!aadhaarStatus}>
@@ -664,6 +785,188 @@ export default function WorkerProfile() {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Bank Details */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <SectionHeader
+              icon={Landmark}
+              title="Bank Details"
+              description="Required for receiving payouts — verified via OTP sent to your email"
+            />
+
+            {bankVerified ? (
+              /* ── Verified state ── */
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
+                  <CheckCircle size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-sm text-green-800">Bank Account Verified</p>
+                    <p className="text-xs text-green-700 mt-0.5">
+                      {bankForm.bank_name} · {bankMaskedAccount}
+                      {bankSubmittedAt && (
+                        <> · Saved on {new Date(bankSubmittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400">Contact support to update your bank details.</p>
+              </div>
+            ) : (
+              /* ── Input form ── */
+              <div className="space-y-4">
+                {/* Row 1: holder name + bank name */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <FieldLabel required>Account Holder Name</FieldLabel>
+                    <input
+                      type="text"
+                      name="account_holder_name"
+                      value={bankForm.account_holder_name}
+                      onChange={handleBankChange}
+                      placeholder="As per bank records"
+                      className={inputClass(!!bankErrors.account_holder_name)}
+                    />
+                    {bankErrors.account_holder_name && <p className="text-red-500 text-xs mt-1">{bankErrors.account_holder_name}</p>}
+                  </div>
+                  <div>
+                    <FieldLabel required>Bank Name</FieldLabel>
+                    <input
+                      type="text"
+                      name="bank_name"
+                      value={bankForm.bank_name}
+                      onChange={handleBankChange}
+                      placeholder="e.g. State Bank of India"
+                      className={inputClass(!!bankErrors.bank_name)}
+                    />
+                    {bankErrors.bank_name && <p className="text-red-500 text-xs mt-1">{bankErrors.bank_name}</p>}
+                  </div>
+                </div>
+
+                {/* Row 2: account number + IFSC */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <FieldLabel required>Account Number</FieldLabel>
+                    <input
+                      type="text"
+                      name="account_number"
+                      value={bankForm.account_number}
+                      onChange={handleBankChange}
+                      placeholder="Enter account number"
+                      className={inputClass(!!bankErrors.account_number)}
+                    />
+                    {bankErrors.account_number && <p className="text-red-500 text-xs mt-1">{bankErrors.account_number}</p>}
+                  </div>
+                  <div>
+                    <FieldLabel required>IFSC Code</FieldLabel>
+                    <input
+                      type="text"
+                      name="ifsc_code"
+                      value={bankForm.ifsc_code}
+                      onChange={handleBankChange}
+                      placeholder="e.g. SBIN0001234"
+                      maxLength={11}
+                      className={`${inputClass(!!bankErrors.ifsc_code)} uppercase tracking-widest`}
+                    />
+                    {bankErrors.ifsc_code && <p className="text-red-500 text-xs mt-1">{bankErrors.ifsc_code}</p>}
+                  </div>
+                </div>
+
+                {/* Passbook upload */}
+                <div>
+                  <FieldLabel required={!bankVerified}>
+                    Bank Passbook
+                    <span className="ml-1 text-xs text-gray-400 font-normal">(First page — JPG, PNG or PDF, max 5 MB)</span>
+                  </FieldLabel>
+                  <input
+                    ref={passbookInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,application/pdf"
+                    className="hidden"
+                    onChange={handlePassbookChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => passbookInputRef.current?.click()}
+                    className={`w-full flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl px-4 py-5 transition-colors cursor-pointer text-sm font-medium ${
+                      bankErrors.passbook
+                        ? 'border-red-300 text-red-400 hover:border-red-400'
+                        : 'border-gray-200 text-gray-500 hover:border-[#C9A84C]/60 hover:text-[#1B2B4B] hover:bg-[#FAF8F3]'
+                    }`}
+                  >
+                    <Upload size={20} className="text-gray-300" />
+                    {passbookFile ? passbookFile.name : 'Click to upload passbook'}
+                  </button>
+                  {bankErrors.passbook && <p className="text-red-500 text-xs mt-1">{bankErrors.passbook}</p>}
+                  {passbookPreview && passbookPreview !== 'pdf' && (
+                    <div className="relative mt-3 inline-block">
+                      <img src={passbookPreview} alt="Passbook preview" className="h-32 rounded-xl border border-gray-200 object-cover shadow-sm" />
+                      <button type="button" onClick={() => { setPassbookFile(null); setPassbookPreview(null); }}
+                        className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-0.5 shadow text-gray-500 hover:text-red-500">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+                  {passbookPreview === 'pdf' && (
+                    <div className="mt-3 flex items-center gap-2 text-sm text-gray-700 bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-lg w-fit">
+                      <FileText size={15} className="text-[#C9A84C]" />
+                      {passbookFile?.name}
+                      <button type="button" onClick={() => { setPassbookFile(null); setPassbookPreview(null); }}
+                        className="ml-2 text-gray-400 hover:text-red-500"><X size={13} /></button>
+                    </div>
+                  )}
+                </div>
+
+                {/* OTP section */}
+                <div className="border border-amber-100 bg-amber-50/50 rounded-xl p-4 space-y-3">
+                  <p className="text-xs text-amber-800 font-medium flex items-center gap-1.5">
+                    <KeyRound size={13} />
+                    Verify your bank account with a one-time password sent to your registered email.
+                  </p>
+                  <div className="flex gap-3 items-end">
+                    <div className="flex-1">
+                      <FieldLabel required>OTP</FieldLabel>
+                      <input
+                        type="text"
+                        name="otp"
+                        value={bankForm.otp}
+                        onChange={handleBankChange}
+                        placeholder={bankOtpSent ? '6-digit OTP' : 'Send OTP first'}
+                        maxLength={6}
+                        disabled={!bankOtpSent}
+                        className={`${inputClass(!!bankErrors.otp)} tracking-widest`}
+                      />
+                      {bankErrors.otp && <p className="text-red-500 text-xs mt-1">{bankErrors.otp}</p>}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSendBankOTP}
+                      disabled={bankOtpSending || otpCooldown > 0}
+                      className="flex items-center gap-2 bg-[#1B2B4B] hover:bg-[#152238] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors whitespace-nowrap"
+                    >
+                      <Send size={13} />
+                      {bankOtpSending
+                        ? 'Sending…'
+                        : otpCooldown > 0
+                        ? `Resend (${otpCooldown}s)`
+                        : bankOtpSent
+                        ? 'Resend OTP'
+                        : 'Send OTP'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit bank form */}
+                <button
+                  type="button"
+                  onClick={handleBankSubmit}
+                  disabled={bankSaving || !bankOtpSent}
+                  className="w-full flex items-center justify-center gap-2 bg-[#C9A84C] hover:bg-[#b8923e] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl text-sm transition-colors shadow-sm"
+                >
+                  {bankSaving ? <><Spinner size="sm" color="white" /> Saving…</> : <><CheckCircle size={15} /> Verify &amp; Save Bank Details</>}
+                </button>
               </div>
             )}
           </div>

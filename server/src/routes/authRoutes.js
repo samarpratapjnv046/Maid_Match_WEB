@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   register,
+  sendRegisterOTP,
   login,
   refreshToken,
   logout,
@@ -25,6 +26,7 @@ import {
 
 const router = express.Router();
 
+router.post('/send-register-otp', forgotPasswordLimiter, sendRegisterOTP);
 router.post('/register', authLimiter, validate(registerSchema), register);
 router.post('/login', authLimiter, validate(loginSchema), login);
 router.post('/refresh', refreshToken);

@@ -17,6 +17,11 @@ export const registerSchema = Joi.object({
   pincode: Joi.string().pattern(/^\d{6}$/).required().messages({
     'string.pattern.base': 'Please provide a valid 6-digit pincode.',
   }),
+  otp: Joi.string().length(6).pattern(/^\d{6}$/).required().messages({
+    'string.length': 'OTP must be exactly 6 digits.',
+    'string.pattern.base': 'OTP must be 6 numeric digits.',
+    'any.required': 'Email verification OTP is required.',
+  }),
 });
 
 export const loginSchema = Joi.object({

@@ -1,23 +1,97 @@
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Worker from '../models/Worker.js';
+import RegisterOTP from '../models/RegisterOTP.js';
 import { sendTokens, generateAccessToken, generateRefreshToken } from '../utils/generateToken.js';
 import { AppError } from '../utils/errorHandler.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
-import { sendOTPEmail } from '../utils/email.js';
+import { sendOTPEmail, sendRegisterOTPEmail } from '../utils/email.js';
+
+// @desc    Send OTP to email for registration verification
+// @route   POST /api/auth/send-register-otp
+// @access  Public
+export const sendRegisterOTP = async (req, res, next) => {
+  try {
+    const { email, name } = req.body;
+    if (!email || !name) return next(new AppError('Email and name are required.', 400));
+
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) return next(new AppError('Email already registered.', 409));
+
+    // Re-send cooldown: allow resend only after 60s
+    const existing = await RegisterOTP.findOne({ email: email.toLowerCase() });
+    if (existing) {
+      const sentAgo = Date.now() - (existing.expires_at.getTime() - 10 * 60 * 1000);
+      if (sentAgo < 60 * 1000) {
+        const wait = Math.ceil((60 * 1000 - sentAgo) / 1000);
+        return next(new AppError(`Please wait ${wait}s before requesting another OTP.`, 429));
+      }
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const salt = await bcrypt.genSalt(10);
+    const otp_hash = await bcrypt.hash(otp, salt);
+    const expires_at = new Date(Date.now() + 10 * 60 * 1000);
+
+    await RegisterOTP.findOneAndUpdate(
+      { email: email.toLowerCase() },
+      { otp_hash, expires_at, attempts: 0, locked_until: null },
+      { upsert: true, new: true }
+    );
+
+    await sendRegisterOTPEmail(email, name, otp);
+    res.json({ success: true, message: `Verification code sent to ${email}` });
+  } catch (err) {
+    next(err);
+  }
+};
 
 // @desc    Register user (customer or worker)
 // @route   POST /api/auth/register
 // @access  Public
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, phone, role, pincode } = req.body;
+    const { name, email, password, phone, role, pincode, otp } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return next(new AppError('Email already registered.', 409));
+    if (!otp) return next(new AppError('Email verification OTP is required.', 400));
+
+    // Verify OTP
+    const otpRecord = await RegisterOTP.findOne({ email: email.toLowerCase() });
+    if (!otpRecord) {
+      return next(new AppError('No OTP found for this email. Please request a new one.', 400));
     }
+    if (otpRecord.locked_until && otpRecord.locked_until > new Date()) {
+      return next(new AppError('Too many incorrect attempts. Please request a new OTP.', 429));
+    }
+    if (otpRecord.expires_at < new Date()) {
+      await RegisterOTP.deleteOne({ email: email.toLowerCase() });
+      return next(new AppError('OTP has expired. Please request a new one.', 410));
+    }
+
+    const isValid = await bcrypt.compare(otp.trim(), otpRecord.otp_hash);
+    if (!isValid) {
+      otpRecord.attempts += 1;
+      if (otpRecord.attempts >= 5) {
+        otpRecord.locked_until = new Date(Date.now() + 15 * 60 * 1000);
+      }
+      await otpRecord.save();
+      const remaining = 5 - otpRecord.attempts;
+      return next(new AppError(
+        remaining > 0
+          ? `Invalid OTP. ${remaining} attempt(s) remaining.`
+          : 'OTP locked. Please request a new one.',
+        400
+      ));
+    }
+
+    // OTP valid — delete it
+    await RegisterOTP.deleteOne({ email: email.toLowerCase() });
+
+    // Final email uniqueness check (race condition safety)
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return next(new AppError('Email already registered.', 409));
 
     if (!pincode || !/^\d{6}$/.test(pincode)) {
       return next(new AppError('A valid 6-digit pincode is required.', 400));

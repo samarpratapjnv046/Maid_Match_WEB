@@ -61,6 +61,22 @@ const workerSchema = new mongoose.Schema(
       verified: { type: Boolean, default: false },
       submitted_at: { type: Date },
     },
+    // Bank details - for payout, admin-only visibility
+    bank_details: {
+      account_holder_name: { type: String, default: '' },
+      account_number: { type: String, default: '' },
+      ifsc_code: { type: String, default: '' },
+      bank_name: { type: String, default: '' },
+      passbook: {
+        url: { type: String, default: '' },
+        public_id: { type: String, default: '' },
+      },
+      is_verified: { type: Boolean, default: false }, // OTP verified
+      submitted_at: { type: Date },
+    },
+    // Temporary OTP for bank account verification (hashed)
+    bank_otp_hash: { type: String, select: false },
+    bank_otp_expires_at: { type: Date, select: false },
     is_verified: { type: Boolean, default: false },
     is_available: { type: Boolean, default: true },
     verification_status: {

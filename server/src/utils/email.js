@@ -91,6 +91,160 @@ export const sendOTPEmail = async (to, name, otp) => {
 };
 
 /**
+ * Send an email OTP to verify identity during registration.
+ */
+export const sendRegisterOTPEmail = async (to, name, otp) => {
+  const transporter = createTransporter();
+  const user = process.env.EMAIL_USER;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify Your Email – MaidMatch</title>
+</head>
+<body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0"
+             style="max-width:560px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.10);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#1B2B4B 0%,#2563eb 60%,#C9A84C 100%);padding:44px 40px 36px;text-align:center;">
+            <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 20px;margin-bottom:18px;">
+              <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">
+                Maid<span style="color:#C9A84C;">Match</span>
+              </span>
+            </div>
+            <p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">
+              Email Verification
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 20px;">
+            <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1e293b;">Welcome, ${name}! 👋</p>
+            <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.6;">
+              Use the code below to verify your email and complete your MaidMatch registration.
+              It expires in <strong style="color:#1e293b;">10 minutes</strong>.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr><td align="center">
+                <div style="display:inline-block;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #93c5fd;border-radius:16px;padding:24px 48px;text-align:center;">
+                  <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#3b82f6;letter-spacing:2px;text-transform:uppercase;">Your Verification Code</p>
+                  <p style="margin:0;font-size:44px;font-weight:900;letter-spacing:12px;color:#1B2B4B;font-family:'Courier New',monospace;">${otp}</p>
+                </div>
+              </td></tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="background:#fff7ed;border-left:4px solid #f97316;border-radius:0 8px 8px 0;padding:14px 18px;margin-bottom:28px;">
+              <tr><td>
+                <p style="margin:0;font-size:13px;color:#9a3412;line-height:1.5;">
+                  <strong>Didn't sign up?</strong> You can safely ignore this email — no account has been created yet.
+                </p>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
+            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidMatch — Trusted Home Services</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidMatch. All rights reserved.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`.trim();
+
+  await transporter.sendMail({
+    from: `"MaidMatch" <${user}>`,
+    to,
+    subject: `${otp} is your MaidMatch verification code`,
+    html,
+  });
+};
+
+/**
+ * Send a bank account OTP verification email to a worker.
+ */
+export const sendBankOTPEmail = async (to, name, otp) => {
+  const transporter = createTransporter();
+  const user = process.env.EMAIL_USER;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bank Account Verification – MaidMatch</title>
+</head>
+<body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0"
+             style="max-width:560px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.10);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#1B2B4B 0%,#2563eb 60%,#C9A84C 100%);padding:44px 40px 36px;text-align:center;">
+            <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 20px;margin-bottom:18px;">
+              <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">
+                Maid<span style="color:#C9A84C;">Match</span>
+              </span>
+            </div>
+            <p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">
+              Bank Account Verification
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 20px;">
+            <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1e293b;">Hello, ${name} 👋</p>
+            <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.6;">
+              Use the one-time code below to verify your bank account on MaidMatch.
+              It expires in <strong style="color:#1e293b;">10 minutes</strong>.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr><td align="center">
+                <div style="display:inline-block;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid #C9A84C;border-radius:16px;padding:24px 48px;text-align:center;">
+                  <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#92400e;letter-spacing:2px;text-transform:uppercase;">Your OTP Code</p>
+                  <p style="margin:0;font-size:44px;font-weight:900;letter-spacing:12px;color:#1B2B4B;font-family:'Courier New',monospace;">${otp}</p>
+                </div>
+              </td></tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="background:#fff7ed;border-left:4px solid #f97316;border-radius:0 8px 8px 0;padding:14px 18px;margin-bottom:28px;">
+              <tr><td>
+                <p style="margin:0;font-size:13px;color:#9a3412;line-height:1.5;">
+                  <strong>Didn't request this?</strong> Someone may be trying to update your bank details. Please contact support immediately.
+                </p>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
+            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidMatch — Trusted Home Services</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidMatch. All rights reserved.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`.trim();
+
+  await transporter.sendMail({
+    from: `"MaidMatch" <${user}>`,
+    to,
+    subject: `${otp} is your MaidMatch bank verification code`,
+    html,
+  });
+};
+
+/**
  * Send a congratulations email to a worker whose profile has been verified by admin.
  * @param {string} to      - Worker's email address
  * @param {string} name    - Worker's full name

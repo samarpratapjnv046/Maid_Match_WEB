@@ -42,3 +42,11 @@ export const uploadAadhaar = wrapMulter(
     fileFilter: fileFilter(ALLOWED_DOC_TYPES),
   }).single('aadhaar')
 );
+
+export const uploadPassbook = wrapMulter(
+  multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: fileFilter(ALLOWED_DOC_TYPES),
+  }).single('passbook')
+);

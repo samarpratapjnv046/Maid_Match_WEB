@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { MapPin, Clock, Calendar, CheckCircle, Phone, Mail, AlertTriangle, Trash2, Lock, MessageCircle } from 'lucide-react';
+import { MapPin, Clock, Calendar, CheckCircle, Phone, Mail, AlertTriangle, Trash2, Lock, MessageCircle, PhoneCall } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
@@ -18,6 +18,47 @@ import {
   getStatusColor,
   getStatusLabel,
 } from '../../utils/helpers';
+
+// ─── WhatsApp + Call contact button ───────────────────────────────────────────
+function buildWhatsAppUrl(rawPhone, message) {
+  // Strip everything except digits, then prepend India country code if 10-digit
+  const digits = rawPhone.replace(/\D/g, '');
+  const number = digits.length === 10 ? `91${digits}` : digits;
+  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+}
+
+function ContactButton({ phone, whatsappMessage }) {
+  const waUrl = buildWhatsAppUrl(phone, whatsappMessage);
+  const telUrl = `tel:${phone}`;
+
+  return (
+    <div className="flex gap-2">
+      {/* WhatsApp */}
+      <a
+        href={waUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 border-[#25D366] bg-[#25D366]/8 hover:bg-[#25D366]/15 transition-colors group"
+      >
+        {/* WhatsApp SVG icon */}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.532 5.852L.054 23.998l6.305-1.654A11.954 11.954 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.013-1.376l-.36-.214-3.733.979.996-3.638-.235-.374A9.818 9.818 0 1 1 12 21.818z"/>
+        </svg>
+        <span className="text-xs font-semibold text-[#128C7E]">WhatsApp</span>
+      </a>
+
+      {/* Call */}
+      <a
+        href={telUrl}
+        className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors group"
+      >
+        <PhoneCall size={15} className="text-blue-600" />
+        <span className="text-xs font-semibold text-blue-700">Call</span>
+      </a>
+    </div>
+  );
+}
 
 // ─── Razorpay loader ───────────────────────────────────────────────────────────
 function loadRazorpayScript() {
@@ -420,18 +461,16 @@ export default function BookingDetail() {
                 {contactsVisible && (
                   <div className="space-y-2.5 pt-3 border-t border-gray-100">
                     {customer.phone && (
-                      <a
-                        href={`tel:${customer.phone}`}
-                        className="flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 border border-green-200 rounded-xl transition-colors group"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center flex-shrink-0">
-                          <Phone size={14} className="text-white" />
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <Phone size={13} className="text-gray-400" />
+                          <p className="text-xs text-gray-500 font-medium">{customer.phone}</p>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Phone</p>
-                          <p className="text-sm font-semibold text-[#1B2B4B] group-hover:text-green-700">{customer.phone}</p>
-                        </div>
-                      </a>
+                        <ContactButton
+                          phone={customer.phone}
+                          whatsappMessage={`Hi ${customer.name || 'there'}, I'm ${user?.name || 'your worker'} from MaidMatch. I'm contacting you regarding your booking for ${serviceLabels[service] || service} on ${startTime ? new Date(startTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'your scheduled date'}.`}
+                        />
+                      </div>
                     )}
                     {customer.email && (
                       <a
@@ -535,18 +574,16 @@ export default function BookingDetail() {
               {contactsVisible && (
                 <div className="space-y-2.5 pt-3 border-t border-gray-100">
                   {workerUser.phone && (
-                    <a
-                      href={`tel:${workerUser.phone}`}
-                      className="flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 border border-green-200 rounded-xl transition-colors group"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center flex-shrink-0">
-                        <Phone size={14} className="text-white" />
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <Phone size={13} className="text-gray-400" />
+                        <p className="text-xs text-gray-500 font-medium">{workerUser.phone}</p>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Phone</p>
-                        <p className="text-sm font-semibold text-[#1B2B4B] group-hover:text-green-700">{workerUser.phone}</p>
-                      </div>
-                    </a>
+                      <ContactButton
+                        phone={workerUser.phone}
+                        whatsappMessage={`Hi ${worker.name || 'there'}, I'm ${user?.name || 'your customer'} from MaidMatch. I've booked you for ${serviceLabels[service] || service} on ${startTime ? new Date(startTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'your scheduled date'}. Looking forward to your service!`}
+                      />
+                    </div>
                   )}
                   {workerUser.email && (
                     <a

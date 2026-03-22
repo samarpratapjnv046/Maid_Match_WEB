@@ -7,7 +7,7 @@ import api from '../api/axios';
 import {
   User, Mail, Lock, Phone, Eye, EyeOff, Loader2, AlertCircle,
   Briefcase, ShoppingBag, MapPin, ChevronRight, ChevronLeft,
-  DollarSign, Star, Globe, FileText,
+  DollarSign, Star, Globe, FileText, Send, KeyRound, CheckCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -56,6 +56,13 @@ const Register = () => {
   const [localError, setLocalError] = useState('');
   const [step1Loading, setStep1Loading] = useState(false);
   const [step2Loading, setStep2Loading] = useState(false);
+
+  // OTP state
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+
   const { register } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -83,29 +90,62 @@ const Register = () => {
     }));
   };
 
-  // Step 1 validation & submission
+  // OTP cooldown timer
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const t = setTimeout(() => setOtpCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [otpCooldown]);
+
+  // Validate step 1 form fields (client-side only)
+  const validateStep1Fields = () => {
+    if (formData.password !== formData.confirmPassword) return "Passwords don't match.";
+    const pwdPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+    if (!pwdPattern.test(formData.password)) return 'Password must be at least 8 characters and include uppercase, lowercase, number and special character.';
+    if (!/^\d{6}$/.test(formData.pincode)) return 'Please enter a valid 6-digit pincode.';
+    if (!formData.name.trim()) return 'Name is required.';
+    if (!formData.email.trim()) return 'Email is required.';
+    if (!formData.phone.trim()) return 'Phone is required.';
+    return null;
+  };
+
+  const handleSendOTP = async () => {
+    const err = validateStep1Fields();
+    if (err) { setLocalError(err); return; }
+    setLocalError('');
+    setOtpSending(true);
+    try {
+      await api.post('/auth/send-register-otp', { email: formData.email, name: formData.name });
+      setOtpSent(true);
+      setOtpCooldown(60);
+    } catch (e) {
+      setLocalError(e.response?.data?.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  // Step 1 validation & submission (now requires OTP)
   const handleStep1Submit = async (e) => {
     e.preventDefault();
     setLocalError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      setLocalError("Passwords don't match.");
+    if (!otpSent) {
+      setLocalError('Please verify your email first — click "Send OTP".');
       return;
     }
-    const pwdPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
-    if (!pwdPattern.test(formData.password)) {
-      setLocalError('Password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character (@$!%*?&).');
+    if (!otp || otp.length !== 6) {
+      setLocalError('Please enter the 6-digit OTP sent to your email.');
       return;
     }
-    if (!/^\d{6}$/.test(formData.pincode)) {
-      setLocalError('Please enter a valid 6-digit pincode.');
-      return;
-    }
+
+    const fieldErr = validateStep1Fields();
+    if (fieldErr) { setLocalError(fieldErr); return; }
 
     setStep1Loading(true);
     try {
       const { name, email, password, phone, role, pincode } = formData;
-      await register({ name, email, password, phone, role, pincode });
+      await register({ name, email, password, phone, role, pincode, otp });
 
       if (role === 'worker') {
         setStep(2);
@@ -322,9 +362,45 @@ const Register = () => {
                   </InputField>
                 </div>
 
+                {/* OTP section */}
+                <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 space-y-3 mt-1">
+                  <p className="text-xs text-blue-800 font-medium flex items-center gap-1.5">
+                    <KeyRound size={13} />
+                    Verify your email with a one-time code before creating your account.
+                  </p>
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Enter OTP</label>
+                      <input
+                        type="text"
+                        value={otp}
+                        onChange={(e) => { setOtp(e.target.value.replace(/\D/g, '').slice(0, 6)); setLocalError(''); }}
+                        placeholder={otpSent ? '6-digit code' : 'Send OTP first'}
+                        maxLength={6}
+                        disabled={!otpSent}
+                        className="input-field tracking-widest text-center disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSendOTP}
+                      disabled={otpSending || otpCooldown > 0}
+                      className="flex items-center gap-1.5 bg-[#1B2B4B] hover:bg-[#152238] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold px-3 py-2.5 rounded-lg transition-colors whitespace-nowrap"
+                    >
+                      <Send size={12} />
+                      {otpSending ? 'Sending…' : otpCooldown > 0 ? `Resend (${otpCooldown}s)` : otpSent ? 'Resend OTP' : 'Send OTP'}
+                    </button>
+                  </div>
+                  {otpSent && (
+                    <p className="text-xs text-blue-600 flex items-center gap-1">
+                      <CheckCircle size={11} /> Code sent to <strong>{formData.email}</strong>. Valid for 10 minutes.
+                    </p>
+                  )}
+                </div>
+
                 <button
                   type="submit"
-                  disabled={step1Loading}
+                  disabled={step1Loading || !otpSent}
                   className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-sm shadow-primary-200 mt-2"
                 >
                   {step1Loading ? (
