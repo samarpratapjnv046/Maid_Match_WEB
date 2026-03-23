@@ -43,8 +43,10 @@ export const createOrder = async (req, res, next) => {
       return next(new AppError('Payment can only be initiated for accepted bookings.', 400));
     }
 
+    // Use final_amount (after coupon discount) if available, otherwise fall back to base_amount
+    const chargeAmount = booking.price.final_amount ?? booking.price.base_amount;
     const order = await createRazorpayOrder(
-      booking.price.base_amount,
+      chargeAmount,
       booking._id,
       req.user._id
     );

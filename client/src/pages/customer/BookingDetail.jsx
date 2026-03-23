@@ -404,11 +404,14 @@ export default function BookingDetail() {
   const startTime = booking.start_time;
   const endTime = booking.end_time;
   const address = booking.address || {};
-  const totalAmount = booking.price?.base_amount;
+  const totalAmount = booking.price?.base_amount;  // service + distance (before coupon)
   const platformFee = booking.price?.platform_commission;
   const workerPayout = booking.price?.worker_payout;
   const distanceKm = booking.price?.distance_km || 0;
   const distanceCharge = booking.price?.distance_charge || 0;
+  const couponCode = booking.price?.coupon_code || '';
+  const couponDiscount = booking.price?.coupon_discount || 0;
+  const finalAmount = booking.price?.final_amount ?? totalAmount; // what customer actually paid
   const baseCharge = totalAmount != null ? totalAmount - distanceCharge : null;
   const durationType = booking.duration_type;
   const specialInstructions = booking.special_instructions;
@@ -740,7 +743,7 @@ export default function BookingDetail() {
               <h2 className="font-serif text-base font-semibold text-[#1B2B4B] mb-3">Price Breakdown</h2>
               <div>
                 {baseCharge != null && (
-                  <PriceRow label="Base Charge" value={formatCurrency(baseCharge)} />
+                  <PriceRow label="Service Charge" value={formatCurrency(baseCharge)} />
                 )}
                 {distanceCharge > 0 && (
                   <PriceRow
@@ -748,15 +751,29 @@ export default function BookingDetail() {
                     value={`+${formatCurrency(distanceCharge)}`}
                   />
                 )}
+                {couponDiscount > 0 && (
+                  <div className="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <span className="flex items-center gap-1.5 text-sm text-emerald-600">
+                      Coupon Discount
+                      {couponCode && (
+                        <span className="font-mono font-bold bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-0.5 rounded text-xs tracking-widest">
+                          {couponCode}
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-sm font-bold text-emerald-600">−{formatCurrency(couponDiscount)}</span>
+                  </div>
+                )}
                 {workerPayout != null && (
                   <PriceRow label="Worker Earnings" value={formatCurrency(workerPayout)} />
                 )}
                 {platformFee != null && (
                   <PriceRow label="Platform Commission" value={formatCurrency(platformFee)} />
                 )}
-                {totalAmount != null && (
-                  <PriceRow label="Total" value={formatCurrency(totalAmount)} highlight />
+                {finalAmount != null && (
+                  <PriceRow label="Total Paid" value={formatCurrency(finalAmount)} highlight />
                 )}
+                <p className="text-xs text-gray-400 mt-2">No GST applicable · Platform commission deducted from sub-total</p>
               </div>
 
               {/* Payment status */}
@@ -854,7 +871,7 @@ export default function BookingDetail() {
               <div className="border border-blue-100 rounded-xl overflow-hidden text-xs">
                 <div className="flex justify-between px-3 py-2 bg-blue-50">
                   <span className="text-blue-700">Amount paid</span>
-                  <span className="font-semibold text-blue-800">₹{booking.price?.base_amount ?? '—'}</span>
+                  <span className="font-semibold text-blue-800">₹{finalAmount ?? '—'}</span>
                 </div>
                 <div className="flex justify-between px-3 py-2 border-t border-blue-100 bg-blue-50/50">
                   <span className="text-blue-700">Platform fee <span className="text-orange-500">(non-refundable)</span></span>

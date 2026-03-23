@@ -2,8 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import {
   Plus, Pencil, Trash2, ToggleLeft, ToggleRight,
-  Tag, Video, Image, Clock, X, ChevronDown, Eye,
-  Sparkles, Megaphone,
+  Tag, Video, Image, Clock, X, ChevronDown,
+  Sparkles, Megaphone, Percent, IndianRupee, BadgePercent,
 } from 'lucide-react';
 import api from '../../api/axios';
 import Spinner from '../../components/common/Spinner';
@@ -106,6 +106,9 @@ const EMPTY_FORM = {
   video_url: '', image_url: '',
   cta_text: 'Book Now', cta_link: '/workers',
   is_active: true, expires_at: '', display_order: 0,
+  // Coupon fields
+  coupon_code: '', discount_type: 'percentage', discount_value: '',
+  min_order_value: '', max_discount: '', usage_limit: '',
 };
 
 function OfferModal({ offer, onClose, onSaved }) {
@@ -118,6 +121,12 @@ function OfferModal({ offer, onClose, onSaved }) {
           expires_at: offer.expires_at
             ? new Date(offer.expires_at).toISOString().slice(0, 16)
             : '',
+          coupon_code: offer.coupon_code || '',
+          discount_type: offer.discount_type || 'percentage',
+          discount_value: offer.discount_value || '',
+          min_order_value: offer.min_order_value || '',
+          max_discount: offer.max_discount || '',
+          usage_limit: offer.usage_limit || '',
         }
       : { ...EMPTY_FORM }
   );
@@ -129,6 +138,12 @@ function OfferModal({ offer, onClose, onSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title.trim()) { toast.error('Title is required.'); return; }
+    if (form.coupon_code && (!form.discount_value || Number(form.discount_value) <= 0)) {
+      toast.error('Enter a discount value for the coupon code.'); return;
+    }
+    if (form.coupon_code && form.discount_type === 'percentage' && Number(form.discount_value) > 100) {
+      toast.error('Percentage discount cannot exceed 100.'); return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -136,6 +151,11 @@ function OfferModal({ offer, onClose, onSaved }) {
         discount_percent: Number(form.discount_percent) || 0,
         display_order: Number(form.display_order) || 0,
         expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
+        coupon_code: form.coupon_code.trim().toUpperCase(),
+        discount_value: form.coupon_code ? Number(form.discount_value) || 0 : 0,
+        min_order_value: Number(form.min_order_value) || 0,
+        max_discount: form.max_discount ? Number(form.max_discount) : null,
+        usage_limit: form.usage_limit ? Number(form.usage_limit) : null,
       };
       if (isEdit) {
         await api.patch(`/admin/offers/${offer._id}`, payload);
@@ -372,6 +392,114 @@ function OfferModal({ offer, onClose, onSaved }) {
             </div>
           </div>
 
+          {/* ── Coupon Code Section ─────────────────────────────────────── */}
+          <div className="rounded-xl border border-dashed border-[#C9A84C]/40 bg-[#FAF8F3] p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <BadgePercent size={15} className="text-[#C9A84C]" />
+              <p className="text-sm font-semibold text-[#1B2B4B]">Coupon Code</p>
+              <span className="text-xs text-gray-400 font-normal">(optional — customers enter this at checkout)</span>
+            </div>
+
+            {/* Code */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Code</label>
+              <div className="relative">
+                <Tag size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={form.coupon_code}
+                  onChange={(e) => set('coupon_code', e.target.value.toUpperCase().replace(/\s/g, ''))}
+                  placeholder="e.g. LOOT20, SAVE50"
+                  maxLength={20}
+                  className="w-full pl-8 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-mono font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/50 focus:border-[#C9A84C] placeholder:font-sans placeholder:font-normal placeholder:tracking-normal"
+                />
+              </div>
+            </div>
+
+            {form.coupon_code && (
+              <>
+                {/* Discount type + value */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Discount Type</label>
+                    <select
+                      value={form.discount_type}
+                      onChange={(e) => set('discount_type', e.target.value)}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/50 focus:border-[#C9A84C]"
+                    >
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="flat">Flat Amount (₹)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Discount Value <span className="text-red-500">*</span></label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        {form.discount_type === 'percentage' ? <Percent size={12} /> : <IndianRupee size={12} />}
+                      </span>
+                      <input
+                        type="number"
+                        value={form.discount_value}
+                        onChange={(e) => set('discount_value', e.target.value)}
+                        placeholder={form.discount_type === 'percentage' ? '20' : '100'}
+                        min="1"
+                        max={form.discount_type === 'percentage' ? '100' : undefined}
+                        className="w-full pl-8 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/50 focus:border-[#C9A84C]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Min order + max discount + usage limit */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Min Order (₹)</label>
+                    <input
+                      type="number"
+                      value={form.min_order_value}
+                      onChange={(e) => set('min_order_value', e.target.value)}
+                      placeholder="0"
+                      min="0"
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/50"
+                    />
+                  </div>
+                  {form.discount_type === 'percentage' && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Max Discount (₹)</label>
+                      <input
+                        type="number"
+                        value={form.max_discount}
+                        onChange={(e) => set('max_discount', e.target.value)}
+                        placeholder="No cap"
+                        min="1"
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/50"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Usage Limit</label>
+                    <input
+                      type="number"
+                      value={form.usage_limit}
+                      onChange={(e) => set('usage_limit', e.target.value)}
+                      placeholder="∞"
+                      min="1"
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/50"
+                    />
+                  </div>
+                </div>
+
+                {/* Used count (read-only, edit mode only) */}
+                {isEdit && offer?.used_count > 0 && (
+                  <p className="text-xs text-gray-500">
+                    Used <span className="font-bold text-[#1B2B4B]">{offer.used_count}</span> time{offer.used_count !== 1 ? 's' : ''} so far
+                    {offer.usage_limit ? ` out of ${offer.usage_limit}` : ''}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
           {/* Expiry */}
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1.5">
@@ -509,8 +637,8 @@ export default function AdminOffers() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-[#1B2B4B]">Offers & Promotions</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Create banners shown on the customer home page</p>
+          <h1 className="font-serif text-2xl font-bold text-[#1B2B4B]">Offers & Coupons</h1>
+          <p className="text-gray-500 text-sm mt-0.5">Create promotional banners — each offer can include a coupon code customers apply at checkout</p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
@@ -582,8 +710,24 @@ export default function AdminOffers() {
                     <p className="text-xs text-gray-500 line-clamp-1">{offer.subtitle}</p>
                   )}
 
+                  {/* Coupon code badge — shown prominently when present */}
+                  {offer.coupon_code && (
+                    <div className="flex items-center gap-2 bg-[#1B2B4B]/5 border border-[#1B2B4B]/10 rounded-lg px-2.5 py-1.5">
+                      <BadgePercent size={13} className="text-[#C9A84C] flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide leading-none mb-0.5">Coupon Code</p>
+                        <p className="font-mono font-black text-sm text-[#1B2B4B] tracking-widest leading-none">{offer.coupon_code}</p>
+                      </div>
+                      <span className="ml-auto text-xs font-bold text-emerald-600 flex-shrink-0">
+                        {offer.discount_type === 'percentage'
+                          ? `${offer.discount_value}% OFF`
+                          : `₹${offer.discount_value} OFF`}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-3 text-xs text-gray-400 pt-1">
-                    {offer.discount_percent > 0 && (
+                    {offer.discount_percent > 0 && !offer.coupon_code && (
                       <span className="flex items-center gap-1 font-semibold text-orange-600">
                         <Tag size={10} /> {offer.discount_percent}% OFF
                       </span>

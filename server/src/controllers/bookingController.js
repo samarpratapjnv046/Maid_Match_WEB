@@ -5,6 +5,7 @@ import Payment from '../models/Payment.js';
 import Review from '../models/Review.js';
 import Transaction from '../models/Transaction.js';
 import Message from '../models/Message.js';
+import Offer from '../models/Offer.js';
 import { generateAndStoreOTP, verifyOTP } from '../services/otpService.js';
 import { calculateCommission, calculateDistanceCharge, MAX_DISTANCE_KM } from '../services/paymentService.js';
 import { getDistanceBetweenPincodes } from '../utils/geocodeService.js';
@@ -20,7 +21,7 @@ const pushStatus = (booking, status, userId, note = '') => {
 // @access  Private (customer)
 export const createBooking = async (req, res, next) => {
   try {
-    const { worker_id, service_type, duration_type, start_time, end_time, address, special_instructions } = req.body;
+    const { worker_id, service_type, duration_type, start_time, end_time, address, special_instructions, coupon_code } = req.body;
 
     const worker = await Worker.findById(worker_id);
     if (!worker) return next(new AppError('Worker not found.', 404));
@@ -94,7 +95,45 @@ export const createBooking = async (req, res, next) => {
     distanceCharge = calculateDistanceCharge(distanceKm);
     const totalAmount = baseAmount + distanceCharge;
 
+    // ── Coupon validation (coupon codes live inside Offers) ────────────────────
+    let couponDiscount = 0;
+    let appliedCouponCode = '';
+    if (coupon_code) {
+      const offer = await Offer.findOne({ coupon_code: coupon_code.toUpperCase().trim() });
+      if (!offer || !offer.coupon_code) return next(new AppError('Invalid coupon code.', 400));
+      if (!offer.is_active) return next(new AppError('This coupon is no longer active.', 400));
+      if (offer.expires_at && new Date(offer.expires_at) < new Date()) {
+        return next(new AppError('This coupon has expired.', 400));
+      }
+      if (offer.usage_limit !== null && offer.used_count >= offer.usage_limit) {
+        return next(new AppError('This coupon has reached its usage limit.', 400));
+      }
+      if (totalAmount < offer.min_order_value) {
+        return next(
+          new AppError(
+            `This coupon requires a minimum booking amount of ₹${offer.min_order_value}.`,
+            400
+          )
+        );
+      }
+
+      if (offer.discount_type === 'percentage') {
+        couponDiscount = Math.round((totalAmount * offer.discount_value) / 100);
+        if (offer.max_discount) couponDiscount = Math.min(couponDiscount, offer.max_discount);
+      } else {
+        couponDiscount = Math.min(offer.discount_value, totalAmount);
+      }
+      appliedCouponCode = offer.coupon_code;
+
+      // Increment usage counter on the offer
+      await Offer.findByIdAndUpdate(offer._id, { $inc: { used_count: 1 } });
+    }
+
+    const finalAmount = totalAmount - couponDiscount;
     const { commissionRate, platformCommission, workerPayout } = calculateCommission(totalAmount);
+
+    // Platform absorbs the coupon discount (reduce its commission, worker payout unchanged)
+    const adjustedCommission = Math.max(0, platformCommission - couponDiscount);
 
     const booking = await Booking.create({
       user_id: req.user._id,
@@ -109,7 +148,10 @@ export const createBooking = async (req, res, next) => {
         base_amount: totalAmount,
         distance_km: distanceKm,
         distance_charge: distanceCharge,
-        platform_commission: platformCommission,
+        coupon_code: appliedCouponCode,
+        coupon_discount: couponDiscount,
+        final_amount: finalAmount,
+        platform_commission: adjustedCommission,
         commission_rate: commissionRate,
         worker_payout: workerPayout,
       },

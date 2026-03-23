@@ -42,9 +42,12 @@ const bookingSchema = new mongoose.Schema(
       required: [true, 'End time is required'],
     },
     price: {
-      base_amount: { type: Number, required: true },
+      base_amount: { type: Number, required: true },   // service charge + distance charge (before coupon)
       distance_km: { type: Number, default: 0 },
       distance_charge: { type: Number, default: 0 },
+      coupon_code: { type: String, default: '' },
+      coupon_discount: { type: Number, default: 0 },   // amount saved via coupon
+      final_amount: { type: Number, required: true },  // amount customer actually pays (base_amount - coupon_discount)
       platform_commission: { type: Number, required: true },
       commission_rate: { type: Number, required: true }, // 0.10 - 0.20
       worker_payout: { type: Number, required: true },

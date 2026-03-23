@@ -36,9 +36,18 @@ export const createOffer = async (req, res, next) => {
       title, subtitle, description, badge_text, discount_percent,
       gradient, accent_color, video_url, image_url,
       cta_text, cta_link, is_active, expires_at, display_order,
+      coupon_code, discount_type, discount_value, min_order_value, max_discount, usage_limit,
     } = req.body;
 
     if (!title?.trim()) return next(new AppError('Offer title is required.', 400));
+
+    const code = coupon_code?.toUpperCase().trim() || '';
+
+    // Ensure coupon code is unique if provided
+    if (code) {
+      const existing = await Offer.findOne({ coupon_code: code });
+      if (existing) return next(new AppError(`Coupon code "${code}" is already used by another offer.`, 409));
+    }
 
     const offer = await Offer.create({
       title: title.trim(),
@@ -55,6 +64,12 @@ export const createOffer = async (req, res, next) => {
       is_active: is_active !== false,
       expires_at: expires_at ? new Date(expires_at) : null,
       display_order: Number(display_order) || 0,
+      coupon_code: code,
+      discount_type: discount_type || 'percentage',
+      discount_value: Number(discount_value) || 0,
+      min_order_value: Number(min_order_value) || 0,
+      max_discount: max_discount ? Number(max_discount) : null,
+      usage_limit: usage_limit ? Number(usage_limit) : null,
     });
 
     res.status(201).json({ success: true, message: 'Offer created successfully.', data: offer });
@@ -71,7 +86,18 @@ export const updateOffer = async (req, res, next) => {
       'title', 'subtitle', 'description', 'badge_text', 'discount_percent',
       'gradient', 'accent_color', 'video_url', 'image_url',
       'cta_text', 'cta_link', 'is_active', 'expires_at', 'display_order',
+      'discount_type', 'discount_value', 'min_order_value', 'max_discount', 'usage_limit',
     ];
+
+    // Handle coupon_code separately — check uniqueness
+    if (req.body.coupon_code !== undefined) {
+      const code = (req.body.coupon_code || '').toUpperCase().trim();
+      if (code && code !== offer.coupon_code) {
+        const existing = await Offer.findOne({ coupon_code: code, _id: { $ne: offer._id } });
+        if (existing) return next(new AppError(`Coupon code "${code}" is already used by another offer.`, 409));
+      }
+      offer.coupon_code = code;
+    }
 
     fields.forEach((f) => {
       if (req.body[f] !== undefined) offer[f] = req.body[f];

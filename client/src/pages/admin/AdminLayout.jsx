@@ -27,7 +27,7 @@ const NAV_LINKS = [
   { to: '/admin/payments',     label: 'Payments',        icon: CreditCard },
   { to: '/admin/withdrawals',     label: 'Withdrawals',  icon: Banknote },
   { to: '/admin/refund-requests', label: 'Refund Requests', icon: RefreshCw },
-  { to: '/admin/offers',       label: 'Offers',          icon: Megaphone },
+  { to: '/admin/offers',       label: 'Offers & Coupons', icon: Megaphone },
   { to: '/admin/reviews',      label: 'Reviews',         icon: Star },
   { to: '/admin/audit-logs',   label: 'Audit Logs',      icon: ClipboardList },
   { to: '/admin/profile',      label: 'Profile',         icon: UserCircle },

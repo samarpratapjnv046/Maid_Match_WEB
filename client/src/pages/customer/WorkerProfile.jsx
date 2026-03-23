@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { MapPin, Clock, Star, CheckCircle, Calendar, Phone, AlertTriangle, CheckCircle2, Loader2, Heart, Navigation } from 'lucide-react';
+import { MapPin, Clock, Star, CheckCircle, Calendar, Phone, AlertTriangle, CheckCircle2, Loader2, Heart, Navigation, Tag, X, BadgePercent } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import StarRating from '../../components/common/StarRating';
@@ -80,6 +80,48 @@ export default function WorkerProfile() {
   const [distanceInfo, setDistanceInfo] = useState(null); // null | { distance_km, distance_charge, within_limit }
   const [distanceLoading, setDistanceLoading] = useState(false);
   const distanceTimerRef = useRef(null);
+
+  // Coupon state
+  const [couponInput, setCouponInput] = useState('');
+  const [couponData, setCouponData] = useState(null); // null | { code, discount_amount, final_amount, message }
+  const [couponLoading, setCouponLoading] = useState(false);
+
+  async function handleApplyCoupon() {
+    if (!couponInput.trim()) return;
+    if (!user) {
+      toast.error('Please sign in to apply a coupon.');
+      return;
+    }
+    const serviceCharge = worker
+      ? computePrice(worker.pricing || {}, form.duration_type, form.start_time, form.end_time)
+      : null;
+    const distCharge = distanceInfo?.within_limit ? (distanceInfo.distance_charge || 0) : 0;
+    const bookingAmount = serviceCharge !== null ? Math.round(serviceCharge + distCharge) : 0;
+    if (!bookingAmount) {
+      toast.error('Please fill in booking dates to calculate the price first.');
+      return;
+    }
+    setCouponLoading(true);
+    try {
+      const { data } = await api.post('/coupons/apply', {
+        code: couponInput.trim(),
+        booking_amount: bookingAmount,
+      });
+      setCouponData(data.data);
+      toast.success(data.data.message);
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Invalid coupon code.';
+      toast.error(msg);
+      setCouponData(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setCouponData(null);
+    setCouponInput('');
+  }
 
   const fetchWorker = useCallback(async () => {
     try {
@@ -246,6 +288,7 @@ export default function WorkerProfile() {
         end_time: form.end_time,
         address: form.address,
         special_instructions: form.special_instructions,
+        ...(couponData ? { coupon_code: couponData.code } : {}),
       };
       const { data } = await api.post('/bookings', payload);
       const bookingId = data.data?.booking?._id || data.data?._id || data.booking?._id || data._id;
@@ -263,7 +306,9 @@ export default function WorkerProfile() {
     ? computePrice(worker.pricing || {}, form.duration_type, form.start_time, form.end_time)
     : null;
   const distanceChargePreview = distanceInfo?.within_limit ? (distanceInfo.distance_charge || 0) : 0;
-  const pricePreview = basePreview !== null ? basePreview + distanceChargePreview : null;
+  const pricePreview = basePreview !== null ? Math.round(basePreview + distanceChargePreview) : null;
+  const couponDiscount = couponData ? couponData.discount_amount : 0;
+  const finalPreview = pricePreview !== null ? pricePreview - couponDiscount : null;
 
   // ─── Loading state ─────────────────────────────────────────────────────────
   if (loading) {
@@ -759,10 +804,13 @@ export default function WorkerProfile() {
                 {/* Price preview */}
                 {basePreview !== null && (
                   <div className="bg-[#FAF8F3] border border-[#C9A84C]/25 rounded-xl p-4 space-y-1.5">
-                    {/* Base amount row */}
+                    {/* Service charge row */}
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">Base charge</span>
-                      <span className="text-sm font-semibold text-gray-700">{formatCurrency(basePreview)}</span>
+                      <span className="text-sm text-gray-500">
+                        Service charge
+                        <span className="text-xs text-gray-400 ml-1 capitalize">({form.duration_type})</span>
+                      </span>
+                      <span className="text-sm font-semibold text-gray-700">{formatCurrency(Math.round(basePreview))}</span>
                     </div>
 
                     {/* Distance charge row */}
@@ -772,7 +820,7 @@ export default function WorkerProfile() {
                         Calculating distance charge…
                       </div>
                     )}
-                    {!distanceLoading && distanceInfo && distanceInfo.within_limit && (
+                    {!distanceLoading && distanceInfo && distanceInfo.within_limit && distanceInfo.distance_charge > 0 && (
                       <div className="flex items-center justify-between text-xs">
                         <span className="flex items-center gap-1 text-gray-500">
                           <Navigation size={11} />
@@ -788,16 +836,88 @@ export default function WorkerProfile() {
                       </div>
                     )}
 
+                    {/* Sub-total row */}
+                    <div className="flex items-center justify-between border-t border-dashed border-[#C9A84C]/20 pt-1.5">
+                      <span className="text-xs text-gray-400">Sub-total (no GST applicable)</span>
+                      <span className="text-sm font-semibold text-gray-700">{formatCurrency(pricePreview)}</span>
+                    </div>
+
+                    {/* Coupon discount row (only when applied) */}
+                    {couponData && (
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-emerald-600 text-xs font-semibold">
+                          <BadgePercent size={12} />
+                          Coupon applied:
+                          <span className="font-mono font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md border border-emerald-200 tracking-wide">
+                            {couponData.code}
+                          </span>
+                        </span>
+                        <span className="text-sm font-bold text-emerald-600">−{formatCurrency(couponData.discount_amount)}</span>
+                      </div>
+                    )}
+
                     {/* Total row */}
                     <div className="flex items-center justify-between border-t border-[#C9A84C]/20 pt-2 mt-1">
-                      <span className="text-sm text-gray-600 font-medium">Estimated Total</span>
+                      <span className="text-sm text-gray-600 font-medium">Total Payable</span>
                       <span className="font-serif text-xl font-bold text-[#1B2B4B]">
-                        {formatCurrency(pricePreview)}
+                        {formatCurrency(finalPreview)}
                       </span>
                     </div>
                     <p className="text-xs text-gray-400">
-                      Based on {form.duration_type} rate · distance charge ₹4/km
+                      Includes service + distance charge · No GST
                     </p>
+                  </div>
+                )}
+
+                {/* Coupon input */}
+                {basePreview !== null && (
+                  <div className="space-y-2">
+                    {couponData ? (
+                      <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <Tag size={14} className="text-emerald-600 flex-shrink-0" />
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-emerald-600 font-medium">Coupon code used:</span>
+                              <span className="font-mono font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded text-xs tracking-widest">
+                                {couponData.code}
+                              </span>
+                            </div>
+                            <p className="text-xs text-emerald-600 mt-0.5">{couponData.message}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoupon}
+                          className="text-emerald-400 hover:text-emerald-700 transition-colors ml-2 flex-shrink-0"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Tag size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            value={couponInput}
+                            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApplyCoupon())}
+                            placeholder="Enter coupon code"
+                            className="w-full border border-gray-200 rounded-lg pl-8 pr-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40 focus:border-[#C9A84C] placeholder:font-sans placeholder:text-gray-400"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={couponLoading || !couponInput.trim()}
+                          className="px-4 py-2.5 bg-[#1B2B4B] hover:bg-[#243a65] disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                        >
+                          {couponLoading ? <Loader2 size={13} className="animate-spin" /> : null}
+                          Apply
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
