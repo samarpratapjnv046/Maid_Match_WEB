@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin, Wallet, CalendarCheck, UserCircle, LayoutDashboard, Search, Play, X as XIcon, ChevronLeft, ChevronRight, Zap, Tag } from 'lucide-react';
+import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin, Wallet, CalendarCheck, UserCircle, LayoutDashboard, Search, Play, X as XIcon, ChevronLeft, ChevronRight, Zap, Tag, Copy, Check, BadgePercent } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -406,6 +406,15 @@ function OfferCard({ offer, onPlayVideo }) {
   const cd      = useCountdown(offer.expires_at);
   const ytId    = getYoutubeId(offer.video_url);
   const showCd  = cd && cd.diff < 24 * 3600000; // show only in last 24 h
+  const [copied, setCopied] = useState(false);
+
+  const copyCoupon = (e) => {
+    e.preventDefault();
+    navigator.clipboard.writeText(offer.coupon_code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <motion.div
@@ -491,6 +500,41 @@ function OfferCard({ offer, onPlayVideo }) {
             <p className="text-white/65 text-xs mt-2 leading-relaxed line-clamp-2">{offer.description}</p>
           )}
         </div>
+
+        {/* ── Coupon Code ── */}
+        {offer.coupon_code && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15 }}
+            className="mb-4"
+          >
+            <p className="text-white/60 text-[10px] font-semibold uppercase tracking-widest mb-1.5 flex items-center gap-1">
+              <BadgePercent size={10} />
+              Apply at checkout
+            </p>
+            <button
+              onClick={copyCoupon}
+              className="group w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border-2 border-dashed border-white/40 bg-white/10 backdrop-blur-sm hover:bg-white/20 hover:border-white/60 transition-all"
+            >
+              <span className="font-mono font-black text-white text-lg tracking-widest leading-none">
+                {offer.coupon_code}
+              </span>
+              <span className="flex items-center gap-1.5 text-xs font-bold text-white/70 group-hover:text-white transition-colors flex-shrink-0">
+                {copied
+                  ? <><Check size={13} className="text-emerald-300" /><span className="text-emerald-300">Copied!</span></>
+                  : <><Copy size={13} /><span>Copy</span></>
+                }
+              </span>
+            </button>
+            <p className="text-white/50 text-[10px] mt-1 text-center">
+              {offer.discount_type === 'percentage'
+                ? `${offer.discount_value}% off${offer.max_discount ? ` · max ₹${offer.max_discount}` : ''}${offer.min_order_value ? ` · min order ₹${offer.min_order_value}` : ''}`
+                : `₹${offer.discount_value} flat off${offer.min_order_value ? ` · min order ₹${offer.min_order_value}` : ''}`
+              }
+            </p>
+          </motion.div>
+        )}
 
         {/* Countdown */}
         {showCd && (
