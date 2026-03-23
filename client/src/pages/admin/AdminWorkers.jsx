@@ -59,7 +59,7 @@ function WorkerDocModal({ workerId, onClose }) {
           {/* Worker identity */}
           <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
             {profilePhoto ? (
-              <img src={profilePhoto} alt={name} className="w-16 h-16 rounded-full object-cover ring-2 ring-[#C9A84C]/30 ring-offset-2 flex-shrink-0" />
+              <img src={profilePhoto} alt={name} loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover ring-2 ring-[#C9A84C]/30 ring-offset-2 flex-shrink-0" />
             ) : (
               <div className="w-16 h-16 rounded-full bg-[#1B2B4B] flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-serif font-bold text-2xl">{initials}</span>
@@ -405,7 +405,7 @@ export default function AdminWorkers() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           {profilePhoto ? (
-                            <img src={profilePhoto} alt={w.user_id?.name} className="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-1 ring-gray-200" />
+                            <img src={profilePhoto} alt={w.user_id?.name} loading="lazy" decoding="async" className="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-1 ring-gray-200" />
                           ) : (
                             <div className="w-9 h-9 rounded-full bg-[#1B2B4B] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
                               {nameInitial}

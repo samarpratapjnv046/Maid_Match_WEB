@@ -30,9 +30,10 @@ function StatusBadge({ banned }) {
 
 export default function AdminUsers() {
   const [users, setUsers]           = useState([]);
-  const [filtered, setFiltered]     = useState([]);
+  const [total, setTotal]           = useState(0);
   const [loading, setLoading]       = useState(true);
   const [search, setSearch]         = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage]             = useState(1);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -43,41 +44,31 @@ export default function AdminUsers() {
   // Unban confirm
   const [unbanModal, setUnbanModal] = useState({ open: false, user: null });
 
+  // Debounce search so we don't fire a request on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get('/admin/users');
-      const data = res.data?.data || [];
-      setUsers(data);
-      setFiltered(data);
-    } catch (err) {
+      const params = new URLSearchParams({ page, limit: PAGE_SIZE });
+      if (debouncedSearch) params.set('search', debouncedSearch);
+      const res = await api.get(`/admin/users?${params}`);
+      setUsers(res.data?.data || []);
+      setTotal(res.data?.total || 0);
+    } catch {
       toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, debouncedSearch]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
-  // Search filter
-  useEffect(() => {
-    const q = search.toLowerCase().trim();
-    if (!q) {
-      setFiltered(users);
-    } else {
-      setFiltered(
-        users.filter(
-          (u) =>
-            u.name?.toLowerCase().includes(q) ||
-            u.email?.toLowerCase().includes(q)
-        )
-      );
-    }
-    setPage(1);
-  }, [search, users]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const paginated  = users; // already paginated by backend
 
   const handleBanSubmit = async () => {
     if (!banReason.trim()) {
@@ -133,7 +124,7 @@ export default function AdminUsers() {
 
       {loading ? (
         <div className="flex justify-center py-20"><Spinner size="lg" /></div>
-      ) : filtered.length === 0 ? (
+      ) : users.length === 0 ? (
         <EmptyState icon="👤" title="No users found" description="Try adjusting your search." />
       ) : (
         <>
@@ -195,7 +186,7 @@ export default function AdminUsers() {
           {/* Pagination */}
           <div className="flex items-center justify-between text-sm text-gray-500">
             <span>
-              Showing {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} users
+              Showing {Math.min((page - 1) * PAGE_SIZE + 1, total)}–{Math.min(page * PAGE_SIZE, total)} of {total} users
             </span>
             <div className="flex items-center gap-1">
               <button

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import {
   RefreshCw, CheckCircle, X, Banknote, Phone, Mail,
@@ -259,9 +259,12 @@ export default function AdminRefundRequests() {
 
   useEffect(() => { fetchRequests(); }, [fetchRequests]);
 
-  // Summary totals
-  const totalRefundable = requests.reduce((s, b) => s + refundAmount(b), 0);
-  const totalFees       = requests.reduce((s, b) => s + Number(b.price?.platform_commission ?? 0), 0);
+  // Summary totals — memoized so they only recompute when the requests array changes,
+  // not on every modal interaction (UTR typing, notes, etc.)
+  const { totalRefundable, totalFees } = useMemo(() => ({
+    totalRefundable: requests.reduce((s, b) => s + refundAmount(b), 0),
+    totalFees:       requests.reduce((s, b) => s + Number(b.price?.platform_commission ?? 0), 0),
+  }), [requests]);
 
   return (
     <div className="space-y-5">

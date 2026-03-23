@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -22,6 +23,10 @@ import { AppError } from './src/utils/errorHandler.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
+
+// ─── Compression (gzip) ───────────────────────────────────────────────────────
+// Skip for Razorpay webhook (raw body required); compress everything else
+app.use(compression({ filter: (req) => req.path !== '/api/payments/webhook' }));
 
 // ─── Security ────────────────────────────────────────────────────────────────
 app.use(helmet());
@@ -61,6 +66,16 @@ app.use('/api/', generalLimiter);
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({ success: true, status: 'Server is running.', env: process.env.NODE_ENV, timestamp: new Date().toISOString() });
+});
+
+// ─── Cache headers for public read-only endpoints ────────────────────────────
+// Workers list / profile: safe to cache for 60 s (stale-while-revalidate = 30 s extra)
+// These are GET-only, authenticated endpoints are excluded by the browser's Vary: Authorization
+app.use('/api/workers', (req, res, next) => {
+  if (req.method === 'GET') {
+    res.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=30');
+  }
+  next();
 });
 
 // ─── Routes ───────────────────────────────────────────────────────────────────

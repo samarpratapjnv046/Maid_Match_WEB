@@ -15,4 +15,17 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react':  ['react', 'react-dom', 'react-router-dom'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-socket': ['socket.io-client'],
+          'vendor-icons':  ['lucide-react'],
+        },
+      },
+    },
+  },
 })

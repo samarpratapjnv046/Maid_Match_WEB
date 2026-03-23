@@ -29,7 +29,7 @@ export const getAllUsers = async (req, res, next) => {
     const skip = (pageNum - 1) * limitNum;
 
     const [users, total] = await Promise.all([
-      User.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+      User.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
       User.countDocuments(filter),
     ]);
     res.json({ success: true, total, page: pageNum, pages: Math.ceil(total / limitNum), data: users });
@@ -173,7 +173,8 @@ export const getAllBookings = async (req, res, next) => {
         .populate({ path: 'worker_id', select: '-aadhaar', populate: { path: 'user_id', select: 'name email' } })
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limitNum),
+        .limit(limitNum)
+        .lean(),          // plain JS objects — no Mongoose overhead for read-only lists
       Booking.countDocuments(filter),
     ]);
     res.json({ success: true, total, page: pageNum, pages: Math.ceil(total / limitNum), data: bookings });
@@ -200,7 +201,8 @@ export const getAllPayments = async (req, res, next) => {
         .populate('booking_id', 'service_type status')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limitNum),
+        .limit(limitNum)
+        .lean(),
       Payment.countDocuments(filter),
     ]);
     res.json({ success: true, total, page: pageNum, pages: Math.ceil(total / limitNum), data: payments });
@@ -256,7 +258,8 @@ export const getAllReviews = async (req, res, next) => {
         .populate({ path: 'worker_id', select: 'user_id', populate: { path: 'user_id', select: 'name' } })
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limitNum),
+        .limit(limitNum)
+        .lean(),
       Review.countDocuments(filter),
     ]);
     res.json({ success: true, total, page: pageNum, pages: Math.ceil(total / limitNum), data: reviews });

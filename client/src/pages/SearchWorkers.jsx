@@ -107,9 +107,11 @@ const SearchWorkers = () => {
               >
                 <div className="p-6 flex-grow">
                   <div className="flex items-center gap-4 mb-4">
-                    <img 
-                      src={worker.user_id?.profilePhoto || 'https://via.placeholder.com/150'} 
+                    <img
+                      src={worker.user_id?.profilePhoto || 'https://via.placeholder.com/150'}
                       alt={worker.user_id?.name}
+                      loading="lazy"
+                      decoding="async"
                       className="w-16 h-16 rounded-full object-cover border-2 border-primary-100"
                     />
                     <div>

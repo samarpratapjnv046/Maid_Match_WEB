@@ -108,6 +108,10 @@ bookingSchema.index({ worker_id: 1 });
 bookingSchema.index({ status: 1 });
 bookingSchema.index({ createdAt: -1 });
 bookingSchema.index({ user_id: 1, worker_id: 1, status: 1 });
+// Refund requests query: status filter + sort by updatedAt
+bookingSchema.index({ status: 1, updatedAt: -1 });
+// Admin bookings filtered by worker then sorted
+bookingSchema.index({ worker_id: 1, createdAt: -1 });
 
 const Booking = mongoose.model('Booking', bookingSchema);
 export default Booking;

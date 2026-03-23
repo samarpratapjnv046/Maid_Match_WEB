@@ -47,25 +47,27 @@ function EntityTypeBadge({ entityType }) {
 
 export default function AdminAuditLogs() {
   const [logs, setLogs]   = useState([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [page, setPage]   = useState(1);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get('/admin/audit-logs');
+      const res = await api.get(`/admin/audit-logs?page=${page}&limit=${PAGE_SIZE}`);
       setLogs(res.data?.data || []);
-    } catch (err) {
+      setTotal(res.data?.total || 0);
+    } catch {
       toast.error('Failed to load audit logs');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
-  const totalPages = Math.max(1, Math.ceil(logs.length / PAGE_SIZE));
-  const paginated  = logs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const paginated  = logs; // backend already paginates
 
   return (
     <div className="space-y-6">
@@ -78,7 +80,7 @@ export default function AdminAuditLogs() {
         {!loading && (
           <div className="flex items-center gap-2 text-sm text-gray-500 bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-sm">
             <ClipboardList size={15} className="text-[#C9A84C]" />
-            <span className="font-medium text-[#1B2B4B]">{logs.length}</span> total entries
+            <span className="font-medium text-[#1B2B4B]">{total}</span> total entries
           </div>
         )}
       </div>
@@ -158,7 +160,7 @@ export default function AdminAuditLogs() {
           {/* Pagination */}
           <div className="flex items-center justify-between text-sm text-gray-500">
             <span>
-              Showing {Math.min((page - 1) * PAGE_SIZE + 1, logs.length)}–{Math.min(page * PAGE_SIZE, logs.length)} of {logs.length} entries
+              Showing {Math.min((page - 1) * PAGE_SIZE + 1, total)}–{Math.min(page * PAGE_SIZE, total)} of {total} entries
             </span>
             <div className="flex items-center gap-1">
               <button

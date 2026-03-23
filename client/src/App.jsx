@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
@@ -6,72 +6,76 @@ import { useAuth } from './hooks/useAuth';
 import MessageNotifications from './components/chat/MessageNotifications';
 import ChatWindow from './components/chat/ChatWindow';
 
-// Layout
+// Layout (always needed — not lazy)
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ProtectedRoute from './components/layout/ProtectedRoute';
-
-// Public pages
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import AuthCallback from './pages/AuthCallback';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
-
-// Customer pages
-import SearchWorkers from './pages/customer/SearchWorkers';
-import WorkerProfile from './pages/customer/WorkerProfile';
-import CustomerDashboard from './pages/customer/CustomerDashboard';
-import MyBookings from './pages/customer/MyBookings';
-import BookingDetail from './pages/customer/BookingDetail';
-import FavoriteWorkers from './pages/customer/FavoriteWorkers';
-
-// Worker pages
-import WorkerDashboard from './pages/worker/WorkerDashboard';
-import WorkerProfilePage from './pages/worker/WorkerProfile';
-import WorkerBookings from './pages/worker/WorkerBookings';
-import WorkerWallet from './pages/worker/WorkerWallet';
-
-// Admin pages
-import AdminLayout from './pages/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminWorkers from './pages/admin/AdminWorkers';
-import AdminBookings from './pages/admin/AdminBookings';
-import AdminPayments from './pages/admin/AdminPayments';
-import AdminReviews from './pages/admin/AdminReviews';
-import AdminAuditLogs from './pages/admin/AdminAuditLogs';
-import AdminWithdrawals from './pages/admin/AdminWithdrawals';
-import AdminRefundRequests from './pages/admin/AdminRefundRequests';
-
-// Profile page (all authenticated users)
-import Profile from './pages/Profile';
-
-// Spinner for auth loading
 import Spinner from './components/common/Spinner';
 
-// Public route — only redirects admins (workers can view public pages too)
+// ─── Lazy-loaded page chunks ────────────────────────────────────────────────
+// Public
+const Home           = lazy(() => import('./pages/Home'));
+const Login          = lazy(() => import('./pages/Login'));
+const Register       = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const AuthCallback   = lazy(() => import('./pages/AuthCallback'));
+const Terms          = lazy(() => import('./pages/Terms'));
+const Privacy        = lazy(() => import('./pages/Privacy'));
+const Profile        = lazy(() => import('./pages/Profile'));
+
+// Customer
+const SearchWorkers    = lazy(() => import('./pages/customer/SearchWorkers'));
+const WorkerProfile    = lazy(() => import('./pages/customer/WorkerProfile'));
+const CustomerDashboard = lazy(() => import('./pages/customer/CustomerDashboard'));
+const MyBookings       = lazy(() => import('./pages/customer/MyBookings'));
+const BookingDetail    = lazy(() => import('./pages/customer/BookingDetail'));
+const FavoriteWorkers  = lazy(() => import('./pages/customer/FavoriteWorkers'));
+
+// Worker
+const WorkerDashboard   = lazy(() => import('./pages/worker/WorkerDashboard'));
+const WorkerProfilePage = lazy(() => import('./pages/worker/WorkerProfile'));
+const WorkerBookings    = lazy(() => import('./pages/worker/WorkerBookings'));
+const WorkerWallet      = lazy(() => import('./pages/worker/WorkerWallet'));
+
+// Admin (all in one chunk — only admins ever download these)
+const AdminLayout         = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminDashboard      = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminUsers          = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminWorkers        = lazy(() => import('./pages/admin/AdminWorkers'));
+const AdminBookings       = lazy(() => import('./pages/admin/AdminBookings'));
+const AdminPayments       = lazy(() => import('./pages/admin/AdminPayments'));
+const AdminReviews        = lazy(() => import('./pages/admin/AdminReviews'));
+const AdminAuditLogs      = lazy(() => import('./pages/admin/AdminAuditLogs'));
+const AdminWithdrawals    = lazy(() => import('./pages/admin/AdminWithdrawals'));
+const AdminRefundRequests = lazy(() => import('./pages/admin/AdminRefundRequests'));
+
+// ─── Page loading fallback ───────────────────────────────────────────────────
+function PageSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Spinner size="lg" color="navy" />
+    </div>
+  );
+}
+
+// ─── Route guards ────────────────────────────────────────────────────────────
 function PublicRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner size="lg" color="navy" /></div>;
+  if (loading) return <PageSpinner />;
   if (user?.role === 'admin') return <Navigate to="/admin" replace />;
   return children;
 }
 
-// Home route — allows workers to see the worker home page; only redirects admins
 function HomeRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner size="lg" color="navy" /></div>;
+  if (loading) return <PageSpinner />;
   if (user?.role === 'admin') return <Navigate to="/admin" replace />;
   return children;
 }
 
-// Guest route — redirect to dashboard if already logged in
 function GuestRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner size="lg" color="navy" /></div>;
+  if (loading) return <PageSpinner />;
   if (user) {
     if (user.role === 'admin') return <Navigate to="/admin" replace />;
     if (user.role === 'worker') return <Navigate to="/worker/dashboard" replace />;
@@ -80,21 +84,19 @@ function GuestRoute({ children }) {
   return children;
 }
 
-// Redirect admin to /admin/profile, others get the standard profile page
 function AdminRedirectProfile() {
   const { user } = useAuth();
   if (user?.role === 'admin') return <Navigate to="/admin/profile" replace />;
   return <MainLayout><Profile /></MainLayout>;
 }
 
-// Catch-all: admins go to /admin, everyone else goes to /
 function CatchAll() {
   const { user } = useAuth();
   if (user?.role === 'admin') return <Navigate to="/admin" replace />;
   return <MainLayout><Navigate to="/" replace /></MainLayout>;
 }
 
-// Main layout wrapper (with Navbar + Footer)
+// ─── Main layout ─────────────────────────────────────────────────────────────
 function MainLayout({ children }) {
   return (
     <div className="flex flex-col min-h-screen">
@@ -105,143 +107,64 @@ function MainLayout({ children }) {
   );
 }
 
+// ─── Routes ──────────────────────────────────────────────────────────────────
 function AppRoutes() {
   return (
-    <Routes>
-      {/* ── Public routes ── */}
-      <Route path="/" element={<HomeRoute><MainLayout><Home /></MainLayout></HomeRoute>} />
-      <Route path="/workers" element={<HomeRoute><MainLayout><SearchWorkers /></MainLayout></HomeRoute>} />
-      <Route path="/workers/:id" element={<HomeRoute><MainLayout><WorkerProfile /></MainLayout></HomeRoute>} />
+    <Suspense fallback={<PageSpinner />}>
+      <Routes>
+        {/* ── Public ── */}
+        <Route path="/" element={<HomeRoute><MainLayout><Home /></MainLayout></HomeRoute>} />
+        <Route path="/workers" element={<HomeRoute><MainLayout><SearchWorkers /></MainLayout></HomeRoute>} />
+        <Route path="/workers/:id" element={<HomeRoute><MainLayout><WorkerProfile /></MainLayout></HomeRoute>} />
+        <Route path="/terms" element={<MainLayout><Terms /></MainLayout>} />
+        <Route path="/privacy" element={<MainLayout><Privacy /></MainLayout>} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
 
-      <Route path="/terms" element={<MainLayout><Terms /></MainLayout>} />
-      <Route path="/privacy" element={<MainLayout><Privacy /></MainLayout>} />
+        {/* ── Auth (guests only) ── */}
+        <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+        <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* ── OAuth callback (public, no auth guard) ── */}
-      <Route path="/auth/callback" element={<AuthCallback />} />
+        {/* ── Customer ── */}
+        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['customer']}><MainLayout><CustomerDashboard /></MainLayout></ProtectedRoute>} />
+        <Route path="/bookings" element={<ProtectedRoute allowedRoles={['customer']}><MainLayout><MyBookings /></MainLayout></ProtectedRoute>} />
+        <Route path="/favorites" element={<ProtectedRoute allowedRoles={['customer']}><MainLayout><FavoriteWorkers /></MainLayout></ProtectedRoute>} />
+        <Route path="/bookings/:id" element={<ProtectedRoute allowedRoles={['customer', 'worker', 'admin']}><MainLayout><BookingDetail /></MainLayout></ProtectedRoute>} />
 
-      {/* ── Auth routes (guests only) ── */}
-      <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-      <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
+        {/* ── Shared profile ── */}
+        <Route path="/profile" element={<ProtectedRoute><AdminRedirectProfile /></ProtectedRoute>} />
 
-      {/* ── Customer routes ── */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <MainLayout><CustomerDashboard /></MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/bookings"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <MainLayout><MyBookings /></MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/favorites"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <MainLayout><FavoriteWorkers /></MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/bookings/:id"
-        element={
-          <ProtectedRoute allowedRoles={['customer', 'worker', 'admin']}>
-            <MainLayout><BookingDetail /></MainLayout>
-          </ProtectedRoute>
-        }
-      />
+        {/* ── Worker ── */}
+        <Route path="/worker/dashboard" element={<ProtectedRoute allowedRoles={['worker']}><MainLayout><WorkerDashboard /></MainLayout></ProtectedRoute>} />
+        <Route path="/worker/setup" element={<ProtectedRoute allowedRoles={['customer', 'worker']}><MainLayout><WorkerProfilePage /></MainLayout></ProtectedRoute>} />
+        <Route path="/worker/profile" element={<ProtectedRoute allowedRoles={['worker']}><MainLayout><WorkerProfilePage /></MainLayout></ProtectedRoute>} />
+        <Route path="/worker/bookings" element={<ProtectedRoute allowedRoles={['worker']}><MainLayout><WorkerBookings /></MainLayout></ProtectedRoute>} />
+        <Route path="/worker/wallet" element={<ProtectedRoute allowedRoles={['worker']}><MainLayout><WorkerWallet /></MainLayout></ProtectedRoute>} />
 
-      {/* ── Shared profile route (admin redirected to /admin/profile) ── */}
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <AdminRedirectProfile />
-          </ProtectedRoute>
-        }
-      />
+        {/* ── Admin ── */}
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="workers" element={<AdminWorkers />} />
+          <Route path="bookings" element={<AdminBookings />} />
+          <Route path="payments" element={<AdminPayments />} />
+          <Route path="withdrawals" element={<AdminWithdrawals />} />
+          <Route path="refund-requests" element={<AdminRefundRequests />} />
+          <Route path="reviews" element={<AdminReviews />} />
+          <Route path="audit-logs" element={<AdminAuditLogs />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
 
-      {/* ── Worker routes ── */}
-      <Route
-        path="/worker/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['worker']}>
-            <MainLayout><WorkerDashboard /></MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      {/* Setup route: customers land here to create their worker profile */}
-      <Route
-        path="/worker/setup"
-        element={
-          <ProtectedRoute allowedRoles={['customer', 'worker']}>
-            <MainLayout><WorkerProfilePage /></MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/worker/profile"
-        element={
-          <ProtectedRoute allowedRoles={['worker']}>
-            <MainLayout><WorkerProfilePage /></MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/worker/bookings"
-        element={
-          <ProtectedRoute allowedRoles={['worker']}>
-            <MainLayout><WorkerBookings /></MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/worker/wallet"
-        element={
-          <ProtectedRoute allowedRoles={['worker']}>
-            <MainLayout><WorkerWallet /></MainLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* ── Admin routes (no main Navbar/Footer — admin has own layout) ── */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<AdminDashboard />} />
-        <Route path="users" element={<AdminUsers />} />
-        <Route path="workers" element={<AdminWorkers />} />
-        <Route path="bookings" element={<AdminBookings />} />
-        <Route path="payments" element={<AdminPayments />} />
-        <Route path="withdrawals" element={<AdminWithdrawals />} />
-        <Route path="refund-requests" element={<AdminRefundRequests />} />
-        <Route path="reviews" element={<AdminReviews />} />
-        <Route path="audit-logs" element={<AdminAuditLogs />} />
-        <Route path="profile" element={<Profile />} />
-      </Route>
-
-      {/* ── Catch-all ── */}
-      <Route path="*" element={<CatchAll />} />
-    </Routes>
+        {/* ── Catch-all ── */}
+        <Route path="*" element={<CatchAll />} />
+      </Routes>
+    </Suspense>
   );
 }
 
-// Global notification + chat layer (rendered once, outside routes)
+// ─── Global notification + chat layer ────────────────────────────────────────
 function GlobalChat() {
   const [chatFromNotif, setChatFromNotif] = useState(null);
-
   return (
     <>
       <MessageNotifications
@@ -260,6 +183,7 @@ function GlobalChat() {
   );
 }
 
+// ─── Root ─────────────────────────────────────────────────────────────────────
 function App() {
   return (
     <AuthProvider>
