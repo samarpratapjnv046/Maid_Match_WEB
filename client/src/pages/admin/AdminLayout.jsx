@@ -16,19 +16,21 @@ import {
   UserCircle,
   Banknote,
   RefreshCw,
+  Megaphone,
 } from 'lucide-react';
 
 const NAV_LINKS = [
-  { to: '/admin',              label: 'Dashboard',    icon: LayoutDashboard, end: true },
-  { to: '/admin/users',        label: 'Users',         icon: Users },
-  { to: '/admin/workers',      label: 'Workers',       icon: Briefcase },
-  { to: '/admin/bookings',     label: 'Bookings',      icon: Calendar },
-  { to: '/admin/payments',     label: 'Payments',      icon: CreditCard },
-  { to: '/admin/withdrawals',     label: 'Withdrawals',   icon: Banknote },
+  { to: '/admin',              label: 'Dashboard',       icon: LayoutDashboard, end: true },
+  { to: '/admin/users',        label: 'Users',           icon: Users },
+  { to: '/admin/workers',      label: 'Workers',         icon: Briefcase },
+  { to: '/admin/bookings',     label: 'Bookings',        icon: Calendar },
+  { to: '/admin/payments',     label: 'Payments',        icon: CreditCard },
+  { to: '/admin/withdrawals',     label: 'Withdrawals',  icon: Banknote },
   { to: '/admin/refund-requests', label: 'Refund Requests', icon: RefreshCw },
-  { to: '/admin/reviews',      label: 'Reviews',       icon: Star },
-  { to: '/admin/audit-logs',   label: 'Audit Logs',    icon: ClipboardList },
-  { to: '/admin/profile',      label: 'Profile',       icon: UserCircle },
+  { to: '/admin/offers',       label: 'Offers',          icon: Megaphone },
+  { to: '/admin/reviews',      label: 'Reviews',         icon: Star },
+  { to: '/admin/audit-logs',   label: 'Audit Logs',      icon: ClipboardList },
+  { to: '/admin/profile',      label: 'Profile',         icon: UserCircle },
 ];
 
 function NavItem({ to, label, icon: Icon, end, onClick }) {

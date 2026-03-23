@@ -1,11 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin, Wallet, CalendarCheck, UserCircle, LayoutDashboard, Search } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { ArrowRight, Star, Shield, Clock, CheckCircle, Users, TrendingUp, MapPin, Wallet, CalendarCheck, UserCircle, LayoutDashboard, Search, Play, X as XIcon, ChevronLeft, ChevronRight, Zap, Tag } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { serviceIcons, serviceLabels } from '../utils/helpers';
 import { useAuth } from '../hooks/useAuth';
 import WorkerDemoSection from '../components/common/WorkerDemoSection';
+import api from '../api/axios';
 
 const SERVICES = [
   'house_cleaning', 'cooking', 'babysitting',
@@ -372,6 +373,357 @@ const ServicesMarquee = () => (
   </div>
 );
 
+// ── Offers Section ────────────────────────────────────────────────────────────
+
+/** Extract YouTube video ID from any YouTube URL format */
+const getYoutubeId = (url) => {
+  if (!url) return null;
+  const m = url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+};
+
+/** Countdown timer hook */
+function useCountdown(expiresAt) {
+  const calc = () => {
+    if (!expiresAt) return null;
+    const diff = new Date(expiresAt) - Date.now();
+    if (diff <= 0) return null;
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    return { h, m, s, diff };
+  };
+  const [cd, setCd] = useState(calc);
+  useEffect(() => {
+    const t = setInterval(() => setCd(calc()), 1000);
+    return () => clearInterval(t);
+  }, [expiresAt]);
+  return cd;
+}
+
+/** Single offer card */
+function OfferCard({ offer, onPlayVideo }) {
+  const cd      = useCountdown(offer.expires_at);
+  const ytId    = getYoutubeId(offer.video_url);
+  const showCd  = cd && cd.diff < 24 * 3600000; // show only in last 24 h
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
+      whileHover={{ y: -6, scale: 1.015 }}
+      className={`relative rounded-3xl overflow-hidden shadow-xl border border-white/10 flex-shrink-0 w-full sm:w-[340px] lg:w-[380px] bg-gradient-to-br ${offer.gradient}`}
+      style={{ minHeight: 240 }}
+    >
+      {/* Background image overlay */}
+      {offer.image_url && (
+        <img
+          src={offer.image_url}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity"
+        />
+      )}
+
+      {/* Noise texture */}
+      <div
+        className="absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
+      {/* Shimmer sweep */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 pointer-events-none"
+        animate={{ x: ['-120%', '220%'] }}
+        transition={{ duration: 3.5, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut' }}
+      />
+
+      {/* Glow orb */}
+      <div
+        className="absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-30 blur-3xl pointer-events-none"
+        style={{ background: offer.accent_color || '#ffffff' }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 p-6 flex flex-col justify-between h-full" style={{ minHeight: 240 }}>
+        {/* Top row */}
+        <div className="flex items-start justify-between gap-3 mb-4">
+          {/* Badge */}
+          {offer.badge_text && (
+            <motion.span
+              animate={{ scale: [1, 1.06, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full bg-white/25 text-white backdrop-blur-sm border border-white/30 tracking-wide uppercase"
+            >
+              <Zap size={10} className="fill-current" />
+              {offer.badge_text}
+            </motion.span>
+          )}
+
+          {/* Discount pill */}
+          {offer.discount_percent > 0 && (
+            <motion.div
+              initial={{ rotate: -12, scale: 0.8 }}
+              whileInView={{ rotate: -8, scale: 1 }}
+              viewport={{ once: true }}
+              className="flex-shrink-0 w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex flex-col items-center justify-center"
+            >
+              <p className="text-white font-black text-xl leading-none">{offer.discount_percent}%</p>
+              <p className="text-white/80 text-[10px] font-semibold leading-none mt-0.5">OFF</p>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Text */}
+        <div className="mb-4">
+          <h3 className="text-white font-black text-xl sm:text-2xl leading-tight drop-shadow">
+            {offer.title}
+          </h3>
+          {offer.subtitle && (
+            <p className="text-white/80 text-sm mt-1 leading-snug">{offer.subtitle}</p>
+          )}
+          {offer.description && (
+            <p className="text-white/65 text-xs mt-2 leading-relaxed line-clamp-2">{offer.description}</p>
+          )}
+        </div>
+
+        {/* Countdown */}
+        {showCd && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center gap-2 mb-4"
+          >
+            <Clock size={12} className="text-white/70 flex-shrink-0" />
+            <p className="text-white/70 text-xs font-medium">Ends in</p>
+            {[
+              { v: cd.h, l: 'h' },
+              { v: cd.m, l: 'm' },
+              { v: cd.s, l: 's' },
+            ].map(({ v, l }) => (
+              <div key={l} className="flex items-center gap-0.5">
+                <motion.span
+                  key={v}
+                  initial={{ y: -6, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.25 }}
+                  className="bg-white/20 text-white text-xs font-bold w-7 text-center py-0.5 rounded-md tabular-nums"
+                >
+                  {String(v).padStart(2, '0')}
+                </motion.span>
+                <span className="text-white/50 text-xs">{l}</span>
+              </div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* CTA row */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            to={offer.cta_link || '/workers'}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-sm font-bold transition-all hover:scale-105 active:scale-95 shadow-md"
+            style={{ color: offer.accent_color || '#1B2B4B' }}
+          >
+            {offer.cta_text || 'Book Now'}
+            <ArrowRight size={14} />
+          </Link>
+
+          {/* Watch video button */}
+          {ytId && (
+            <button
+              onClick={() => onPlayVideo(ytId)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black/30 border border-white/25 text-white text-sm font-semibold backdrop-blur-sm hover:bg-black/40 transition-all"
+            >
+              <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <Play size={10} className="text-white fill-white ml-0.5" />
+              </span>
+              Watch
+            </button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/** YouTube lightbox modal */
+function VideoModal({ ytId, onClose }) {
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.88, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.88, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+          className="relative w-full max-w-3xl aspect-video rounded-2xl overflow-hidden shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <iframe
+            src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`}
+            className="w-full h-full"
+            allow="autoplay; encrypted-media; fullscreen"
+            allowFullScreen
+            title="Offer video"
+          />
+        </motion.div>
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+        >
+          <XIcon size={18} />
+        </button>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+/** Main offers section — carousel with prev/next on desktop */
+function OffersSection() {
+  const [offers,   setOffers]   = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [videoId,  setVideoId]  = useState(null);
+  const [idx,      setIdx]      = useState(0);
+  const trackRef = useRef(null);
+
+  useEffect(() => {
+    api.get('/offers')
+      .then(({ data }) => setOffers(Array.isArray(data.data) ? data.data : []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const prev = useCallback(() => setIdx((i) => Math.max(0, i - 1)), []);
+  const next = useCallback(() => setIdx((i) => Math.min(offers.length - 1, i + 1)), [offers.length]);
+
+  if (loading || offers.length === 0) return null;
+
+  return (
+    <section className="relative py-16 overflow-hidden bg-gradient-to-b from-gray-950 to-[#0d1b30]">
+      {/* Ambient glows */}
+      <div className="absolute top-0 left-1/3 w-80 h-60 bg-orange-600/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-80 h-60 bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.45 }}
+          className="flex items-center justify-between mb-8 gap-4"
+        >
+          <div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#C9A84C]/15 text-[#C9A84C] border border-[#C9A84C]/20 uppercase tracking-widest mb-3">
+              <Tag size={10} /> Exclusive Offers
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight">
+              Deals &amp; Promotions
+            </h2>
+            <p className="text-gray-400 text-sm mt-1.5">Limited-time offers just for you</p>
+          </div>
+
+          {/* Prev / Next — desktop */}
+          {offers.length > 1 && (
+            <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={prev}
+                disabled={idx === 0}
+                className="w-10 h-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white disabled:opacity-30 transition-all"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <span className="text-gray-500 text-sm tabular-nums">{idx + 1} / {offers.length}</span>
+              <button
+                onClick={next}
+                disabled={idx === offers.length - 1}
+                className="w-10 h-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white disabled:opacity-30 transition-all"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Carousel — horizontal scroll on mobile, controlled on desktop */}
+        <div className="relative">
+          {/* Mobile: native horizontal scroll */}
+          <div
+            className="flex sm:hidden gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-none"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {offers.map((offer) => (
+              <div key={offer._id} className="snap-start flex-shrink-0 w-[85vw]">
+                <OfferCard offer={offer} onPlayVideo={setVideoId} />
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: single card view with slide animation */}
+          <div className="hidden sm:block overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={idx}
+                ref={trackRef}
+                initial={{ opacity: 0, x: 60 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -60 }}
+                transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className={`grid gap-6 ${offers.length === 1 ? 'grid-cols-1 max-w-lg mx-auto' : offers.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}
+              >
+                {/* Show up to 3 cards at a time */}
+                {offers.slice(
+                  offers.length <= 3 ? 0 : Math.min(idx, offers.length - 3),
+                  offers.length <= 3 ? offers.length : Math.min(idx + 3, offers.length)
+                ).map((offer) => (
+                  <OfferCard key={offer._id} offer={offer} onPlayVideo={setVideoId} />
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Dot indicators */}
+        {offers.length > 1 && (
+          <div className="flex justify-center gap-2 mt-6">
+            {offers.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setIdx(i)}
+                className={`rounded-full transition-all ${
+                  i === idx ? 'w-6 h-2 bg-[#C9A84C]' : 'w-2 h-2 bg-white/20 hover:bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Video lightbox */}
+      {videoId && <VideoModal ytId={videoId} onClose={() => setVideoId(null)} />}
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -554,6 +906,9 @@ const Home = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* ── Offers & Promotions (customers only) ────────────────────────────────── */}
+      {!isWorker && <OffersSection />}
 
       {/* ── Worker Quick Actions ───────────────────────────────────────────────── */}
       {isWorker && (

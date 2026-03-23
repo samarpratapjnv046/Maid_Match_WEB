@@ -15,6 +15,7 @@ import walletRoutes from './src/routes/walletRoutes.js';
 import adminRoutes from './src/routes/adminRoutes.js';
 import favoriteRoutes from './src/routes/favoriteRoutes.js';
 import chatRoutes from './src/routes/chatRoutes.js';
+import offerRoutes from './src/routes/offerRoutes.js';
 
 import { globalErrorHandler } from './src/utils/errorHandler.js';
 import { generalLimiter } from './src/middleware/rateLimiter.js';
@@ -87,6 +88,7 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/offers', offerRoutes);
 
 // ─── Static Files (Production) ────────────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {

@@ -20,6 +20,13 @@ import {
   getRefundRequests,
   processManualRefund,
 } from '../controllers/adminController.js';
+import {
+  getAllOffers,
+  createOffer,
+  updateOffer,
+  deleteOffer,
+  toggleOffer,
+} from '../controllers/offerController.js';
 import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
 import { processRefund } from '../controllers/paymentController.js';
@@ -63,5 +70,12 @@ router.get('/withdrawals', getAllWithdrawals);
 router.patch('/withdrawals/:id/approve', approveWithdrawal);
 router.patch('/withdrawals/:id/reject', rejectWithdrawal);
 router.patch('/withdrawals/:id/processing', markWithdrawalProcessing);
+
+// Offers (home page promotions)
+router.get('/offers', getAllOffers);
+router.post('/offers', createOffer);
+router.patch('/offers/:id', updateOffer);
+router.patch('/offers/:id/toggle', toggleOffer);
+router.delete('/offers/:id', deleteOffer);
 
 export default router;

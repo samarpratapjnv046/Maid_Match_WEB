@@ -48,6 +48,7 @@ const AdminReviews        = lazy(() => import('./pages/admin/AdminReviews'));
 const AdminAuditLogs      = lazy(() => import('./pages/admin/AdminAuditLogs'));
 const AdminWithdrawals    = lazy(() => import('./pages/admin/AdminWithdrawals'));
 const AdminRefundRequests = lazy(() => import('./pages/admin/AdminRefundRequests'));
+const AdminOffers         = lazy(() => import('./pages/admin/AdminOffers'));
 
 // ─── Page loading fallback ───────────────────────────────────────────────────
 function PageSpinner() {
@@ -150,6 +151,7 @@ function AppRoutes() {
           <Route path="payments" element={<AdminPayments />} />
           <Route path="withdrawals" element={<AdminWithdrawals />} />
           <Route path="refund-requests" element={<AdminRefundRequests />} />
+          <Route path="offers" element={<AdminOffers />} />
           <Route path="reviews" element={<AdminReviews />} />
           <Route path="audit-logs" element={<AdminAuditLogs />} />
           <Route path="profile" element={<Profile />} />
