@@ -49,7 +49,7 @@ const Register = () => {
     gender: '', bio: '', services: [],
     hourly: '', daily: '', monthly: '',
     experience_years: '', languages: [],
-    city: '', state: '', pincode: '',
+    city: '', state: '', pincode:'',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
