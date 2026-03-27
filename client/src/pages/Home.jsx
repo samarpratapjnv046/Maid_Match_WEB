@@ -1545,7 +1545,7 @@ const Home = () => {
                   {/* Screen glow */}
                   <div className="absolute inset-2 rounded-[2rem] bg-gradient-to-br from-primary-900 to-primary-800 flex flex-col items-center justify-center gap-3 p-4">
                     <div className="text-5xl">🧹</div>
-                    <p className="text-white font-black text-base text-center leading-tight">Maid<span className="text-yellow-300">Match</span></p>
+                    <p className="text-white font-black text-base text-center leading-tight">Maid<span className="text-yellow-300">Saathi</span></p>
                     <div className="w-full space-y-1.5">
                       {['House Cleaning', 'Cooking', 'Elder Care'].map((s) => (
                         <div key={s} className="bg-white/10 rounded-lg px-2.5 py-1.5 flex items-center gap-2">

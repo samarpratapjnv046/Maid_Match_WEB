@@ -113,7 +113,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <span className="text-2xl font-bold text-primary-600 tracking-tight">
-              Maid<span className="text-gray-900">Match</span>
+              Maid<span className="text-gray-900">Saathi</span>
             </span>
           </Link>
 

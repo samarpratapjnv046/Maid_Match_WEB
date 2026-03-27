@@ -222,7 +222,7 @@ const Register = () => {
       >
         <div className="text-center mb-8">
           <Link to="/" className="inline-block text-2xl font-bold text-primary-600 mb-6">
-            Maid<span className="text-gray-900">Match</span>
+            Maid<span className="text-gray-900">Saathi</span>
           </Link>
           <h2 className="text-3xl font-extrabold text-gray-900">
             {step === 1 ? t('register.step1Title') : t('register.step2Title')}
