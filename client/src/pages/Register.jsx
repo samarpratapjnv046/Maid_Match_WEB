@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
@@ -7,9 +7,55 @@ import api from '../api/axios';
 import {
   User, Mail, Lock, Phone, Eye, EyeOff, Loader2, AlertCircle,
   Briefcase, ShoppingBag, MapPin, ChevronRight, ChevronLeft,
-  DollarSign, Star, Globe, FileText, Send, KeyRound, CheckCircle,
+  DollarSign, Star, Globe, FileText, Send, KeyRound, CheckCircle, Shield,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+function ParticleCanvas() {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId;
+    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+    const particles = Array.from({ length: 50 }, () => ({
+      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+      r: Math.random() * 1.6 + 0.4,
+      vx: (Math.random() - 0.5) * 0.22, vy: (Math.random() - 0.5) * 0.22,
+      alpha: Math.random() * 0.5 + 0.1,
+    }));
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p) => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(147,197,253,${p.alpha})`; ctx.fill();
+      });
+      for (let i = 0; i < particles.length; i++)
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 90) {
+            const prog = 1 - ((particles[i].x + particles[j].x) / 2) / canvas.width;
+            ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(147,197,253,${(1 - d / 90) * 0.1 * prog})`; ctx.lineWidth = 0.6; ctx.stroke();
+          }
+        }
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize); };
+  }, []);
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }} />;
+}
 
 const SERVICE_OPTIONS = [
   { value: 'house_cleaning', label: 'House Cleaning' },
@@ -24,6 +70,14 @@ const SERVICE_OPTIONS = [
 ];
 
 const LANGUAGE_OPTIONS = ['Hindi', 'English', 'Bengali', 'Tamil', 'Telugu', 'Marathi', 'Gujarati', 'Kannada', 'Malayalam', 'Punjabi', 'Odia', 'Urdu'];
+
+const FEATURES = [
+  { icon: Shield,      text: 'Verified & background-checked workers' },
+  { icon: Star,        text: 'Instant booking, flexible scheduling' },
+  { icon: CheckCircle, text: 'Secure payments & instant wallet' },
+  { icon: Globe,       text: 'Pan-India coverage, 24/7 support' },
+];
+
 
 const InputField = ({ label, icon: Icon, error, children, className = '' }) => (
   <div className={className}>
@@ -49,7 +103,7 @@ const Register = () => {
     gender: '', bio: '', services: [],
     hourly: '', daily: '', monthly: '',
     experience_years: '', languages: [],
-    city: '', state: '', pincode:'',
+    city: '', state: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -208,58 +262,120 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
-      {/* Language switcher — fixed top-right */}
+    <div
+      className="h-screen flex overflow-hidden relative"
+      style={{ background: 'linear-gradient(105deg,#0f172a 0%,#1e3a5f 30%,#2563eb 58%,#bfdbfe 80%,#f0f9ff 100%)' }}
+    >
+      <ParticleCanvas />
+
+      {/* Ambient blobs */}
+      <motion.div className="absolute rounded-full pointer-events-none" style={{ width:480,height:480,top:'-100px',left:'-70px',background:'radial-gradient(circle,rgba(96,165,250,0.18),transparent)',zIndex:1 }}
+        animate={{ scale:[1,1.1,1],opacity:[0.7,1,0.7] }} transition={{ duration:7,repeat:Infinity,ease:'easeInOut' }} />
+      <motion.div className="absolute rounded-full pointer-events-none" style={{ width:340,height:340,bottom:'-60px',left:'20%',background:'radial-gradient(circle,rgba(129,140,248,0.13),transparent)',zIndex:1 }}
+        animate={{ scale:[1,1.08,1],opacity:[0.6,0.9,0.6] }} transition={{ duration:9,repeat:Infinity,ease:'easeInOut',delay:2 }} />
+
+      {/* Language switcher */}
       <div className="absolute top-4 right-4 z-50">
-        <LanguageSwitcher />
+        <LanguageSwitcher variant="dark" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="sm:mx-auto sm:w-full sm:max-w-lg"
-      >
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-block text-2xl font-bold text-primary-600 mb-6">
-            Maid<span className="text-gray-900">Saathi</span>
-          </Link>
-          <h2 className="text-3xl font-extrabold text-gray-900">
+      {/* ── LEFT panel ── */}
+      <div className="hidden lg:flex lg:w-[46%] h-full relative z-10 flex-col justify-between p-10">
+        {/* Logo */}
+        <Link to="/" className="inline-flex items-center gap-2">
+          <span className="text-xl font-black text-white tracking-tight">Maid<span className="text-blue-300">Saathi</span></span>
+        </Link>
+
+        {/* Centre copy */}
+        <motion.div initial={{ opacity:0,y:28 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.6 }}>
+          <p className="text-blue-300 text-xs font-bold tracking-[0.2em] uppercase mb-4">Join Us Today</p>
+          <h1 className="text-4xl xl:text-[2.6rem] font-black text-white leading-tight mb-4 drop-shadow-md">
+            Trusted home services,<br />at your fingertips
+          </h1>
+          <p className="text-white/55 text-sm leading-relaxed max-w-xs mb-7">
+            Connect with verified domestic workers across India. Safe, reliable, and just a tap away.
+          </p>
+
+          {/* Feature list */}
+          <div className="space-y-3">
+            {FEATURES.map(({ icon: Icon, text }, i) => (
+              <motion.div key={text} initial={{ opacity:0,x:-14 }} animate={{ opacity:1,x:0 }}
+                transition={{ delay:0.3+i*0.1,duration:0.4 }} className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+                  <Icon size={13} className="text-blue-300" />
+                </div>
+                <span className="text-sm text-white/70">{text}</span>
+              </motion.div>
+            ))}
+          </div>
+
+        </motion.div>
+
+        {/* Bottom badge */}
+        <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-4 py-2 backdrop-blur-sm w-fit">
+          <div className="flex -space-x-1.5">
+            {['#f59e0b','#10b981','#3b82f6'].map((c) => (
+              <div key={c} className="w-5 h-5 rounded-full border-2 border-white/20" style={{ background:c }} />
+            ))}
+          </div>
+          <span className="text-xs text-white/65">Join 10,000+ happy customers</span>
+        </div>
+      </div>
+
+      {/* ── RIGHT panel — exact same as Login ── */}
+      <div className="flex-1 h-full relative z-10 flex items-center justify-center px-5 sm:px-10 lg:px-12">
+        <motion.div
+          initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.45 }}
+          className="w-full max-w-md rounded-2xl"
+          style={{ background:'rgba(255,255,255,0.86)',backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',boxShadow:'0 20px 60px rgba(15,23,42,0.18),0 0 0 1px rgba(255,255,255,0.45)' }}
+        >
+          {/* Scrollable inner — no scrollbar */}
+          <div
+            className="px-7 py-7 overflow-y-auto"
+            style={{ maxHeight:'calc(100vh - 4rem)', scrollbarWidth:'none', msOverflowStyle:'none' }}
+          >
+          <style>{`.reg-card::-webkit-scrollbar{display:none}`}</style>
+
+          {/* Mobile logo */}
+          <div className="lg:hidden mb-4 text-center">
+            <Link to="/" className="inline-flex items-center justify-center gap-2">
+              <span className="text-lg font-black text-gray-900">Maid<span className="text-blue-600">Saathi</span></span>
+            </Link>
+          </div>
+
+          {/* Title */}
+          <h2 className="text-xl font-black text-gray-900 mb-0.5">
             {step === 1 ? t('register.step1Title') : t('register.step2Title')}
           </h2>
           {step === 1 ? (
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="text-xs text-gray-500 mb-4">
               {t('register.alreadyHaveAccount')}{' '}
-              <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500 transition-colors">
+              <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
                 {t('register.signIn')}
               </Link>
             </p>
           ) : (
-            <p className="mt-2 text-sm text-gray-600">
-              Almost there! Tell customers what you offer.
-            </p>
+            <p className="text-xs text-gray-500 mb-4">Almost there! Tell customers what you offer.</p>
           )}
-        </div>
 
-        {/* Progress indicator for workers */}
-        {formData.role === 'worker' && (
-          <div className="flex items-center justify-center gap-2 mb-6">
-            {[1, 2].map((s) => (
-              <div key={s} className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                  s < step ? 'bg-primary-600 text-white' :
-                  s === step ? 'bg-primary-600 text-white ring-4 ring-primary-100' :
-                  'bg-gray-200 text-gray-500'
-                }`}>
-                  {s}
+          {/* Progress indicator for workers */}
+          {formData.role === 'worker' && (
+            <div className="flex items-center justify-center gap-2 mb-4">
+              {[1, 2].map((s) => (
+                <div key={s} className="flex items-center gap-2">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
+                    s < step ? 'bg-blue-600 text-white' :
+                    s === step ? 'bg-blue-600 text-white ring-4 ring-blue-100' :
+                    'bg-gray-200 text-gray-500'
+                  }`}>{s}</div>
+                  {s < 2 && <div className={`w-10 h-0.5 ${s < step ? 'bg-blue-600' : 'bg-gray-200'}`} />}
                 </div>
-                {s < 2 && <div className={`w-12 h-0.5 ${s < step ? 'bg-primary-600' : 'bg-gray-200'}`} />}
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
-        <div className="bg-white py-8 px-6 shadow-xl sm:rounded-2xl border border-gray-100">
+          {/* Error */}
+          <div className="[&>*]:mb-4">
           {localError && (
             <div className="mb-5 flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
               <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
@@ -610,8 +726,10 @@ const Register = () => {
               <Link to="/privacy" className="text-primary-600 hover:underline">{t('register.privacyPolicy')}</Link>
             </p>
           )}
-        </div>
-      </motion.div>
+          </div>{/* end [&>*]:mb-4 */}
+          </div>{/* end scrollable inner */}
+        </motion.div>{/* end glass card */}
+      </div>{/* end right panel */}
     </div>
   );
 };

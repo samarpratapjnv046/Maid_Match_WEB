@@ -22,6 +22,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const AuthCallback   = lazy(() => import('./pages/AuthCallback'));
 const Terms          = lazy(() => import('./pages/Terms'));
 const Privacy        = lazy(() => import('./pages/Privacy'));
+const Contact        = lazy(() => import('./pages/Contact'));
 const Profile        = lazy(() => import('./pages/Profile'));
 
 // Customer
@@ -49,7 +50,8 @@ const AdminReviews        = lazy(() => import('./pages/admin/AdminReviews'));
 const AdminAuditLogs      = lazy(() => import('./pages/admin/AdminAuditLogs'));
 const AdminWithdrawals    = lazy(() => import('./pages/admin/AdminWithdrawals'));
 const AdminRefundRequests = lazy(() => import('./pages/admin/AdminRefundRequests'));
-const AdminOffers         = lazy(() => import('./pages/admin/AdminOffers'));
+const AdminOffers           = lazy(() => import('./pages/admin/AdminOffers'));
+const AdminContactMessages  = lazy(() => import('./pages/admin/AdminContactMessages'));
 
 // ─── Page loading fallback ───────────────────────────────────────────────────
 function PageSpinner() {
@@ -130,6 +132,7 @@ function AppRoutes() {
         <Route path="/workers/:id" element={<HomeRoute><MainLayout><WorkerProfile /></MainLayout></HomeRoute>} />
         <Route path="/terms" element={<MainLayout><Terms /></MainLayout>} />
         <Route path="/privacy" element={<MainLayout><Privacy /></MainLayout>} />
+        <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
         <Route path="/auth/callback" element={<AuthCallback />} />
 
         {/* ── Auth (guests only) ── */}
@@ -165,6 +168,7 @@ function AppRoutes() {
           <Route path="offers" element={<AdminOffers />} />
           <Route path="reviews" element={<AdminReviews />} />
           <Route path="audit-logs" element={<AdminAuditLogs />} />
+          <Route path="contact-messages" element={<AdminContactMessages />} />
           <Route path="profile" element={<Profile />} />
         </Route>
 

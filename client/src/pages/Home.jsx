@@ -1544,7 +1544,7 @@ const Home = () => {
                 <div className="w-44 h-80 bg-gradient-to-b from-gray-800 to-gray-900 rounded-[2.5rem] border-4 border-gray-700 shadow-2xl shadow-black/60 flex flex-col items-center justify-center gap-3 relative overflow-hidden">
                   {/* Screen glow */}
                   <div className="absolute inset-2 rounded-[2rem] bg-gradient-to-br from-primary-900 to-primary-800 flex flex-col items-center justify-center gap-3 p-4">
-                    <div className="text-5xl">🧹</div>
+                    <img src="/ms-icon.png" alt="MaidSaathi" className="w-14 h-14 object-contain rounded-2xl" />
                     <p className="text-white font-black text-base text-center leading-tight">Maid<span className="text-yellow-300">Saathi</span></p>
                     <div className="w-full space-y-1.5">
                       {['House Cleaning', 'Cooking', 'Elder Care'].map((s) => (

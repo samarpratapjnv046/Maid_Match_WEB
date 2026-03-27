@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import {
   Mail, Lock, Eye, EyeOff, Loader2, AlertCircle,
-  CheckCircle2, Sparkles, ArrowLeft, KeyRound,
+  CheckCircle2, ArrowLeft, KeyRound,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -119,9 +119,7 @@ export default function ForgotPassword() {
       {/* ── LEFT panel ── */}
       <div className="hidden lg:flex lg:w-[52%] h-full relative z-10 flex-col justify-between p-10">
         <Link to="/" className="inline-flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-sm">
-            <Sparkles size={18} className="text-blue-300" />
-          </div>
+          <img src="/ms-icon-nobg.png" alt="" className="h-10 w-auto object-contain brightness-0 invert" />
           <span className="text-xl font-black text-white tracking-tight">Maid<span className="text-blue-300">Saathi</span></span>
         </Link>
 
@@ -152,9 +150,9 @@ export default function ForgotPassword() {
         >
           {/* Mobile logo */}
           <div className="lg:hidden mb-4 text-center">
-            <Link to="/" className="inline-flex items-center gap-1.5">
-              <Sparkles size={16} className="text-blue-600" />
-              <span className="text-base font-black text-gray-900">Maid<span className="text-blue-600">Saathi</span></span>
+            <Link to="/" className="inline-flex items-center justify-center gap-2">
+              <img src="/ms-icon-nobg.png" alt="" className="h-9 w-auto object-contain" />
+              <span className="text-lg font-black text-gray-900">Maid<span className="text-blue-600">Saathi</span></span>
             </Link>
           </div>
 

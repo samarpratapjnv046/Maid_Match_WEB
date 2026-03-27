@@ -17,6 +17,7 @@ import {
   Banknote,
   RefreshCw,
   Megaphone,
+  MessageSquare,
 } from 'lucide-react';
 
 const NAV_LINKS = [
@@ -29,8 +30,9 @@ const NAV_LINKS = [
   { to: '/admin/refund-requests', label: 'Refund Requests', icon: RefreshCw },
   { to: '/admin/offers',       label: 'Offers & Coupons', icon: Megaphone },
   { to: '/admin/reviews',      label: 'Reviews',         icon: Star },
-  { to: '/admin/audit-logs',   label: 'Audit Logs',      icon: ClipboardList },
-  { to: '/admin/profile',      label: 'Profile',         icon: UserCircle },
+  { to: '/admin/audit-logs',        label: 'Audit Logs',       icon: ClipboardList },
+  { to: '/admin/contact-messages', label: 'Contact Messages', icon: MessageSquare },
+  { to: '/admin/profile',          label: 'Profile',          icon: UserCircle },
 ];
 
 function NavItem({ to, label, icon: Icon, end, onClick }) {
@@ -85,10 +87,10 @@ export default function AdminLayout() {
         `}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-5 border-b border-white/10 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-[#C9A84C] rounded-lg flex items-center justify-center">
-              <Shield size={16} className="text-[#1B2B4B]" />
+            <div className="w-9 h-9 bg-[#C9A84C]/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Shield size={20} className="text-[#C9A84C]" />
             </div>
             <div>
               <p className="text-white font-serif font-bold text-base leading-tight">MaidSaathi</p>
@@ -104,7 +106,7 @@ export default function AdminLayout() {
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth:'none',msOverflowStyle:'none'}}>
           {NAV_LINKS.map((link) => (
             <NavItem key={link.to} {...link} onClick={closeSidebar} />
           ))}
@@ -133,9 +135,7 @@ export default function AdminLayout() {
             <Menu size={22} />
           </button>
           <div className="flex items-center gap-2 flex-1">
-            <div className="w-7 h-7 bg-[#C9A84C] rounded-md flex items-center justify-center">
-              <Shield size={14} className="text-[#1B2B4B]" />
-            </div>
+            <Shield size={18} className="text-[#C9A84C]" />
             <span className="font-serif font-bold text-base">MaidSaathi Admin</span>
           </div>
           <button
