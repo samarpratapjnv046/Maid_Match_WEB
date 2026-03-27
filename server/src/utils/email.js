@@ -37,7 +37,7 @@ export const sendOTPEmail = async (to, name, otp) => {
           <td style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 60%,#0ea5e9 100%);padding:44px 40px 36px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 20px;margin-bottom:18px;">
               <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">
-                Maid<span style="color:#93c5fd;">Match</span>
+                Maid<span style="color:#93c5fd;">Saathi</span>
               </span>
             </div>
             <p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">
@@ -114,7 +114,7 @@ export const sendRegisterOTPEmail = async (to, name, otp) => {
           <td style="background:linear-gradient(135deg,#1B2B4B 0%,#2563eb 60%,#C9A84C 100%);padding:44px 40px 36px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 20px;margin-bottom:18px;">
               <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">
-                Maid<span style="color:#C9A84C;">Match</span>
+                Maid<span style="color:#C9A84C;">Saathi</span>
               </span>
             </div>
             <p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">
@@ -191,7 +191,7 @@ export const sendBankOTPEmail = async (to, name, otp) => {
           <td style="background:linear-gradient(135deg,#1B2B4B 0%,#2563eb 60%,#C9A84C 100%);padding:44px 40px 36px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 20px;margin-bottom:18px;">
               <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">
-                Maid<span style="color:#C9A84C;">Match</span>
+                Maid<span style="color:#C9A84C;">Saathi</span>
               </span>
             </div>
             <p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">
@@ -286,7 +286,7 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
           <td style="background:linear-gradient(135deg,#1B2B4B 0%,#166534 60%,#15803d 100%);padding:44px 40px 36px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 20px;margin-bottom:18px;">
               <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">
-                Maid<span style="color:#C9A84C;">Match</span>
+                Maid<span style="color:#C9A84C;">Saathi</span>
               </span>
             </div>
             <p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">
@@ -392,7 +392,7 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
           <td style="background:linear-gradient(135deg,#1B2B4B 0%,#2563eb 70%,#C9A84C 100%);padding:44px 40px 36px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 24px;margin-bottom:16px;">
               <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">
-                Maid<span style="color:#C9A84C;">Match</span>
+                Maid<span style="color:#C9A84C;">Saathi</span>
               </span>
             </div>
             <div style="background:rgba(255,255,255,0.2);border-radius:50%;width:72px;height:72px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;">
@@ -523,7 +523,7 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
           <td style="background:linear-gradient(135deg,#1B2B4B 0%,#166534 60%,#15803d 100%);padding:44px 40px 36px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 20px;margin-bottom:18px;">
               <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">
-                Maid<span style="color:#C9A84C;">Match</span>
+                Maid<span style="color:#C9A84C;">Saathi</span>
               </span>
             </div>
             <p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">
@@ -637,7 +637,7 @@ export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankNam
           <td style="background:linear-gradient(135deg,#1B2B4B 0%,#166534 60%,#C9A84C 100%);padding:44px 40px 36px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 20px;margin-bottom:18px;">
               <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">
-                Maid<span style="color:#C9A84C;">Match</span>
+                Maid<span style="color:#C9A84C;">Saathi</span>
               </span>
             </div>
             <p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">
