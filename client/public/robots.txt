@@ -1,0 +1,31 @@
+User-agent: *
+Allow: /
+Allow: /workers
+Allow: /workers/
+Allow: /contact
+Allow: /terms
+Allow: /privacy
+
+# Block all private / auth / dashboard pages
+Disallow: /admin
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /bookings
+Disallow: /bookings/
+Disallow: /favorites
+Disallow: /profile
+Disallow: /worker/dashboard
+Disallow: /worker/setup
+Disallow: /worker/profile
+Disallow: /worker/bookings
+Disallow: /worker/wallet
+Disallow: /auth/
+Disallow: /auth/callback
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+
+# Block API routes (safety)
+Disallow: /api/
+
+Sitemap: https://www.maidsaathi.in/sitemap.xml

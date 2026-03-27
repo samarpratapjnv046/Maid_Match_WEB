@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/common/SEO';
 import LanguageSwitcher from '../components/common/LanguageSwitcher';
 import api from '../api/axios';
 import {
@@ -266,6 +267,12 @@ const Register = () => {
       className="h-screen flex overflow-hidden relative"
       style={{ background: 'linear-gradient(105deg,#0f172a 0%,#1e3a5f 30%,#2563eb 58%,#bfdbfe 80%,#f0f9ff 100%)' }}
     >
+      <SEO
+        title="Create Your MaidSaathi Account"
+        description="Sign up for MaidSaathi to book trusted, verified maids and domestic workers in Bangalore. Register as a customer or join as a worker."
+        canonical="https://www.maidsaathi.in/register"
+        noindex={true}
+      />
       <ParticleCanvas />
 
       {/* Ambient blobs */}

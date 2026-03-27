@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/common/SEO';
 import {
   Mail, Lock, Eye, EyeOff, Loader2, AlertCircle,
   Shield, Star, Clock,
@@ -115,6 +116,12 @@ export default function Login() {
       className="h-screen flex overflow-hidden relative"
       style={{ background: 'linear-gradient(105deg,#0f172a 0%,#1e3a5f 30%,#2563eb 58%,#bfdbfe 80%,#f0f9ff 100%)' }}
     >
+      <SEO
+        title="Login to MaidSaathi"
+        description="Sign in to your MaidSaathi account to manage bookings and domestic help in Bangalore."
+        canonical="https://www.maidsaathi.in/login"
+        noindex={true}
+      />
       {/* Language switcher — fixed top-right */}
       <div className="absolute top-4 right-4 z-50">
         <LanguageSwitcher variant="dark" />

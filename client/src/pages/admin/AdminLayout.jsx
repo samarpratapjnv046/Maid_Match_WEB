@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 import {
   LayoutDashboard,
   Users,
@@ -69,6 +70,9 @@ export default function AdminLayout() {
 
   return (
     <div className="h-screen overflow-hidden bg-[#FAF8F3] flex">
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div

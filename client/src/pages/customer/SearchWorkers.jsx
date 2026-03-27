@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import SEO from '../../components/common/SEO';
 import { Filter, Search, MapPin, Star, ChevronDown, CheckCircle, Heart } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
@@ -470,6 +471,11 @@ export default function SearchWorkers() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F3]">
+      <SEO
+        title="Find Maids & Domestic Help Near You | MaidSaathi"
+        description="Search and hire verified maids, cooks, babysitters and domestic workers in Bangalore. Filter by service, location, and availability. Background-checked workers."
+        canonical="https://www.maidsaathi.in/workers"
+      />
       {/* Page header */}
       <div className="bg-[#1B2B4B] py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">

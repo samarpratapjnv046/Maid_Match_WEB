@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, ArrowLeft } from 'lucide-react';
+import SEO from '../components/common/SEO';
 
 export default function Privacy() {
   useEffect(() => {
@@ -9,6 +10,11 @@ export default function Privacy() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title="Privacy Policy | MaidSaathi"
+        description="Read MaidSaathi's privacy policy to understand how we collect, use, and protect your personal data when you book domestic workers in Bangalore."
+        canonical="https://www.maidsaathi.in/privacy"
+      />
       {/* Header */}
       <div className="bg-[#0A1628] text-white py-12 px-4">
         <div className="max-w-4xl mx-auto">

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
+import SEO from '../components/common/SEO';
+import { homeFaqSchema } from '../utils/schema';
 import {
   Mail, Phone, MapPin, Clock, Send, MessageSquare,
   CheckCircle, ArrowLeft, ChevronDown, ChevronUp
@@ -158,6 +160,12 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title="Contact MaidSaathi – Maid Booking Support Bangalore"
+        description="Get in touch with MaidSaathi for maid booking help, worker registration, or general queries. Call, email, or use the contact form. Available 7 days a week."
+        canonical="https://www.maidsaathi.in/contact"
+        schema={homeFaqSchema}
+      />
 
       {/* ── Hero header ───────────────────────────────────────────────────── */}
       <div className="relative bg-[#0A1628] text-white overflow-hidden">

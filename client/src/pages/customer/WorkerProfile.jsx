@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import SEO from '../../components/common/SEO';
+import { workerProfileSchema, breadcrumbSchema } from '../../utils/schema';
 import { MapPin, Clock, Star, CheckCircle, Calendar, Phone, AlertTriangle, CheckCircle2, Loader2, Heart, Navigation, Tag, X, BadgePercent } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
@@ -358,6 +360,20 @@ export default function WorkerProfile() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F3]">
+      <SEO
+        title={`${workerName} – ${services[0] || 'Domestic Worker'} in ${city || 'Bangalore'} | MaidSaathi`}
+        description={`Hire ${workerName}, a verified ${services[0] || 'domestic worker'} in ${city || 'Bangalore'}. Background-checked, rated ${rating}/5 by real customers. Book instantly on MaidSaathi.`}
+        canonical={`https://www.maidsaathi.in/workers/${id}`}
+        ogImage={photo || 'https://www.maidsaathi.in/og-homepage.jpg'}
+        schema={[
+          workerProfileSchema({ name: workerName, services, profile_photo: photo, location: { city } }),
+          breadcrumbSchema([
+            { name: 'Home', url: 'https://www.maidsaathi.in' },
+            { name: 'Find Workers', url: 'https://www.maidsaathi.in/workers' },
+            { name: workerName, url: `https://www.maidsaathi.in/workers/${id}` },
+          ]),
+        ]}
+      />
       {/* ─── Header banner ───────────────────────────────────────────────── */}
       <div className="bg-[#1B2B4B] relative overflow-hidden">
         <div

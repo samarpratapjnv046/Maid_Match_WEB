@@ -15,7 +15,8 @@ import Spinner from './components/common/Spinner';
 
 // ─── Lazy-loaded page chunks ────────────────────────────────────────────────
 // Public
-const Home           = lazy(() => import('./pages/Home'));
+const Home              = lazy(() => import('./pages/Home'));
+const LocalServicePage  = lazy(() => import('./pages/LocalServicePage'));
 const Login          = lazy(() => import('./pages/Login'));
 const Register       = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
@@ -134,6 +135,25 @@ function AppRoutes() {
         <Route path="/privacy" element={<MainLayout><Privacy /></MainLayout>} />
         <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+
+        {/* ── Local SEO pages (service + city combos) ── */}
+        <Route path="/maid-service-bangalore"      element={<MainLayout><LocalServicePage service="maid"           city="bangalore"    /></MainLayout>} />
+        <Route path="/part-time-maid-bangalore"    element={<MainLayout><LocalServicePage service="part-time-maid" city="bangalore"    /></MainLayout>} />
+        <Route path="/full-time-maid-bangalore"    element={<MainLayout><LocalServicePage service="full-time-maid" city="bangalore"    /></MainLayout>} />
+        <Route path="/babysitter-bangalore"        element={<MainLayout><LocalServicePage service="babysitter"     city="bangalore"    /></MainLayout>} />
+        <Route path="/cook-bangalore"              element={<MainLayout><LocalServicePage service="cook"           city="bangalore"    /></MainLayout>} />
+        <Route path="/house-cleaning-bangalore"    element={<MainLayout><LocalServicePage service="house-cleaning" city="bangalore"    /></MainLayout>} />
+        <Route path="/elder-care-bangalore"        element={<MainLayout><LocalServicePage service="elder-care"     city="bangalore"    /></MainLayout>} />
+        <Route path="/maid-service-whitefield"     element={<MainLayout><LocalServicePage service="maid"           city="whitefield"   /></MainLayout>} />
+        <Route path="/maid-service-koramangala"    element={<MainLayout><LocalServicePage service="maid"           city="koramangala"  /></MainLayout>} />
+        <Route path="/maid-service-hsr-layout"     element={<MainLayout><LocalServicePage service="maid"           city="hsr-layout"   /></MainLayout>} />
+        <Route path="/maid-service-marathahalli"   element={<MainLayout><LocalServicePage service="maid"           city="marathahalli" /></MainLayout>} />
+        <Route path="/maid-service-indiranagar"    element={<MainLayout><LocalServicePage service="maid"           city="indiranagar"  /></MainLayout>} />
+        <Route path="/part-time-maid-whitefield"   element={<MainLayout><LocalServicePage service="part-time-maid" city="whitefield"   /></MainLayout>} />
+        <Route path="/part-time-maid-koramangala"  element={<MainLayout><LocalServicePage service="part-time-maid" city="koramangala"  /></MainLayout>} />
+        <Route path="/babysitter-hsr-layout"       element={<MainLayout><LocalServicePage service="babysitter"     city="hsr-layout"   /></MainLayout>} />
+        <Route path="/cook-koramangala"            element={<MainLayout><LocalServicePage service="cook"           city="koramangala"  /></MainLayout>} />
+        <Route path="/elder-care-jayanagar"        element={<MainLayout><LocalServicePage service="elder-care"     city="jayanagar"    /></MainLayout>} />
 
         {/* ── Auth (guests only) ── */}
         <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />

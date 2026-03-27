@@ -7,6 +7,8 @@ import { serviceIcons, serviceLabels } from '../utils/helpers';
 import { useAuth } from '../hooks/useAuth';
 import WorkerDemoSection from '../components/common/WorkerDemoSection';
 import api from '../api/axios';
+import SEO from '../components/common/SEO';
+import { organizationSchema, localBusinessSchema, websiteSchema, homeFaqSchema } from '../utils/schema';
 
 const SERVICES = [
   'house_cleaning', 'cooking', 'babysitting',
@@ -805,6 +807,12 @@ const Home = () => {
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title="Book Trusted Maids in Bangalore | MaidSaathi"
+        description="Hire verified maids, cooks, babysitters & house helpers in Bangalore. Book part-time or full-time domestic help online. Background-checked workers. Instant booking."
+        canonical="https://www.maidsaathi.in/"
+        schema={[organizationSchema, localBusinessSchema, websiteSchema, homeFaqSchema]}
+      />
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
       {isWorker ? (
         /* Worker hero — compact dashboard entry */

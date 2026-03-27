@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, ArrowLeft } from 'lucide-react';
+import SEO from '../components/common/SEO';
 
 export default function Terms() {
   useEffect(() => {
@@ -9,6 +10,11 @@ export default function Terms() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title="Terms & Conditions | MaidSaathi"
+        description="Read MaidSaathi's terms of service for booking domestic help, maids, cooks, and babysitters in Bangalore. Understand your rights and responsibilities."
+        canonical="https://www.maidsaathi.in/terms"
+      />
       {/* Header */}
       <div className="bg-[#0A1628] text-white py-12 px-4">
         <div className="max-w-4xl mx-auto">
