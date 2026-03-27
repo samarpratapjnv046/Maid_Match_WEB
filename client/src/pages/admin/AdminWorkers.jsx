@@ -40,7 +40,8 @@ function WorkerDocModal({ workerId, onClose }) {
       .finally(() => setLoading(false));
   }, [workerId]);
 
-  const isPdf = worker?.aadhaar?.url?.includes('/raw/') || worker?.aadhaar?.url?.toLowerCase().endsWith('.pdf');
+  const isPdf = worker?.aadhaar?.url?.includes('/raw/') || worker?.aadhaar?.url?.toLowerCase().includes('.pdf');
+  const pdfViewUrl = (url) => `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
   const profilePhoto = worker?.user_id?.profilePhoto?.url;
   const name = worker?.user_id?.name || '—';
   const initials = name[0]?.toUpperCase() || '?';
@@ -139,9 +140,9 @@ function WorkerDocModal({ workerId, onClose }) {
                     <p className="text-sm font-semibold text-gray-800">Aadhaar PDF Document</p>
                     <p className="text-xs text-gray-500 mt-0.5">Click to open and review</p>
                   </div>
-                  <a href={worker.aadhaar.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                  <a href={pdfViewUrl(worker.aadhaar.url)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
                     <ExternalLink size={12} />
-                    Open PDF
+                    View PDF
                   </a>
                 </div>
               ) : (
@@ -215,7 +216,7 @@ function WorkerDocModal({ workerId, onClose }) {
                 {worker.bank_details.passbook?.url ? (
                   (() => {
                     const pbUrl = worker.bank_details.passbook.url;
-                    const isPbPdf = pbUrl.includes('/raw/') || pbUrl.toLowerCase().endsWith('.pdf');
+                    const isPbPdf = pbUrl.includes('/raw/') || pbUrl.toLowerCase().includes('.pdf');
                     return isPbPdf ? (
                       <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
                         <FileText size={22} className="text-orange-500 flex-shrink-0" />
@@ -223,9 +224,9 @@ function WorkerDocModal({ workerId, onClose }) {
                           <p className="text-sm font-semibold text-gray-800">Bank Passbook (PDF)</p>
                           <p className="text-xs text-gray-500 mt-0.5">Click to open and review</p>
                         </div>
-                        <a href={pbUrl} target="_blank" rel="noreferrer"
+                        <a href={pdfViewUrl(pbUrl)} target="_blank" rel="noreferrer"
                           className="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
-                          <ExternalLink size={12} /> Open PDF
+                          <ExternalLink size={12} /> View PDF
                         </a>
                       </div>
                     ) : (

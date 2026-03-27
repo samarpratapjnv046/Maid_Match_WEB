@@ -1,5 +1,6 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import api from './api/axios';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { useAuth } from './hooks/useAuth';
@@ -60,13 +61,6 @@ function PageSpinner() {
 }
 
 // ─── Route guards ────────────────────────────────────────────────────────────
-function PublicRoute({ children }) {
-  const { user, loading } = useAuth();
-  if (loading) return <PageSpinner />;
-  if (user?.role === 'admin') return <Navigate to="/admin" replace />;
-  return children;
-}
-
 function HomeRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <PageSpinner />;
@@ -82,6 +76,23 @@ function GuestRoute({ children }) {
     if (user.role === 'worker') return <Navigate to="/worker/dashboard" replace />;
     return <Navigate to="/dashboard" replace />;
   }
+  return children;
+}
+
+// Redirects workers without a completed profile to /worker/setup
+function WorkerGuard({ children }) {
+  const { user, loading } = useAuth();
+  const [profileStatus, setProfileStatus] = useState(null); // null=checking, true=ok, false=missing
+
+  useEffect(() => {
+    if (!user || user.role !== 'worker') return;
+    api.get('/workers/profile/me')
+      .then((res) => setProfileStatus(res.data?.data ? true : false))
+      .catch(() => setProfileStatus(true)); // on network/server error, let through
+  }, [user]);
+
+  if (loading || profileStatus === null) return <PageSpinner />;
+  if (profileStatus === false) return <Navigate to="/worker/setup" replace />;
   return children;
 }
 
@@ -136,11 +147,11 @@ function AppRoutes() {
         <Route path="/profile" element={<ProtectedRoute><AdminRedirectProfile /></ProtectedRoute>} />
 
         {/* ── Worker ── */}
-        <Route path="/worker/dashboard" element={<ProtectedRoute allowedRoles={['worker']}><MainLayout><WorkerDashboard /></MainLayout></ProtectedRoute>} />
+        <Route path="/worker/dashboard" element={<ProtectedRoute allowedRoles={['worker']}><WorkerGuard><MainLayout><WorkerDashboard /></MainLayout></WorkerGuard></ProtectedRoute>} />
         <Route path="/worker/setup" element={<ProtectedRoute allowedRoles={['customer', 'worker']}><MainLayout><WorkerProfilePage /></MainLayout></ProtectedRoute>} />
         <Route path="/worker/profile" element={<ProtectedRoute allowedRoles={['worker']}><MainLayout><WorkerProfilePage /></MainLayout></ProtectedRoute>} />
-        <Route path="/worker/bookings" element={<ProtectedRoute allowedRoles={['worker']}><MainLayout><WorkerBookings /></MainLayout></ProtectedRoute>} />
-        <Route path="/worker/wallet" element={<ProtectedRoute allowedRoles={['worker']}><MainLayout><WorkerWallet /></MainLayout></ProtectedRoute>} />
+        <Route path="/worker/bookings" element={<ProtectedRoute allowedRoles={['worker']}><WorkerGuard><MainLayout><WorkerBookings /></MainLayout></WorkerGuard></ProtectedRoute>} />
+        <Route path="/worker/wallet" element={<ProtectedRoute allowedRoles={['worker']}><WorkerGuard><MainLayout><WorkerWallet /></MainLayout></WorkerGuard></ProtectedRoute>} />
 
         {/* ── Admin ── */}
         <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>

@@ -52,7 +52,7 @@ export default function ChatWindow({ bookingId, otherPartyName, onClose }) {
           const token = localStorage.getItem('accessToken');
           socket = io(SERVER_URL, {
             auth: { token },
-            transports: ['websocket'],
+            transports: ['polling', 'websocket'],
           });
 
           socketRef.current = socket;

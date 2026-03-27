@@ -1,11 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
 
 export default function Footer() {
-  const { user } = useAuth();
-  const isWorker = user?.role === 'worker';
-
   return (
     <footer className="bg-[#1B2B4B] text-gray-300 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -24,15 +20,24 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold text-sm mb-3 uppercase tracking-wider">Quick Links</h4>
             <ul className="space-y-2">
-              {[['/', 'Home'], ...(!isWorker ? [['/workers', 'Find Workers'], ['/register', 'Become a Worker']] : [])].map(([to, label]) => (
-                <li key={to}><Link to={to} className="text-sm text-gray-400 hover:text-[#C9A84C] transition-colors">{label}</Link></li>
+              {[
+                ['/', 'Home'], 
+                ['/terms', 'Terms and Services'], 
+                ['/privacy', 'Privacy Policy'],
+                ['/contact', 'Contact Us']
+              ].map(([to, label]) => (
+                <li key={to}>
+                  <Link to={to} className="text-sm text-gray-400 hover:text-[#C9A84C] transition-colors">
+                    {label}
+                  </Link>
+                </li>
               ))}
             </ul>
           </div>
           <div>
             <h4 className="text-white font-semibold text-sm mb-3 uppercase tracking-wider">Contact</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li className="flex items-center gap-2"><Phone size={13} /> +91 98765 43210</li>
+              <li className="flex items-center gap-2"><Phone size={13} /> +91 85430 02135</li>
               <li className="flex items-center gap-2"><Mail size={13} /> help@MaidSaathi.in</li>
               <li className="flex items-center gap-2"><MapPin size={13} /> India</li>
             </ul>

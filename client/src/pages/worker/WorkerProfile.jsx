@@ -16,8 +16,7 @@ import {
   FileText,
   X,
   Landmark,
-  Send,
-  KeyRound,
+  Pencil,
 } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
@@ -145,24 +144,24 @@ export default function WorkerProfile() {
     account_number: '',
     ifsc_code: '',
     bank_name: '',
-    otp: '',
   });
   const [bankErrors, setBankErrors] = useState({});
   const [passbookFile, setPassbookFile] = useState(null);
   const [passbookPreview, setPassbookPreview] = useState(null);
   const [bankVerified, setBankVerified] = useState(false);
+  const [bankEditing, setBankEditing] = useState(false);
   const [bankSubmittedAt, setBankSubmittedAt] = useState(null);
   const [bankMaskedAccount, setBankMaskedAccount] = useState('');
-  const [bankOtpSent, setBankOtpSent] = useState(false);
-  const [bankOtpSending, setBankOtpSending] = useState(false);
-  const [bankSaving, setBankSaving] = useState(false);
-  const [otpCooldown, setOtpCooldown] = useState(0); // seconds remaining
 
   // ─── Fetch existing profile ─────────────────────────────────────────────────
   const fetchProfile = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await api.get('/workers/profile/me');
+      if (!data.data) {
+        setProfileExists(false);
+        return;
+      }
       const profile = data.data?.worker || data.data || data.worker || data;
       setProfileExists(true);
       setVerificationStatus(profile.verification_status || 'pending');
@@ -208,12 +207,8 @@ export default function WorkerProfile() {
         },
         aadhaarNumber: '',
       });
-    } catch (err) {
-      if (err?.response?.status === 404) {
-        setProfileExists(false);
-      } else {
-        toast.error('Failed to load profile.');
-      }
+    } catch {
+      toast.error('Failed to load profile.');
     } finally {
       setLoading(false);
     }
@@ -277,13 +272,6 @@ export default function WorkerProfile() {
     }
   }
 
-  // ─── OTP cooldown timer ─────────────────────────────────────────────────────
-  useEffect(() => {
-    if (otpCooldown <= 0) return;
-    const t = setTimeout(() => setOtpCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [otpCooldown]);
-
   // ─── Bank form handlers ─────────────────────────────────────────────────────
   function handleBankChange(e) {
     const { name, value } = e.target;
@@ -302,65 +290,6 @@ export default function WorkerProfile() {
     setBankErrors((prev) => ({ ...prev, passbook: '' }));
   }
 
-  async function handleSendBankOTP() {
-    // Basic pre-check — account number must be filled before sending OTP
-    if (!bankForm.account_number.trim()) {
-      setBankErrors((prev) => ({ ...prev, account_number: 'Enter account number before requesting OTP.' }));
-      return;
-    }
-    setBankOtpSending(true);
-    try {
-      const { data } = await api.post('/workers/bank/send-otp');
-      toast.success(data.message || 'OTP sent to your email.');
-      setBankOtpSent(true);
-      setOtpCooldown(60); // 60s re-send cooldown
-    } catch (err) {
-      toast.error(err?.response?.data?.message || 'Failed to send OTP.');
-    } finally {
-      setBankOtpSending(false);
-    }
-  }
-
-  async function handleBankSubmit(e) {
-    e.preventDefault();
-    const errs = {};
-    if (!bankForm.account_holder_name.trim()) errs.account_holder_name = 'Account holder name is required.';
-    if (!bankForm.account_number.trim()) errs.account_number = 'Account number is required.';
-    if (!bankForm.ifsc_code.trim()) errs.ifsc_code = 'IFSC code is required.';
-    else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankForm.ifsc_code)) errs.ifsc_code = 'Invalid IFSC (e.g. SBIN0001234).';
-    if (!bankForm.bank_name.trim()) errs.bank_name = 'Bank name is required.';
-    if (!bankForm.otp.trim()) errs.otp = 'Enter the OTP sent to your email.';
-    if (!passbookFile && !bankVerified) errs.passbook = 'Please upload your bank passbook.';
-    if (Object.keys(errs).length) { setBankErrors(errs); return; }
-
-    setBankSaving(true);
-    try {
-      const fd = new FormData();
-      fd.append('account_holder_name', bankForm.account_holder_name.trim());
-      fd.append('account_number', bankForm.account_number.trim());
-      fd.append('ifsc_code', bankForm.ifsc_code.trim());
-      fd.append('bank_name', bankForm.bank_name.trim());
-      fd.append('otp', bankForm.otp.trim());
-      if (passbookFile) fd.append('passbook', passbookFile);
-
-      const { data } = await api.post('/workers/bank', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      toast.success('Bank details verified and saved!');
-      setBankVerified(true);
-      setBankSubmittedAt(data.data?.submitted_at);
-      setBankMaskedAccount(data.data?.account_number_masked || '');
-      setBankOtpSent(false);
-      setPassbookFile(null);
-      setPassbookPreview(null);
-      setBankForm((prev) => ({ ...prev, otp: '' }));
-    } catch (err) {
-      toast.error(err?.response?.data?.message || 'Failed to save bank details.');
-    } finally {
-      setBankSaving(false);
-    }
-  }
 
   // ─── Aadhaar file ───────────────────────────────────────────────────────────
   function handleAadhaarFileChange(e) {
@@ -459,9 +388,41 @@ export default function WorkerProfile() {
         setVerificationStatus('under_review');
       }
 
+      // 3. Save bank details if any bank field is filled and not already verified
+      const bankFilled = bankForm.account_holder_name.trim() || bankForm.account_number.trim();
+      if (bankFilled && (!bankVerified || bankEditing)) {
+        const bankErrs = {};
+        if (!bankForm.account_holder_name.trim()) bankErrs.account_holder_name = 'Account holder name is required.';
+        if (!bankForm.account_number.trim()) bankErrs.account_number = 'Account number is required.';
+        if (!bankForm.ifsc_code.trim()) bankErrs.ifsc_code = 'IFSC code is required.';
+        else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankForm.ifsc_code)) bankErrs.ifsc_code = 'Invalid IFSC (e.g. SBIN0001234).';
+        if (!bankForm.bank_name.trim()) bankErrs.bank_name = 'Bank name is required.';
+        if (!passbookFile) bankErrs.passbook = 'Please upload your bank passbook.';
+        if (Object.keys(bankErrs).length) {
+          setBankErrors(bankErrs);
+          toast.error('Please fix bank detail errors before saving.');
+          return;
+        }
+        const fd = new FormData();
+        fd.append('account_holder_name', bankForm.account_holder_name.trim());
+        fd.append('account_number', bankForm.account_number.trim());
+        fd.append('ifsc_code', bankForm.ifsc_code.trim());
+        fd.append('bank_name', bankForm.bank_name.trim());
+        if (passbookFile) fd.append('passbook', passbookFile);
+        const { data: bankData } = await api.post('/workers/bank', fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        setBankVerified(true);
+        setBankEditing(false);
+        setBankSubmittedAt(bankData.data?.submitted_at);
+        setBankMaskedAccount(bankData.data?.account_number_masked || '');
+        setPassbookFile(null);
+        setPassbookPreview(null);
+      }
+
       toast.success(profileExists ? 'Profile saved!' : 'Profile created! Submitting to admin for verification…');
 
-      // 3. For new workers in setup mode, switch role
+      // 4. For new workers in setup mode, switch role
       if (!profileExists && isSetupMode) {
         const result = await switchMode('worker');
         if (result?.role === 'worker') {
@@ -794,16 +755,16 @@ export default function WorkerProfile() {
             <SectionHeader
               icon={Landmark}
               title="Bank Details"
-              description="Required for receiving payouts — verified via OTP sent to your email"
+              description="Required for receiving payouts"
             />
 
-            {bankVerified ? (
+            {bankVerified && !bankEditing ? (
               /* ── Verified state ── */
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
                   <CheckCircle size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-sm text-green-800">Bank Account Verified</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-green-800">Bank Account Saved</p>
                     <p className="text-xs text-green-700 mt-0.5">
                       {bankForm.bank_name} · {bankMaskedAccount}
                       {bankSubmittedAt && (
@@ -811,8 +772,14 @@ export default function WorkerProfile() {
                       )}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setBankEditing(true)}
+                    className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-[#1B2B4B] hover:text-[#C9A84C] border border-gray-200 hover:border-[#C9A84C] bg-white rounded-lg px-3 py-1.5 transition-colors"
+                  >
+                    <Pencil size={12} /> Edit
+                  </button>
                 </div>
-                <p className="text-xs text-gray-400">Contact support to update your bank details.</p>
               </div>
             ) : (
               /* ── Input form ── */
@@ -919,54 +886,15 @@ export default function WorkerProfile() {
                   )}
                 </div>
 
-                {/* OTP section */}
-                <div className="border border-amber-100 bg-amber-50/50 rounded-xl p-4 space-y-3">
-                  <p className="text-xs text-amber-800 font-medium flex items-center gap-1.5">
-                    <KeyRound size={13} />
-                    Verify your bank account with a one-time password sent to your registered email.
-                  </p>
-                  <div className="flex gap-3 items-end">
-                    <div className="flex-1">
-                      <FieldLabel required>OTP</FieldLabel>
-                      <input
-                        type="text"
-                        name="otp"
-                        value={bankForm.otp}
-                        onChange={handleBankChange}
-                        placeholder={bankOtpSent ? '6-digit OTP' : 'Send OTP first'}
-                        maxLength={6}
-                        disabled={!bankOtpSent}
-                        className={`${inputClass(!!bankErrors.otp)} tracking-widest`}
-                      />
-                      {bankErrors.otp && <p className="text-red-500 text-xs mt-1">{bankErrors.otp}</p>}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleSendBankOTP}
-                      disabled={bankOtpSending || otpCooldown > 0}
-                      className="flex items-center gap-2 bg-[#1B2B4B] hover:bg-[#152238] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors whitespace-nowrap"
-                    >
-                      <Send size={13} />
-                      {bankOtpSending
-                        ? 'Sending…'
-                        : otpCooldown > 0
-                        ? `Resend (${otpCooldown}s)`
-                        : bankOtpSent
-                        ? 'Resend OTP'
-                        : 'Send OTP'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Submit bank form */}
-                <button
-                  type="button"
-                  onClick={handleBankSubmit}
-                  disabled={bankSaving || !bankOtpSent}
-                  className="w-full flex items-center justify-center gap-2 bg-[#C9A84C] hover:bg-[#b8923e] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl text-sm transition-colors shadow-sm"
-                >
-                  {bankSaving ? <><Spinner size="sm" color="white" /> Saving…</> : <><CheckCircle size={15} /> Verify &amp; Save Bank Details</>}
-                </button>
+                {bankEditing && (
+                  <button
+                    type="button"
+                    onClick={() => { setBankEditing(false); setBankErrors({}); }}
+                    className="w-full text-sm text-gray-500 hover:text-gray-700 py-2 transition-colors"
+                  >
+                    Cancel editing
+                  </button>
+                )}
               </div>
             )}
           </div>

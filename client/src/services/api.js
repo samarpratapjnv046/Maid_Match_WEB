@@ -8,11 +8,17 @@ const api = axios.create({
   }
 });
 
+// Attach access token to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
 // Response interceptor to format errors
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    // If the error response implies an unauthorized token (and we setup refresh in the future), we could handle it here.
     return Promise.reject(error.response?.data?.message || error.message || 'An error occurred');
   }
 );

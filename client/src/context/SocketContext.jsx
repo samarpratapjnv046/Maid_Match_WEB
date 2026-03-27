@@ -97,7 +97,7 @@ export function SocketProvider({ children }) {
     const token = localStorage.getItem('accessToken');
     if (!token) return;
 
-    const socket = io(SERVER_URL, { auth: { token }, transports: ['websocket'] });
+    const socket = io(SERVER_URL, { auth: { token }, transports: ['polling', 'websocket'] });
     socketRef.current = socket;
 
     socket.on('chat_notification', (data) => {
