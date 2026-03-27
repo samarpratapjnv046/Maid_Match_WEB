@@ -1,40 +1,26 @@
 import nodemailer from 'nodemailer';
 
-// 1. GLOBAL TRANSPORTER (Singleton Pattern)
-// This prevents opening 100 connections at once and getting blocked by Gmail
-let globalTransporter = null;
-
-const getTransporter = () => {
-  if (globalTransporter) return globalTransporter;
-
+const createTransporter = () => {
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
-  
-  if (!user || !pass) {
-    console.error('🔥 MISSING EMAIL CREDENTIALS IN .ENV / RENDER DASHBOARD');
-    throw new Error('EMAIL_USER or EMAIL_PASS environment variable is not set.');
-  }
-
-  globalTransporter = nodemailer.createTransport({
+  if (!user || !pass) throw new Error('EMAIL_USER or EMAIL_PASS environment variable is not set.');
+  return nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,          // Fixed for Render
-    secure: true,       // Fixed for Render
+    port: 587,
+    secure: false,
     auth: { user, pass },
-    family: 4,          // THE MAGIC FIX: Forces IPv4 to prevent Render timeout
+    tls: { rejectUnauthorized: false },
   });
-
-  return globalTransporter;
 };
 
 /**
  * Send a password-reset OTP email.
  */
 export const sendOTPEmail = async (to, name, otp) => {
-  try {
-    const transporter = getTransporter();
-    const user = process.env.EMAIL_USER;
+  const transporter = createTransporter();
+  const user = process.env.EMAIL_USER;
 
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -96,27 +82,22 @@ export const sendOTPEmail = async (to, name, otp) => {
 </body>
 </html>`.trim();
 
-    await transporter.sendMail({
-      from: `"MaidSaathi" <${user}>`,
-      to,
-      subject: `${otp} is your MaidSaathi password reset code`,
-      html,
-    });
-    console.log(`✅ Password Reset Email sent to ${to}`);
-  } catch (error) {
-    console.error(`❌ Error sending Password Reset Email to ${to}:`, error.message);
-  }
+  await transporter.sendMail({
+    from: `"MaidSaathi" <${user}>`,
+    to,
+    subject: `${otp} is your MaidSaathi password reset code`,
+    html,
+  });
 };
 
 /**
  * Send an email OTP to verify identity during registration.
  */
 export const sendRegisterOTPEmail = async (to, name, otp) => {
-  try {
-    const transporter = getTransporter();
-    const user = process.env.EMAIL_USER;
+  const transporter = createTransporter();
+  const user = process.env.EMAIL_USER;
 
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -178,27 +159,22 @@ export const sendRegisterOTPEmail = async (to, name, otp) => {
 </body>
 </html>`.trim();
 
-    await transporter.sendMail({
-      from: `"MaidSaathi" <${user}>`,
-      to,
-      subject: `${otp} is your MaidSaathi verification code`,
-      html,
-    });
-    console.log(`✅ Register OTP Email sent to ${to}`);
-  } catch (error) {
-    console.error(`❌ Error sending Register OTP Email to ${to}:`, error.message);
-  }
+  await transporter.sendMail({
+    from: `"MaidSaathi" <${user}>`,
+    to,
+    subject: `${otp} is your MaidSaathi verification code`,
+    html,
+  });
 };
 
 /**
  * Send a bank account OTP verification email to a worker.
  */
 export const sendBankOTPEmail = async (to, name, otp) => {
-  try {
-    const transporter = getTransporter();
-    const user = process.env.EMAIL_USER;
+  const transporter = createTransporter();
+  const user = process.env.EMAIL_USER;
 
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -260,39 +236,38 @@ export const sendBankOTPEmail = async (to, name, otp) => {
 </body>
 </html>`.trim();
 
-    await transporter.sendMail({
-      from: `"MaidSaathi" <${user}>`,
-      to,
-      subject: `${otp} is your MaidSaathi bank verification code`,
-      html,
-    });
-    console.log(`✅ Bank OTP Email sent to ${to}`);
-  } catch (error) {
-    console.error(`❌ Error sending Bank OTP Email to ${to}:`, error.message);
-  }
+  await transporter.sendMail({
+    from: `"MaidSaathi" <${user}>`,
+    to,
+    subject: `${otp} is your MaidSaathi bank verification code`,
+    html,
+  });
 };
 
 /**
  * Send the booking completion OTP to the customer after payment.
+ * @param {string} to          - Customer email
+ * @param {string} name        - Customer name
+ * @param {string} otp         - 6-digit OTP
+ * @param {object} booking     - { service_type, start_time, _id }
  */
 export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
-  try {
-    const transporter = getTransporter();
-    const emailUser   = process.env.EMAIL_USER;
+  const transporter = createTransporter();
+  const emailUser   = process.env.EMAIL_USER;
 
-    const serviceLabel = (booking.service_type || 'Home Service')
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+  const serviceLabel = (booking.service_type || 'Home Service')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 
-    const bookingDate = booking.start_time
-      ? new Date(booking.start_time).toLocaleString('en-IN', {
-          dateStyle: 'medium',
-          timeStyle: 'short',
-          timeZone: 'Asia/Kolkata',
-        })
-      : '';
+  const bookingDate = booking.start_time
+    ? new Date(booking.start_time).toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: 'Asia/Kolkata',
+      })
+    : '';
 
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -305,6 +280,8 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0"
              style="max-width:560px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.10);">
+
+        <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#1B2B4B 0%,#166534 60%,#15803d 100%);padding:44px 40px 36px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 20px;margin-bottom:18px;">
@@ -317,6 +294,8 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
             </p>
           </td>
         </tr>
+
+        <!-- Body -->
         <tr>
           <td style="padding:40px 40px 20px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1e293b;">Hello, ${name}! 👋</p>
@@ -327,6 +306,7 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
 
             ${bookingDate ? `<p style="margin:0 0 20px;font-size:14px;color:#64748b;"><strong>Service:</strong> ${serviceLabel} &nbsp;·&nbsp; <strong>Scheduled:</strong> ${bookingDate}</p>` : ''}
 
+            <!-- OTP box -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
               <tr><td align="center">
                 <div style="display:inline-block;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #4ade80;border-radius:16px;padding:24px 48px;text-align:center;">
@@ -336,6 +316,8 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
                 </div>
               </td></tr>
             </table>
+
+            <!-- Warning -->
             <table width="100%" cellpadding="0" cellspacing="0"
                    style="background:#fff7ed;border-left:4px solid #f97316;border-radius:0 8px 8px 0;padding:14px 18px;margin-bottom:28px;">
               <tr><td>
@@ -356,42 +338,42 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
             </p>
           </td>
         </tr>
+
+        <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
             <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidSaathi — Trusted Home Services</p>
             <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidSaathi. All rights reserved.</p>
           </td>
         </tr>
+
       </table>
     </td></tr>
   </table>
 </body>
 </html>`.trim();
 
-    await transporter.sendMail({
-      from: `"MaidSaathi" <${emailUser}>`,
-      to,
-      subject: `Your MaidSaathi Booking OTP: ${otp}`,
-      html,
-    });
-    console.log(`✅ Completion OTP Email sent to ${to}`);
-  } catch (error) {
-    console.error(`❌ Error sending Completion OTP Email to ${to}:`, error.message);
-  }
+  await transporter.sendMail({
+    from: `"MaidSaathi" <${emailUser}>`,
+    to,
+    subject: `Your MaidSaathi Booking OTP: ${otp}`,
+    html,
+  });
 };
 
 /**
  * Send a congratulations email to a worker whose profile has been verified by admin.
+ * @param {string} to      - Worker's email address
+ * @param {string} name    - Worker's full name
  */
 export const sendWorkerVerifiedEmail = async (to, name) => {
-  try {
-    const transporter = getTransporter();
-    const emailUser = process.env.EMAIL_USER;
-    const appUrl = process.env.CLIENT_URL || 'https://MaidSaathi.in';
-    const dashboardUrl = `${appUrl}/worker/dashboard`;
-    const profileUrl = `${appUrl}/worker/profile`;
+  const transporter = createTransporter();
+  const emailUser = process.env.EMAIL_USER;
+  const appUrl = process.env.CLIENT_URL || 'https://MaidSaathi.in';
+  const dashboardUrl = `${appUrl}/worker/dashboard`;
+  const profileUrl = `${appUrl}/worker/profile`;
 
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -404,6 +386,8 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0"
              style="max-width:580px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.10);">
+
+        <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#1B2B4B 0%,#2563eb 70%,#C9A84C 100%);padding:44px 40px 36px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 24px;margin-bottom:16px;">
@@ -418,6 +402,8 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Your profile has been officially verified</p>
           </td>
         </tr>
+
+        <!-- Body -->
         <tr>
           <td style="padding:40px 40px 28px;">
             <p style="margin:0 0 10px;font-size:22px;font-weight:700;color:#1e293b;">Hello, ${name}! 👋</p>
@@ -427,6 +413,7 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
               clients can see your verified badge and book you with full confidence.
             </p>
 
+            <!-- Verified badge strip -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
               <tr><td align="center">
                 <div style="display:inline-block;background:linear-gradient(135deg,#d1fae5,#a7f3d0);border:2px solid #34d399;border-radius:14px;padding:18px 36px;text-align:center;">
@@ -436,6 +423,7 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
               </td></tr>
             </table>
 
+            <!-- What to do next -->
             <p style="margin:0 0 14px;font-size:16px;font-weight:700;color:#1e293b;">What to do next:</p>
             <table width="100%" cellpadding="0" cellspacing="0" style="border-left:4px solid #C9A84C;border-radius:0 8px 8px 0;background:#fffbeb;padding:0;margin-bottom:28px;">
               <tr><td style="padding:18px 20px;">
@@ -454,6 +442,7 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
               </td></tr>
             </table>
 
+            <!-- CTA Buttons -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
               <tr>
                 <td align="center" style="padding-bottom:12px;">
@@ -479,39 +468,43 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
             </p>
           </td>
         </tr>
+
+        <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
             <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidSaathi — Trusted Home Services</p>
             <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidSaathi. All rights reserved.</p>
           </td>
         </tr>
+
       </table>
     </td></tr>
   </table>
 </body>
 </html>`.trim();
 
-    await transporter.sendMail({
-      from: `"MaidSaathi" <${emailUser}>`,
-      to,
-      subject: `🎉 Congratulations ${name}! Your MaidSaathi profile is now Verified`,
-      html,
-    });
-    console.log(`✅ Worker Verified Email sent to ${to}`);
-  } catch (error) {
-    console.error(`❌ Error sending Worker Verified Email to ${to}:`, error.message);
-  }
+  await transporter.sendMail({
+    from: `"MaidSaathi" <${emailUser}>`,
+    to,
+    subject: `🎉 Congratulations ${name}! Your MaidSaathi profile is now Verified`,
+    html,
+  });
 };
 
 /**
  * Notify a customer that their manual refund has been processed by admin.
+ * @param {string} to         - Customer email
+ * @param {string} name       - Customer name
+ * @param {number} amount     - Refund amount in INR (after deducting platform fee)
+ * @param {string} utr        - UTR / transaction reference
+ * @param {string} bankName   - Destination bank name
+ * @param {string} bookingId  - Booking ID for reference
  */
 export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankName, bookingId) => {
-  try {
-    const transporter = getTransporter();
-    const emailUser   = process.env.EMAIL_USER;
+  const transporter = createTransporter();
+  const emailUser   = process.env.EMAIL_USER;
 
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -524,6 +517,8 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0"
              style="max-width:560px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.10);">
+
+        <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#1B2B4B 0%,#166534 60%,#15803d 100%);padding:44px 40px 36px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 20px;margin-bottom:18px;">
@@ -536,6 +531,8 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
             </p>
           </td>
         </tr>
+
+        <!-- Body -->
         <tr>
           <td style="padding:40px 40px 20px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1e293b;">Hello, ${name}! 👋</p>
@@ -544,6 +541,7 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
               The amount has been transferred to your bank account.
             </p>
 
+            <!-- Amount box -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
               <tr><td align="center">
                 <div style="display:inline-block;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #4ade80;border-radius:16px;padding:24px 48px;text-align:center;">
@@ -553,6 +551,7 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
               </td></tr>
             </table>
 
+            <!-- Details -->
             <table width="100%" cellpadding="0" cellspacing="0"
                    style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:24px;">
               <tr style="background:#f8fafc;">
@@ -584,39 +583,42 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
             </p>
           </td>
         </tr>
+
+        <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
             <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidSaathi — Trusted Home Services</p>
             <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidSaathi. All rights reserved.</p>
           </td>
         </tr>
+
       </table>
     </td></tr>
   </table>
 </body>
 </html>`.trim();
 
-    await transporter.sendMail({
-      from: `"MaidSaathi" <${emailUser}>`,
-      to,
-      subject: `Your MaidSaathi refund of ₹${amount} has been processed`,
-      html,
-    });
-    console.log(`✅ Refund Email sent to ${to}`);
-  } catch (error) {
-    console.error(`❌ Error sending Refund Email to ${to}:`, error.message);
-  }
+  await transporter.sendMail({
+    from: `"MaidSaathi" <${emailUser}>`,
+    to,
+    subject: `Your MaidSaathi refund of ₹${amount} has been processed`,
+    html,
+  });
 };
 
 /**
  * Notify a worker that their withdrawal request has been approved and money sent.
+ * @param {string} to       - Worker email
+ * @param {string} name     - Worker name
+ * @param {number} amount   - Withdrawal amount in INR
+ * @param {string} utr      - UTR / transaction reference
+ * @param {string} bankName - Destination bank name
  */
 export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankName) => {
-  try {
-    const transporter = getTransporter();
-    const emailUser   = process.env.EMAIL_USER;
+  const transporter = createTransporter();
+  const emailUser   = process.env.EMAIL_USER;
 
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -629,6 +631,8 @@ export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankNam
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0"
              style="max-width:560px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.10);">
+
+        <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#1B2B4B 0%,#166534 60%,#C9A84C 100%);padding:44px 40px 36px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 20px;margin-bottom:18px;">
@@ -641,6 +645,8 @@ export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankNam
             </p>
           </td>
         </tr>
+
+        <!-- Body -->
         <tr>
           <td style="padding:40px 40px 20px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1e293b;">Hello, ${name}! 👋</p>
@@ -649,6 +655,7 @@ export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankNam
               amount has been transferred to your bank account.
             </p>
 
+            <!-- Amount -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
               <tr><td align="center">
                 <div style="display:inline-block;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #4ade80;border-radius:16px;padding:24px 48px;text-align:center;">
@@ -658,6 +665,7 @@ export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankNam
               </td></tr>
             </table>
 
+            <!-- Details -->
             <table width="100%" cellpadding="0" cellspacing="0"
                    style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:24px;">
               <tr style="background:#f8fafc;">
@@ -686,26 +694,26 @@ export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankNam
             </p>
           </td>
         </tr>
+
+        <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
             <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidSaathi — Trusted Home Services</p>
             <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidSaathi. All rights reserved.</p>
           </td>
         </tr>
+
       </table>
     </td></tr>
   </table>
 </body>
 </html>`.trim();
 
-    await transporter.sendMail({
-      from: `"MaidSaathi" <${emailUser}>`,
-      to,
-      subject: `Your MaidSaathi withdrawal of ₹${amount} has been sent to your bank`,
-      html,
-    });
-    console.log(`✅ Withdrawal Approved Email sent to ${to}`);
-  } catch (error) {
-    console.error(`❌ Error sending Withdrawal Approved Email to ${to}:`, error.message);
-  }
+  await transporter.sendMail({
+    from: `"MaidSaathi" <${emailUser}>`,
+    to,
+    subject: `Your MaidSaathi withdrawal of ₹${amount} has been sent to your bank`,
+    html,
+  });
 };
+
