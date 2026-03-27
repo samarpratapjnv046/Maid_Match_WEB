@@ -36,7 +36,8 @@ app.use(
   cors({
      origin: [
     "http://localhost:5173",
-    "https://maid-match.vercel.app"
+    "https://maid-match.vercel.app",
+    "https://www.maidsaathi.in",
   ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
