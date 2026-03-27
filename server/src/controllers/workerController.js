@@ -1,12 +1,9 @@
-import crypto from 'crypto';
-import bcrypt from 'bcryptjs';
 import Worker from '../models/Worker.js';
 import User from '../models/User.js';
 import Booking from '../models/Booking.js';
 import cloudinary, { uploadToCloudinary } from '../config/cloudinary.js';
 import { AppError } from '../utils/errorHandler.js';
 import { APIFeatures } from '../utils/apiFeatures.js';
-import { sendBankOTPEmail } from '../utils/email.js';
 
 // @desc    Create worker profile (after registration as worker)
 // @route   POST /api/workers/profile
@@ -47,7 +44,7 @@ export const updateWorkerProfile = async (req, res, next) => {
     // If new Aadhaar uploaded, delete old from cloudinary
     if (req.file) {
       if (worker.aadhaar?.public_id) {
-        await cloudinary.uploader.destroy(worker.aadhaar.public_id, { resource_type: 'raw' });
+        await cloudinary.uploader.destroy(worker.aadhaar.public_id, { resource_type: 'image' });
       }
       const result = await uploadToCloudinary(req.file.buffer, {
         folder: 'maidproject/aadhaar',
@@ -99,7 +96,7 @@ export const getMyWorkerProfile = async (req, res, next) => {
     const worker = await Worker.findOne({ user_id: req.user._id })
       .select('-aadhaar.number -aadhaar.public_id')
       .populate('user_id', 'name email phone profilePhoto');
-    if (!worker) return next(new AppError('Worker profile not found.', 404));
+    if (!worker) return res.json({ success: true, data: null });
     res.json({ success: true, data: worker });
   } catch (err) {
     next(err);
@@ -295,12 +292,12 @@ export const submitAadhaar = async (req, res, next) => {
 
     // Delete old Aadhaar from Cloudinary if exists
     if (worker.aadhaar?.public_id) {
-      await cloudinary.uploader.destroy(worker.aadhaar.public_id, { resource_type: 'raw' }).catch(() => {});
+      await cloudinary.uploader.destroy(worker.aadhaar.public_id, { resource_type: 'image' }).catch(() => {});
     }
 
     const result = await uploadToCloudinary(req.file.buffer, {
       folder: 'maidproject/aadhaar',
-      resource_type: 'auto',
+      resource_type: 'image',
     });
 
     worker.aadhaar = {
@@ -330,77 +327,36 @@ export const submitAadhaar = async (req, res, next) => {
 // @desc    Send OTP to worker's email to verify bank account number
 // @route   POST /api/workers/bank/send-otp
 // @access  Private (worker)
-export const sendBankOTP = async (req, res, next) => {
-  try {
-    const worker = await Worker.findOne({ user_id: req.user._id })
-      .select('+bank_otp_hash +bank_otp_expires_at');
-    if (!worker) return next(new AppError('Worker profile not found.', 404));
-
-    // Rate-limit: don't allow re-send within 60 seconds
-    if (worker.bank_otp_expires_at && worker.bank_otp_expires_at > new Date(Date.now() - 9 * 60 * 1000)) {
-      const wait = Math.ceil((worker.bank_otp_expires_at - (Date.now() - 9 * 60 * 1000)) / 1000);
-      if (wait > 0) return next(new AppError(`Please wait ${wait}s before requesting a new OTP.`, 429));
-    }
-
-    const user = await User.findById(req.user._id).select('email name');
-    if (!user?.email) return next(new AppError('No email address on file.', 400));
-
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const salt = await bcrypt.genSalt(10);
-    worker.bank_otp_hash = await bcrypt.hash(otp, salt);
-    worker.bank_otp_expires_at = new Date(Date.now() + 10 * 60 * 1000); // 10 min
-    await worker.save();
-
-    await sendBankOTPEmail(user.email, user.name, otp);
-
-    res.json({ success: true, message: `OTP sent to ${user.email}` });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// @desc    Submit bank details with passbook upload + OTP verification
+// @desc    Submit bank details with passbook upload
 // @route   POST /api/workers/bank
-// @access  Private (worker)
+// @access  Private (worker or customer mode)
 export const submitBankDetails = async (req, res, next) => {
   try {
-    const worker = await Worker.findOne({ user_id: req.user._id })
-      .select('+bank_otp_hash +bank_otp_expires_at');
+    const worker = await Worker.findOne({ user_id: req.user._id });
     if (!worker) return next(new AppError('Worker profile not found.', 404));
 
-    const { account_holder_name, account_number, ifsc_code, bank_name, otp } = req.body;
+    const { account_holder_name, account_number, ifsc_code, bank_name } = req.body;
 
     // Validate required fields
     if (!account_holder_name?.trim()) return next(new AppError('Account holder name is required.', 400));
     if (!account_number?.trim()) return next(new AppError('Account number is required.', 400));
     if (!ifsc_code?.trim()) return next(new AppError('IFSC code is required.', 400));
     if (!bank_name?.trim()) return next(new AppError('Bank name is required.', 400));
-    if (!otp) return next(new AppError('OTP is required.', 400));
 
     // IFSC format: 4 letters + 0 + 6 alphanumeric
     if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc_code.toUpperCase())) {
       return next(new AppError('Invalid IFSC code format (e.g. SBIN0001234).', 400));
     }
 
-    // Verify OTP
-    if (!worker.bank_otp_hash || !worker.bank_otp_expires_at) {
-      return next(new AppError('No OTP found. Please request a new OTP first.', 400));
-    }
-    if (worker.bank_otp_expires_at < new Date()) {
-      return next(new AppError('OTP has expired. Please request a new one.', 410));
-    }
-    const otpValid = await bcrypt.compare(otp.trim(), worker.bank_otp_hash);
-    if (!otpValid) return next(new AppError('Invalid OTP.', 400));
-
     // Upload passbook if provided
     let passbookData = worker.bank_details?.passbook || {};
     if (req.file) {
       if (passbookData.public_id) {
-        await cloudinary.uploader.destroy(passbookData.public_id, { resource_type: 'raw' }).catch(() => {});
+        await cloudinary.uploader.destroy(passbookData.public_id, { resource_type: 'image' }).catch(() => {});
       }
       const uploaded = await uploadToCloudinary(req.file.buffer, {
         folder: 'maidproject/passbooks',
-        resource_type: 'auto',
+        resource_type: 'image',
       });
       passbookData = { url: uploaded.secure_url, public_id: uploaded.public_id };
     }
@@ -415,9 +371,6 @@ export const submitBankDetails = async (req, res, next) => {
       submitted_at: new Date(),
     };
 
-    // Clear OTP after successful use
-    worker.bank_otp_hash = undefined;
-    worker.bank_otp_expires_at = undefined;
     await worker.save();
 
     res.json({

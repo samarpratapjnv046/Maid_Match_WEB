@@ -41,8 +41,34 @@ export const sendRegisterOTP = async (req, res, next) => {
       { upsert: true, new: true }
     );
 
-    await sendRegisterOTPEmail(email, name, otp);
-    res.json({ success: true, message: `Verification code sent to ${email}` });
+    const isDev = process.env.NODE_ENV !== 'production';
+    const emailConfigured =
+      process.env.EMAIL_USER &&
+      process.env.EMAIL_PASS &&
+      !process.env.EMAIL_USER.includes('your_') &&
+      !process.env.EMAIL_PASS.includes('your_');
+
+    if (emailConfigured) {
+      try {
+        await sendRegisterOTPEmail(email, name, otp);
+      } catch (emailErr) {
+        // Roll back the OTP record so the user can try again
+        await RegisterOTP.deleteOne({ email: email.toLowerCase() });
+        console.error('[SendRegisterOTP] Email delivery failed:', emailErr.message);
+        if (isDev) console.log(`[DEV] OTP for ${email}: ${otp}`);
+        return next(new AppError('Failed to send verification email. Please try again later.', 500));
+      }
+    } else if (isDev) {
+      console.log(`\n[DEV] Email not configured — OTP for ${email}: ${otp}\n`);
+    } else {
+      return next(new AppError('Email service is not configured.', 500));
+    }
+
+    res.json({
+      success: true,
+      message: `Verification code sent to ${email}`,
+      ...(isDev && !emailConfigured && { dev_otp: otp }),
+    });
   } catch (err) {
     next(err);
   }

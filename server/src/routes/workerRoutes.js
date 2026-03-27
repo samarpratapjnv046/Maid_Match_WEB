@@ -9,7 +9,6 @@ import {
   checkWorkerAvailability,
   submitAadhaar,
   toggleAvailability,
-  sendBankOTP,
   submitBankDetails,
 } from '../controllers/workerController.js';
 import { protect } from '../middleware/auth.js';
@@ -17,7 +16,6 @@ import { authorize } from '../middleware/roleCheck.js';
 import { validate } from '../middleware/validate.js';
 import { uploadAadhaar, uploadProfilePhoto as uploadPhoto, uploadPassbook } from '../middleware/upload.js';
 import { workerProfileSchema, workerUpdateSchema } from '../validators/workerValidator.js';
-import multer from 'multer';
 
 const router = express.Router();
 
@@ -26,7 +24,8 @@ router.get('/search', searchWorkers);
 router.get('/:id/availability', checkWorkerAvailability);
 router.get('/:id', getWorkerById);
 
-// Protected
+// Protected — allow both 'worker' and 'customer' roles so profile setup
+// works regardless of the user's currently active mode
 router.get('/profile/me', protect, authorize('worker', 'customer'), getMyWorkerProfile);
 router.post(
   '/profile',
@@ -39,15 +38,14 @@ router.post(
 router.patch(
   '/profile',
   protect,
-  authorize('worker'),
+  authorize('worker', 'customer'),
   uploadAadhaar,
   validate(workerUpdateSchema),
   updateWorkerProfile
 );
-router.post('/profile/photo', protect, authorize('worker'), uploadPhoto, uploadProfilePhoto);
+router.post('/profile/photo', protect, authorize('worker', 'customer'), uploadPhoto, uploadProfilePhoto);
 router.patch('/profile/availability', protect, authorize('worker'), toggleAvailability);
 router.post('/aadhaar', protect, authorize('worker', 'customer'), uploadAadhaar, submitAadhaar);
-router.post('/bank/send-otp', protect, authorize('worker'), sendBankOTP);
-router.post('/bank', protect, authorize('worker'), uploadPassbook, submitBankDetails);
+router.post('/bank', protect, authorize('worker', 'customer'), uploadPassbook, submitBankDetails);
 
 export default router;

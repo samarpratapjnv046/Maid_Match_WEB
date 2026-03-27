@@ -34,11 +34,12 @@ app.use(compression({ filter: (req) => req.path !== '/api/payments/webhook' }));
 app.use(helmet());
 app.use(
   cors({
-     origin: [
-    "http://localhost:5173",
-    "https://maid-match.vercel.app",
-    "https://www.maidsaathi.in",
-  ],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:8081",
+      "http://localhost:19006",
+      "https://maid-match.vercel.app",
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   })
