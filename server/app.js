@@ -41,6 +41,7 @@ app.use(
       "http://localhost:19006",
       "https://maid-match.vercel.app",
       "https://maidsaathi.in",
+      "https://www.maidsaathi.in",
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
