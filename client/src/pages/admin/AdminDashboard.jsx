@@ -122,7 +122,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <div>
         <h1 className="font-serif text-2xl font-bold text-[#1B2B4B]">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">Welcome back. Here's what's happening on MaidMatch.</p>
+        <p className="text-gray-500 text-sm mt-1">Welcome back. Here's what's happening on MaidSaathi.</p>
       </div>
 
       {/* Stats grid */}

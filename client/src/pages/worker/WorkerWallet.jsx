@@ -623,8 +623,8 @@ export default function WorkerWallet() {
         {/* Footer note */}
         <p className="text-xs text-gray-400 text-center pb-4">
           Transactions are processed automatically. Contact{' '}
-          <a href="mailto:support@maidmatch.in" className="text-[#C9A84C] hover:underline font-medium">
-            support@maidmatch.in
+          <a href="mailto:support@MaidSaathi.in" className="text-[#C9A84C] hover:underline font-medium">
+            support@MaidSaathi.in
           </a>{' '}
           for any discrepancies.
         </p>

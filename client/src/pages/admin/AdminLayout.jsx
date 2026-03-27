@@ -91,7 +91,7 @@ export default function AdminLayout() {
               <Shield size={16} className="text-[#1B2B4B]" />
             </div>
             <div>
-              <p className="text-white font-serif font-bold text-base leading-tight">MaidMatch</p>
+              <p className="text-white font-serif font-bold text-base leading-tight">MaidSaathi</p>
               <p className="text-[#C9A84C] text-xs font-medium">Admin Panel</p>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function AdminLayout() {
             <div className="w-7 h-7 bg-[#C9A84C] rounded-md flex items-center justify-center">
               <Shield size={14} className="text-[#1B2B4B]" />
             </div>
-            <span className="font-serif font-bold text-base">MaidMatch Admin</span>
+            <span className="font-serif font-bold text-base">MaidSaathi Admin</span>
           </div>
           <button
             onClick={handleLogout}

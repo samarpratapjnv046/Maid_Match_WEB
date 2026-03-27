@@ -36,8 +36,8 @@ export default function Terms() {
           {/* Intro */}
           <section>
             <p>
-              Welcome to <strong>MaidMatch</strong> ("Platform", "we", "us", "our"), operated by
-              MaidMatch Technologies Private Limited, a company incorporated under the Companies
+              Welcome to <strong>MaidSaathi</strong> ("Platform", "we", "us", "our"), operated by
+              MaidSaathi Technologies Private Limited, a company incorporated under the Companies
               Act, 2013, with its registered office in Mumbai, Maharashtra, India. By accessing or
               using our website, mobile application, or any related services (collectively, the
               "Services"), you ("User", "you", "your") agree to be bound by these Terms of Service
@@ -63,7 +63,7 @@ export default function Terms() {
               <li>You must provide accurate, current, and complete information at registration and keep it updated.</li>
               <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
               <li>You are liable for all activity that occurs under your account.</li>
-              <li>Notify us immediately at <strong>support@maidmatch.in</strong> if you suspect unauthorised use of your account.</li>
+              <li>Notify us immediately at <strong>support@MaidSaathi.in</strong> if you suspect unauthorised use of your account.</li>
               <li>We reserve the right to suspend or terminate accounts that violate these Terms.</li>
             </ul>
           </section>
@@ -72,14 +72,14 @@ export default function Terms() {
           <section>
             <h2 className="text-lg font-semibold text-[#0A1628] mb-3">3. Nature of the Platform — Intermediary</h2>
             <p className="mb-2">
-              MaidMatch is an online intermediary marketplace that connects customers seeking
+              MaidSaathi is an online intermediary marketplace that connects customers seeking
               household services with independent service providers ("Workers"). We do not employ
-              Workers, and Workers are not agents of MaidMatch. We facilitate introductions and
+              Workers, and Workers are not agents of MaidSaathi. We facilitate introductions and
               provide tools for booking, payments, and reviews.
             </p>
             <p>
               In accordance with the Information Technology (Intermediary Guidelines and Digital
-              Media Ethics Code) Rules, 2021, MaidMatch acts as an intermediary and is not
+              Media Ethics Code) Rules, 2021, MaidSaathi acts as an intermediary and is not
               responsible for content or services provided by third-party Workers. We exercise
               due diligence including identity verification as described below.
             </p>
@@ -114,7 +114,7 @@ export default function Terms() {
               <li>A booking is confirmed only upon acceptance by the Worker and completion of payment (where applicable).</li>
               <li>Customers may cancel bookings subject to the cancellation policy in effect at the time of booking, which is displayed before payment.</li>
               <li>Workers who repeatedly cancel accepted bookings may be removed from the Platform.</li>
-              <li>MaidMatch is not liable for losses arising from a Worker's failure to fulfil a booking.</li>
+              <li>MaidSaathi is not liable for losses arising from a Worker's failure to fulfil a booking.</li>
             </ul>
           </section>
 
@@ -126,7 +126,7 @@ export default function Terms() {
               <li>Prices displayed on the Platform are inclusive of applicable taxes unless otherwise stated.</li>
               <li>Refunds are processed within 5–7 working days to the original payment method or Platform wallet, subject to our Refund Policy.</li>
               <li>Wallet credits have no cash value and cannot be transferred. They expire 12 months from the date of credit.</li>
-              <li>In the event of a dispute over a payment, please contact us at <strong>support@maidmatch.in</strong>. We shall try to resolve it within 30 days in accordance with the Consumer Protection Act, 2019.</li>
+              <li>In the event of a dispute over a payment, please contact us at <strong>support@MaidSaathi.in</strong>. We shall try to resolve it within 30 days in accordance with the Consumer Protection Act, 2019.</li>
             </ul>
           </section>
 
@@ -159,7 +159,7 @@ export default function Terms() {
             <h2 className="text-lg font-semibold text-[#0A1628] mb-3">9. Intellectual Property</h2>
             <p>
               All content on the Platform, including but not limited to logos, text, graphics,
-              software, and data compilations, is the exclusive property of MaidMatch Technologies
+              software, and data compilations, is the exclusive property of MaidSaathi Technologies
               Private Limited or its licensors and is protected under the Copyright Act, 1957 and
               the Trade Marks Act, 1999. You may not reproduce, distribute, or create derivative
               works without our prior written consent.
@@ -170,7 +170,7 @@ export default function Terms() {
           <section>
             <h2 className="text-lg font-semibold text-[#0A1628] mb-3">10. Limitation of Liability</h2>
             <p className="mb-2">
-              To the maximum extent permitted by applicable law, MaidMatch shall not be liable for:
+              To the maximum extent permitted by applicable law, MaidSaathi shall not be liable for:
             </p>
             <ul className="list-disc pl-5 space-y-1">
               <li>Any indirect, incidental, special, consequential, or punitive damages.</li>
@@ -179,7 +179,7 @@ export default function Terms() {
             </ul>
             <p className="mt-2">
               Our aggregate liability for any claim shall not exceed the amount paid by you to
-              MaidMatch in the three months preceding the event giving rise to the claim.
+              MaidSaathi in the three months preceding the event giving rise to the claim.
             </p>
           </section>
 
@@ -187,7 +187,7 @@ export default function Terms() {
           <section>
             <h2 className="text-lg font-semibold text-[#0A1628] mb-3">11. Indemnification</h2>
             <p>
-              You agree to indemnify and hold harmless MaidMatch, its officers, directors,
+              You agree to indemnify and hold harmless MaidSaathi, its officers, directors,
               employees, and agents from any claim, demand, loss, or expense (including reasonable
               legal fees) arising out of your use of the Platform, violation of these Terms, or
               infringement of any third-party rights.
@@ -217,8 +217,8 @@ export default function Terms() {
             <div className="mt-3 bg-gray-50 rounded-lg p-4 text-sm space-y-1">
               <p><strong>Name:</strong> Ritesh Singh</p>
               <p><strong>Designation:</strong> Grievance Officer</p>
-              <p><strong>Email:</strong> grievance@maidmatch.in</p>
-              <p><strong>Address:</strong> MaidMatch Technologies Pvt. Ltd., Mumbai, Maharashtra – 400001</p>
+              <p><strong>Email:</strong> grievance@MaidSaathi.in</p>
+              <p><strong>Address:</strong> MaidSaathi Technologies Pvt. Ltd., Mumbai, Maharashtra – 400001</p>
               <p><strong>Working hours:</strong> Monday – Friday, 10:00 AM – 6:00 PM IST</p>
             </div>
             <p className="mt-2">
@@ -240,11 +240,11 @@ export default function Terms() {
 
           {/* Footer */}
           <div className="border-t pt-6 text-center text-xs text-gray-400">
-            <p>MaidMatch Technologies Private Limited &nbsp;·&nbsp; Mumbai, India</p>
+            <p>MaidSaathi Technologies Private Limited &nbsp;·&nbsp; Mumbai, India</p>
             <p className="mt-1">
               Questions?{' '}
-              <a href="mailto:support@maidmatch.in" className="text-[#C9A84C] hover:underline">
-                support@maidmatch.in
+              <a href="mailto:support@MaidSaathi.in" className="text-[#C9A84C] hover:underline">
+                support@MaidSaathi.in
               </a>
               {' '}·{' '}
               <Link to="/privacy" className="text-[#C9A84C] hover:underline">Privacy Policy</Link>

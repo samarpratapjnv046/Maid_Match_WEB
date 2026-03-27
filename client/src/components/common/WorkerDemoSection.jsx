@@ -74,7 +74,7 @@ const STEPS = [
     textColor: 'text-emerald-600',
     ringColor: 'ring-emerald-200',
     title: 'Money in Your Wallet',
-    desc: 'Earnings land in your MaidMatch wallet the instant the OTP is verified. Withdraw to your bank account anytime.',
+    desc: 'Earnings land in your MaidSaathi wallet the instant the OTP is verified. Withdraw to your bank account anytime.',
   },
 ];
 
@@ -526,7 +526,7 @@ const PaidScreen = ({ balanceProgress }) => {
         </motion.p>
         <div className="flex items-center gap-1 mt-1.5">
           <div className="w-1.5 h-1.5 bg-white/60 rounded-full" />
-          <span className="text-[8px] opacity-70">MaidMatch Wallet</span>
+          <span className="text-[8px] opacity-70">MaidSaathi Wallet</span>
         </div>
       </motion.div>
 
@@ -615,7 +615,7 @@ const PhoneMockup = ({ stepId, substep, otpProgress, balanceProgress }) => {
 
         {/* App header bar */}
         <div className="px-3 py-2 bg-gradient-to-r from-gray-900 to-gray-800 flex items-center gap-2">
-          <span className="text-yellow-400 text-[9px] font-black tracking-tight">MaidMatch</span>
+          <span className="text-yellow-400 text-[9px] font-black tracking-tight">MaidSaathi</span>
           <div className="ml-auto w-1.5 h-1.5 bg-emerald-400 rounded-full" />
         </div>
 

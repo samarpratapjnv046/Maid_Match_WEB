@@ -36,8 +36,8 @@ export default function Privacy() {
           {/* Intro */}
           <section>
             <p>
-              MaidMatch Technologies Private Limited ("MaidMatch", "we", "us", "our") is committed
-              to protecting the privacy and personal data of all users of the MaidMatch platform
+              MaidSaathi Technologies Private Limited ("MaidSaathi", "we", "us", "our") is committed
+              to protecting the privacy and personal data of all users of the MaidSaathi platform
               ("Platform"). This Privacy Policy describes how we collect, use, store, share, and
               protect your personal information in compliance with:
             </p>
@@ -57,12 +57,12 @@ export default function Privacy() {
           <section>
             <h2 className="text-lg font-semibold text-[#0A1628] mb-3">1. Data Controller</h2>
             <p>
-              MaidMatch Technologies Private Limited is the Data Fiduciary (as defined under the
+              MaidSaathi Technologies Private Limited is the Data Fiduciary (as defined under the
               DPDPA, 2023) responsible for your personal data. Our registered office is in Mumbai,
               Maharashtra, India.
             </p>
             <p className="mt-2">
-              Contact: <a href="mailto:privacy@maidmatch.in" className="text-[#C9A84C] hover:underline">privacy@maidmatch.in</a>
+              Contact: <a href="mailto:privacy@MaidSaathi.in" className="text-[#C9A84C] hover:underline">privacy@MaidSaathi.in</a>
             </p>
           </section>
 
@@ -199,8 +199,8 @@ export default function Privacy() {
             </ul>
             <p className="mt-2">
               To exercise any of the above rights, write to us at{' '}
-              <a href="mailto:privacy@maidmatch.in" className="text-[#C9A84C] hover:underline">
-                privacy@maidmatch.in
+              <a href="mailto:privacy@MaidSaathi.in" className="text-[#C9A84C] hover:underline">
+                privacy@MaidSaathi.in
               </a>. We will respond within 30 days.
             </p>
           </section>
@@ -250,8 +250,8 @@ export default function Privacy() {
               collect personal data from minors. If we become aware that we have collected such
               data without parental consent, we will delete it promptly. If you believe a minor
               has provided us with data, please contact us at{' '}
-              <a href="mailto:privacy@maidmatch.in" className="text-[#C9A84C] hover:underline">
-                privacy@maidmatch.in
+              <a href="mailto:privacy@MaidSaathi.in" className="text-[#C9A84C] hover:underline">
+                privacy@MaidSaathi.in
               </a>.
             </p>
           </section>
@@ -278,8 +278,8 @@ export default function Privacy() {
             <div className="mt-3 bg-gray-50 rounded-lg p-4 text-sm space-y-1">
               <p><strong>Name:</strong> Ritesh Singh</p>
               <p><strong>Designation:</strong> Grievance Officer — Data Protection</p>
-              <p><strong>Email:</strong> <a href="mailto:grievance@maidmatch.in" className="text-[#C9A84C] hover:underline">grievance@maidmatch.in</a></p>
-              <p><strong>Address:</strong> MaidMatch Technologies Pvt. Ltd., Mumbai, Maharashtra – 400001</p>
+              <p><strong>Email:</strong> <a href="mailto:grievance@MaidSaathi.in" className="text-[#C9A84C] hover:underline">grievance@MaidSaathi.in</a></p>
+              <p><strong>Address:</strong> MaidSaathi Technologies Pvt. Ltd., Mumbai, Maharashtra – 400001</p>
               <p><strong>Working hours:</strong> Monday – Friday, 10:00 AM – 6:00 PM IST</p>
             </div>
             <p className="mt-2">
@@ -291,11 +291,11 @@ export default function Privacy() {
 
           {/* Footer */}
           <div className="border-t pt-6 text-center text-xs text-gray-400">
-            <p>MaidMatch Technologies Private Limited &nbsp;·&nbsp; Mumbai, India</p>
+            <p>MaidSaathi Technologies Private Limited &nbsp;·&nbsp; Mumbai, India</p>
             <p className="mt-1">
               Questions?{' '}
-              <a href="mailto:privacy@maidmatch.in" className="text-[#C9A84C] hover:underline">
-                privacy@maidmatch.in
+              <a href="mailto:privacy@MaidSaathi.in" className="text-[#C9A84C] hover:underline">
+                privacy@MaidSaathi.in
               </a>
               {' '}·{' '}
               <Link to="/terms" className="text-[#C9A84C] hover:underline">Terms of Service</Link>

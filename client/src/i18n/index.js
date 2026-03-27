@@ -20,7 +20,7 @@ i18n
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
-      lookupLocalStorage: 'maidmatch_lang',
+      lookupLocalStorage: 'MaidSaathi_lang',
     },
     interpolation: {
       escapeValue: false,

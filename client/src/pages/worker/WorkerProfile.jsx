@@ -80,7 +80,7 @@ function VerificationBadge({ status, rejectionReason }) {
       cls: 'bg-green-50 border-green-200 text-green-800',
       icon: <CheckCircle size={14} className="text-green-600" />,
       label: 'Verified Worker',
-      desc: 'Your profile has been verified by MaidMatch.',
+      desc: 'Your profile has been verified by MaidSaathi.',
     },
     under_review: {
       cls: 'bg-blue-50 border-blue-200 text-blue-800',
@@ -696,7 +696,7 @@ export default function WorkerProfile() {
                 <CheckCircle size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-sm text-green-800">Aadhaar Verified</p>
-                  <p className="text-xs text-green-700 mt-0.5">Your identity has been verified by MaidMatch.</p>
+                  <p className="text-xs text-green-700 mt-0.5">Your identity has been verified by MaidSaathi.</p>
                 </div>
               </div>
             ) : aadhaarStatus === 'submitted' ? (

@@ -278,7 +278,7 @@ export default function BookingDetail() {
         key: rzpKey,
         amount: orderAmount,
         currency: orderCurrency,
-        name: 'MaidMatch',
+        name: 'MaidSaathi',
         description: `Booking #${id.slice(-8).toUpperCase()}`,
         order_id: orderId,
         prefill: {
@@ -495,7 +495,7 @@ export default function BookingDetail() {
                         </div>
                         <ContactButton
                           phone={customer.phone}
-                          whatsappMessage={`Hi ${customer.name || 'there'}, I'm ${user?.name || 'your worker'} from MaidMatch. I'm contacting you regarding your booking for ${serviceLabels[service] || service} on ${startTime ? new Date(startTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'your scheduled date'}.`}
+                          whatsappMessage={`Hi ${customer.name || 'there'}, I'm ${user?.name || 'your worker'} from MaidSaathi. I'm contacting you regarding your booking for ${serviceLabels[service] || service} on ${startTime ? new Date(startTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'your scheduled date'}.`}
                         />
                       </div>
                     )}
@@ -608,7 +608,7 @@ export default function BookingDetail() {
                       </div>
                       <ContactButton
                         phone={workerUser.phone}
-                        whatsappMessage={`Hi ${worker.name || 'there'}, I'm ${user?.name || 'your customer'} from MaidMatch. I've booked you for ${serviceLabels[service] || service} on ${startTime ? new Date(startTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'your scheduled date'}. Looking forward to your service!`}
+                        whatsappMessage={`Hi ${worker.name || 'there'}, I'm ${user?.name || 'your customer'} from MaidSaathi. I've booked you for ${serviceLabels[service] || service} on ${startTime ? new Date(startTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'your scheduled date'}. Looking forward to your service!`}
                       />
                     </div>
                   )}

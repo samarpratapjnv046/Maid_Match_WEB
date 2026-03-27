@@ -8,7 +8,7 @@ import User from '../src/models/User.js';
 
 const ADMIN = {
   name: 'Admin',
-  email: 'admin@maidmatch.com',
+  email: 'admin@MaidSaathi.com',
   password: 'Admin@1234',
   phone: '9000000000',
   role: 'admin',

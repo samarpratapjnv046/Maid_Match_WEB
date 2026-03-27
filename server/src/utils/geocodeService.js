@@ -24,7 +24,7 @@ export const getPincodeCoordinates = async (pincode) => {
 
   const response = await fetch(url, {
     headers: {
-      'User-Agent': 'MaidMatch/1.0 (contact@maidmatch.in)',
+      'User-Agent': 'MaidSaathi/1.0 (contact@MaidSaathi.in)',
       'Accept-Language': 'en',
     },
   });

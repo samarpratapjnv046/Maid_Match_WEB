@@ -91,7 +91,7 @@ const WORKER_HOW_IT_WORKS = [
 ];
 
 const WORKER_FEATURES = [
-  { icon: Wallet, title: 'Instant Wallet Payouts', desc: 'Earnings land in your MaidMatch wallet right after job completion. Withdraw to your bank at any time.', gradient: 'from-emerald-500 to-teal-600', lightBg: 'bg-emerald-50', iconColor: 'text-emerald-600', border: 'hover:border-emerald-200' },
+  { icon: Wallet, title: 'Instant Wallet Payouts', desc: 'Earnings land in your MaidSaathi wallet right after job completion. Withdraw to your bank at any time.', gradient: 'from-emerald-500 to-teal-600', lightBg: 'bg-emerald-50', iconColor: 'text-emerald-600', border: 'hover:border-emerald-200' },
   { icon: Shield, title: 'Verified Badge', desc: 'Complete Aadhaar verification to get a Verified badge on your profile — boosting customer trust and bookings.', gradient: 'from-blue-500 to-indigo-600', lightBg: 'bg-blue-50', iconColor: 'text-blue-600', border: 'hover:border-blue-200' },
   { icon: Star, title: 'Build Your Reputation', desc: 'Genuine reviews from completed bookings help you rank higher in search results and earn more.', gradient: 'from-amber-400 to-orange-500', lightBg: 'bg-amber-50', iconColor: 'text-amber-600', border: 'hover:border-amber-200' },
   { icon: CalendarCheck, title: 'Flexible Scheduling', desc: 'Accept only the bookings you want. Set your own availability and service pricing — hourly, daily, or monthly.', gradient: 'from-violet-500 to-purple-600', lightBg: 'bg-violet-50', iconColor: 'text-violet-600', border: 'hover:border-violet-200' },
@@ -1396,7 +1396,7 @@ const Home = () => {
             transition={{ duration: 0.4 }}
             className="text-center mb-14"
           >
-            <span className="inline-block bg-white/8 text-gray-300 text-xs font-bold px-4 py-1.5 rounded-full mb-4 tracking-widest uppercase border border-white/10">Why MaidMatch</span>
+            <span className="inline-block bg-white/8 text-gray-300 text-xs font-bold px-4 py-1.5 rounded-full mb-4 tracking-widest uppercase border border-white/10">Why MaidSaathi</span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white">
               {isWorker ? 'Built for workers ' : 'Built for '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400">like you</span>
@@ -1476,7 +1476,7 @@ const Home = () => {
                 Coming Soon
               </span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4 leading-tight">
-                MaidMatch on your{' '}
+                MaidSaathi on your{' '}
                 <span className="text-yellow-300">pocket</span>
               </h2>
               <p className="text-gray-400 text-base max-w-md mx-auto lg:mx-0 mb-8 leading-relaxed">

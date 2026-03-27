@@ -26,7 +26,7 @@ export const sendOTPEmail = async (to, name, otp) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reset Your Password – MaidMatch</title>
+  <title>Reset Your Password – MaidSaathi</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 16px;">
@@ -49,7 +49,7 @@ export const sendOTPEmail = async (to, name, otp) => {
           <td style="padding:40px 40px 20px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1e293b;">Hello, ${name} 👋</p>
             <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.6;">
-              We received a request to reset the password for your MaidMatch account.
+              We received a request to reset the password for your MaidSaathi account.
               Use the one-time code below — it expires in <strong style="color:#1e293b;">10 minutes</strong>.
             </p>
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
@@ -72,8 +72,8 @@ export const sendOTPEmail = async (to, name, otp) => {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
-            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1e3a5f;">MaidMatch — Trusted Home Services</p>
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidMatch. All rights reserved.</p>
+            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1e3a5f;">MaidSaathi — Trusted Home Services</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidSaathi. All rights reserved.</p>
           </td>
         </tr>
       </table>
@@ -83,9 +83,9 @@ export const sendOTPEmail = async (to, name, otp) => {
 </html>`.trim();
 
   await transporter.sendMail({
-    from: `"MaidMatch" <${user}>`,
+    from: `"MaidSaathi" <${user}>`,
     to,
-    subject: `${otp} is your MaidMatch password reset code`,
+    subject: `${otp} is your MaidSaathi password reset code`,
     html,
   });
 };
@@ -103,7 +103,7 @@ export const sendRegisterOTPEmail = async (to, name, otp) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Verify Your Email – MaidMatch</title>
+  <title>Verify Your Email – MaidSaathi</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 16px;">
@@ -126,7 +126,7 @@ export const sendRegisterOTPEmail = async (to, name, otp) => {
           <td style="padding:40px 40px 20px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1e293b;">Welcome, ${name}! 👋</p>
             <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.6;">
-              Use the code below to verify your email and complete your MaidMatch registration.
+              Use the code below to verify your email and complete your MaidSaathi registration.
               It expires in <strong style="color:#1e293b;">10 minutes</strong>.
             </p>
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
@@ -149,8 +149,8 @@ export const sendRegisterOTPEmail = async (to, name, otp) => {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
-            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidMatch — Trusted Home Services</p>
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidMatch. All rights reserved.</p>
+            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidSaathi — Trusted Home Services</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidSaathi. All rights reserved.</p>
           </td>
         </tr>
       </table>
@@ -160,9 +160,9 @@ export const sendRegisterOTPEmail = async (to, name, otp) => {
 </html>`.trim();
 
   await transporter.sendMail({
-    from: `"MaidMatch" <${user}>`,
+    from: `"MaidSaathi" <${user}>`,
     to,
-    subject: `${otp} is your MaidMatch verification code`,
+    subject: `${otp} is your MaidSaathi verification code`,
     html,
   });
 };
@@ -180,7 +180,7 @@ export const sendBankOTPEmail = async (to, name, otp) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Bank Account Verification – MaidMatch</title>
+  <title>Bank Account Verification – MaidSaathi</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 16px;">
@@ -203,7 +203,7 @@ export const sendBankOTPEmail = async (to, name, otp) => {
           <td style="padding:40px 40px 20px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1e293b;">Hello, ${name} 👋</p>
             <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.6;">
-              Use the one-time code below to verify your bank account on MaidMatch.
+              Use the one-time code below to verify your bank account on MaidSaathi.
               It expires in <strong style="color:#1e293b;">10 minutes</strong>.
             </p>
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
@@ -226,8 +226,8 @@ export const sendBankOTPEmail = async (to, name, otp) => {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
-            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidMatch — Trusted Home Services</p>
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidMatch. All rights reserved.</p>
+            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidSaathi — Trusted Home Services</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidSaathi. All rights reserved.</p>
           </td>
         </tr>
       </table>
@@ -237,9 +237,9 @@ export const sendBankOTPEmail = async (to, name, otp) => {
 </html>`.trim();
 
   await transporter.sendMail({
-    from: `"MaidMatch" <${user}>`,
+    from: `"MaidSaathi" <${user}>`,
     to,
-    subject: `${otp} is your MaidMatch bank verification code`,
+    subject: `${otp} is your MaidSaathi bank verification code`,
     html,
   });
 };
@@ -273,7 +273,7 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Your Booking OTP – MaidMatch</title>
+  <title>Your Booking OTP – MaidSaathi</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 16px;">
@@ -331,7 +331,7 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
 
             <p style="margin:0;font-size:13px;color:#94a3b8;text-align:center;">
               Need to cancel instead?{' '}
-              <a href="${process.env.CLIENT_URL || 'https://maidmatch.in'}/bookings/${booking._id || ''}"
+              <a href="${process.env.CLIENT_URL || 'https://MaidSaathi.in'}/bookings/${booking._id || ''}"
                  style="color:#1B2B4B;font-weight:600;text-decoration:underline;">
                 View booking
               </a>
@@ -342,8 +342,8 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
         <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
-            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidMatch — Trusted Home Services</p>
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidMatch. All rights reserved.</p>
+            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidSaathi — Trusted Home Services</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidSaathi. All rights reserved.</p>
           </td>
         </tr>
 
@@ -354,9 +354,9 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
 </html>`.trim();
 
   await transporter.sendMail({
-    from: `"MaidMatch" <${emailUser}>`,
+    from: `"MaidSaathi" <${emailUser}>`,
     to,
-    subject: `Your MaidMatch Booking OTP: ${otp}`,
+    subject: `Your MaidSaathi Booking OTP: ${otp}`,
     html,
   });
 };
@@ -369,7 +369,7 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
 export const sendWorkerVerifiedEmail = async (to, name) => {
   const transporter = createTransporter();
   const emailUser = process.env.EMAIL_USER;
-  const appUrl = process.env.CLIENT_URL || 'https://maidmatch.in';
+  const appUrl = process.env.CLIENT_URL || 'https://MaidSaathi.in';
   const dashboardUrl = `${appUrl}/worker/dashboard`;
   const profileUrl = `${appUrl}/worker/profile`;
 
@@ -379,7 +379,7 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>You're Verified! – MaidMatch</title>
+  <title>You're Verified! – MaidSaathi</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 16px;">
@@ -409,7 +409,7 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
             <p style="margin:0 0 10px;font-size:22px;font-weight:700;color:#1e293b;">Hello, ${name}! 👋</p>
             <p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.7;">
               We're thrilled to let you know that our admin team has <strong style="color:#1B2B4B;">reviewed and verified</strong>
-              your profile on <strong>MaidMatch</strong>. You are now a trusted, verified professional on our platform —
+              your profile on <strong>MaidSaathi</strong>. You are now a trusted, verified professional on our platform —
               clients can see your verified badge and book you with full confidence.
             </p>
 
@@ -472,8 +472,8 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
         <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
-            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidMatch — Trusted Home Services</p>
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidMatch. All rights reserved.</p>
+            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidSaathi — Trusted Home Services</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidSaathi. All rights reserved.</p>
           </td>
         </tr>
 
@@ -484,9 +484,9 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
 </html>`.trim();
 
   await transporter.sendMail({
-    from: `"MaidMatch" <${emailUser}>`,
+    from: `"MaidSaathi" <${emailUser}>`,
     to,
-    subject: `🎉 Congratulations ${name}! Your MaidMatch profile is now Verified`,
+    subject: `🎉 Congratulations ${name}! Your MaidSaathi profile is now Verified`,
     html,
   });
 };
@@ -510,7 +510,7 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Refund Processed – MaidMatch</title>
+  <title>Refund Processed – MaidSaathi</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 16px;">
@@ -579,7 +579,7 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
 
             <p style="margin:0;font-size:13px;color:#94a3b8;text-align:center;">
               Questions? Contact us at
-              <a href="mailto:support@maidmatch.in" style="color:#1B2B4B;font-weight:600;">support@maidmatch.in</a>
+              <a href="mailto:support@MaidSaathi.in" style="color:#1B2B4B;font-weight:600;">support@MaidSaathi.in</a>
             </p>
           </td>
         </tr>
@@ -587,8 +587,8 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
         <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
-            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidMatch — Trusted Home Services</p>
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidMatch. All rights reserved.</p>
+            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidSaathi — Trusted Home Services</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidSaathi. All rights reserved.</p>
           </td>
         </tr>
 
@@ -599,9 +599,9 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
 </html>`.trim();
 
   await transporter.sendMail({
-    from: `"MaidMatch" <${emailUser}>`,
+    from: `"MaidSaathi" <${emailUser}>`,
     to,
-    subject: `Your MaidMatch refund of ₹${amount} has been processed`,
+    subject: `Your MaidSaathi refund of ₹${amount} has been processed`,
     html,
   });
 };
@@ -624,7 +624,7 @@ export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankNam
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Withdrawal Approved – MaidMatch</title>
+  <title>Withdrawal Approved – MaidSaathi</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 16px;">
@@ -690,7 +690,7 @@ export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankNam
 
             <p style="margin:0;font-size:13px;color:#94a3b8;text-align:center;">
               Questions? Contact us at
-              <a href="mailto:support@maidmatch.in" style="color:#1B2B4B;font-weight:600;">support@maidmatch.in</a>
+              <a href="mailto:support@MaidSaathi.in" style="color:#1B2B4B;font-weight:600;">support@MaidSaathi.in</a>
             </p>
           </td>
         </tr>
@@ -698,8 +698,8 @@ export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankNam
         <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">
-            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidMatch — Trusted Home Services</p>
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidMatch. All rights reserved.</p>
+            <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1B2B4B;">MaidSaathi — Trusted Home Services</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} MaidSaathi. All rights reserved.</p>
           </td>
         </tr>
 
@@ -710,9 +710,9 @@ export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankNam
 </html>`.trim();
 
   await transporter.sendMail({
-    from: `"MaidMatch" <${emailUser}>`,
+    from: `"MaidSaathi" <${emailUser}>`,
     to,
-    subject: `Your MaidMatch withdrawal of ₹${amount} has been sent to your bank`,
+    subject: `Your MaidSaathi withdrawal of ₹${amount} has been sent to your bank`,
     html,
   });
 };

@@ -15,7 +15,7 @@ export default function Footer() {
               <div className="w-8 h-8 bg-[#C9A84C] rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">M</span>
               </div>
-              <span className="text-white font-serif text-xl font-semibold">MaidMatch</span>
+              <span className="text-white font-serif text-xl font-semibold">MaidSaathi</span>
             </div>
             <p className="text-sm leading-relaxed text-gray-400 max-w-xs">
               Connecting trusted domestic helpers with families across India. Safe, reliable, and professional home services at your fingertips.
@@ -33,13 +33,13 @@ export default function Footer() {
             <h4 className="text-white font-semibold text-sm mb-3 uppercase tracking-wider">Contact</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li className="flex items-center gap-2"><Phone size={13} /> +91 98765 43210</li>
-              <li className="flex items-center gap-2"><Mail size={13} /> help@maidmatch.in</li>
+              <li className="flex items-center gap-2"><Mail size={13} /> help@MaidSaathi.in</li>
               <li className="flex items-center gap-2"><MapPin size={13} /> India</li>
             </ul>
           </div>
         </div>
         <div className="mt-10 pt-6 border-t border-[#2a3f6f] text-center text-xs text-gray-500">
-          © {new Date().getFullYear()} MaidMatch. All rights reserved.
+          © {new Date().getFullYear()} MaidSaathi. All rights reserved.
         </div>
       </div>
     </footer>
