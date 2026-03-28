@@ -60,8 +60,6 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.index({ 'address.coordinates': '2dsphere' });
-// Fast lookup by email (login, auth checks) — email already has unique:true but explicit index is clearer
-userSchema.index({ email: 1 });
 // Admin user-list filtered by role or ban status
 userSchema.index({ role: 1, is_banned: 1 });
 // Admin search by name (case-insensitive via collation; partial match via text index)

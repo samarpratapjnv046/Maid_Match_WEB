@@ -48,6 +48,8 @@ export const sendRegisterOTP = async (req, res, next) => {
       !process.env.EMAIL_USER.includes('your_') &&
       !process.env.EMAIL_PASS.includes('your_');
 
+    console.log(`[SendRegisterOTP] NODE_ENV=${process.env.NODE_ENV} isDev=${isDev} emailConfigured=${!!emailConfigured} EMAIL_USER=${!!process.env.EMAIL_USER} EMAIL_PASS_LEN=${process.env.EMAIL_PASS?.length ?? 0}`);
+
     if (emailConfigured) {
       try {
         await sendRegisterOTPEmail(email, name, otp);
@@ -61,6 +63,7 @@ export const sendRegisterOTP = async (req, res, next) => {
     } else if (isDev) {
       console.log(`\n[DEV] Email not configured — OTP for ${email}: ${otp}\n`);
     } else {
+      console.error('[SendRegisterOTP] Email not configured in production. EMAIL_USER set:', !!process.env.EMAIL_USER, 'EMAIL_PASS set:', !!process.env.EMAIL_PASS);
       return next(new AppError('Email service is not configured.', 500));
     }
 
