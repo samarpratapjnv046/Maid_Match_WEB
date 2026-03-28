@@ -596,7 +596,7 @@ export default function WorkerDashboard() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {pendingBookings.map((booking) => (
+                  {pendingBookings.slice(0, 5).map((booking) => (
                     <PendingRequestCard
                       key={booking._id}
                       booking={booking}
