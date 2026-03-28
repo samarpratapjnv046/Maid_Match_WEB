@@ -744,7 +744,7 @@ const WorkerDemoSection = () => {
         </motion.div>
 
         {/* Main layout: steps list + phone */}
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+        <div className="flex flex-col lg:flex-row lg:items-stretch gap-12 lg:gap-8">
 
           {/* Left — step list */}
           <motion.div
@@ -826,7 +826,7 @@ const WorkerDemoSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="flex-shrink-0 flex flex-col items-center gap-6"
+            className="flex-1 flex flex-col items-center justify-center gap-6"
           >
             {/* Step label above phone */}
             <AnimatePresence mode="wait">

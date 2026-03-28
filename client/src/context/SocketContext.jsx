@@ -97,8 +97,27 @@ export function SocketProvider({ children }) {
     const token = localStorage.getItem('accessToken');
     if (!token) return;
 
-    const socket = io(SERVER_URL, { auth: { token }, transports: ['polling', 'websocket'] });
+    const socket = io(SERVER_URL, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 3000,
+      reconnectionDelayMax: 15000,
+      timeout: 8000,
+    });
     socketRef.current = socket;
+
+    socket.on('connect_error', (err) => {
+      // Suppress repeated console spam — only log once per error type
+      if (!socketRef.current?._connectErrorLogged) {
+        console.warn('[Socket] Could not connect to server:', err.message);
+        if (socketRef.current) socketRef.current._connectErrorLogged = true;
+      }
+    });
+
+    socket.on('connect', () => {
+      if (socketRef.current) socketRef.current._connectErrorLogged = false;
+    });
 
     socket.on('chat_notification', (data) => {
       const { bookingId, messageId } = data;

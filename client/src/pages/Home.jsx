@@ -17,15 +17,27 @@ const SERVICES = [
 ];
 
 const SERVICE_THEME = {
-  house_cleaning: { gradient: 'from-blue-500 to-cyan-500',    light: 'from-blue-50 to-cyan-50',    border: 'hover:border-blue-300',    glow: 'hover:shadow-blue-200',    text: 'text-blue-600',    desc: 'Spotless home, every day',       character: '🧹', particles: ['✨','💧','🫧'], charAnim: [0,-12,8,-4,0], bgColor: '#eff6ff' },
-  cooking:        { gradient: 'from-orange-500 to-amber-400',  light: 'from-orange-50 to-amber-50',  border: 'hover:border-orange-300',  glow: 'hover:shadow-orange-200',  text: 'text-orange-600',  desc: 'Delicious meals at home',        character: '👨‍🍳', particles: ['🍳','🌶️','⭐'], charAnim: [0,-8,12,-6,0], bgColor: '#fff7ed' },
-  babysitting:    { gradient: 'from-pink-500 to-rose-400',     light: 'from-pink-50 to-rose-50',     border: 'hover:border-pink-300',    glow: 'hover:shadow-pink-200',    text: 'text-pink-600',    desc: 'Safe, caring childcare',         character: '👶', particles: ['🍼','💕','⭐'], charAnim: [0,-6,10,-6,0], bgColor: '#fdf2f8' },
-  elder_care:     { gradient: 'from-violet-500 to-purple-500', light: 'from-violet-50 to-purple-50', border: 'hover:border-violet-300',  glow: 'hover:shadow-violet-200',  text: 'text-violet-600',  desc: 'Compassionate senior care',      character: '👵', particles: ['❤️','🌸','✨'], charAnim: [0,-10,6,-4,0], bgColor: '#f5f3ff' },
-  laundry:        { gradient: 'from-teal-500 to-cyan-500',     light: 'from-teal-50 to-cyan-50',     border: 'hover:border-teal-300',    glow: 'hover:shadow-teal-200',    text: 'text-teal-600',    desc: 'Fresh & folded, always',         character: '🫧', particles: ['👕','💧','✨'], charAnim: [0,-14,6,-4,0], bgColor: '#f0fdfa' },
-  gardening:      { gradient: 'from-emerald-500 to-green-500', light: 'from-emerald-50 to-green-50', border: 'hover:border-emerald-300', glow: 'hover:shadow-emerald-200', text: 'text-emerald-600', desc: 'Beautiful gardens & lawns',       character: '🧑‍🌾', particles: ['🌱','🌻','🍃'], charAnim: [0,-8,8,-4,0], bgColor: '#f0fdf4' },
-  driver:         { gradient: 'from-slate-600 to-gray-600',    light: 'from-slate-50 to-gray-100',   border: 'hover:border-slate-300',   glow: 'hover:shadow-slate-200',   text: 'text-slate-600',   desc: 'Reliable rides, any time',       character: '🚗', particles: ['🛣️','⚡','🗺️'], charAnim: [0,-6,16,-8,0], bgColor: '#f8fafc' },
-  deep_cleaning:  { gradient: 'from-indigo-500 to-blue-600',   light: 'from-indigo-50 to-blue-50',   border: 'hover:border-indigo-300',  glow: 'hover:shadow-indigo-200',  text: 'text-indigo-600',  desc: 'Deep sanitized cleaning',        character: '🧼', particles: ['🫧','✨','💦'], charAnim: [0,-12,8,-4,0], bgColor: '#eef2ff' },
-  security_guard: { gradient: 'from-red-500 to-rose-500',      light: 'from-red-50 to-rose-50',      border: 'hover:border-red-300',     glow: 'hover:shadow-red-200',     text: 'text-red-600',     desc: 'Trusted home security',          character: '💂', particles: ['🛡️','⚔️','✅'], charAnim: [0,-10,6,-4,0], bgColor: '#fff1f2' },
+  house_cleaning: { gradient: 'from-sky-500 to-cyan-400',      light: 'from-sky-100 to-cyan-100',      border: 'hover:border-sky-300',     text: 'text-sky-600',     desc: 'Spotless home, every day',       character: '🧹', particles: ['✨','💧','🫧'], charAnim: [0,-12,8,-4,0], bgColor: '#bae6fd', shadowColor: 'rgba(14,165,233,0.32)' },
+  cooking:        { gradient: 'from-orange-500 to-amber-400',   light: 'from-orange-100 to-amber-100',  border: 'hover:border-orange-300',  text: 'text-orange-600',  desc: 'Delicious meals at home',        character: '👨‍🍳', particles: ['🍳','🌶️','⭐'], charAnim: [0,-8,12,-6,0], bgColor: '#fed7aa', shadowColor: 'rgba(249,115,22,0.32)' },
+  babysitting:    { gradient: 'from-pink-500 to-rose-400',      light: 'from-pink-100 to-rose-100',     border: 'hover:border-pink-300',    text: 'text-pink-600',    desc: 'Safe, caring childcare',         character: '👶', particles: ['🍼','💕','⭐'], charAnim: [0,-6,10,-6,0], bgColor: '#fbcfe8', shadowColor: 'rgba(236,72,153,0.32)' },
+  elder_care:     { gradient: 'from-violet-500 to-purple-500',  light: 'from-violet-100 to-purple-100', border: 'hover:border-violet-300',  text: 'text-violet-600',  desc: 'Compassionate senior care',      character: '👵', particles: ['❤️','🌸','✨'], charAnim: [0,-10,6,-4,0], bgColor: '#ddd6fe', shadowColor: 'rgba(139,92,246,0.32)' },
+  laundry:        { gradient: 'from-teal-500 to-emerald-400',   light: 'from-teal-100 to-emerald-100',  border: 'hover:border-teal-300',    text: 'text-teal-600',    desc: 'Fresh & folded, always',         character: '🫧', particles: ['👕','💧','✨'], charAnim: [0,-14,6,-4,0], bgColor: '#99f6e4', shadowColor: 'rgba(20,184,166,0.32)' },
+  gardening:      { gradient: 'from-emerald-500 to-green-400',  light: 'from-emerald-100 to-green-100', border: 'hover:border-emerald-300', text: 'text-emerald-600', desc: 'Beautiful gardens & lawns',       character: '🧑‍🌾', particles: ['🌱','🌻','🍃'], charAnim: [0,-8,8,-4,0], bgColor: '#bbf7d0', shadowColor: 'rgba(16,185,129,0.32)' },
+  driver:         { gradient: 'from-amber-500 to-yellow-400',   light: 'from-amber-100 to-yellow-100',  border: 'hover:border-amber-300',   text: 'text-amber-600',   desc: 'Reliable rides, any time',       character: '🚗', particles: ['🛣️','⚡','🗺️'], charAnim: [0,-6,16,-8,0], bgColor: '#fde68a', shadowColor: 'rgba(245,158,11,0.32)' },
+  deep_cleaning:  { gradient: 'from-indigo-500 to-blue-500',    light: 'from-indigo-100 to-blue-100',   border: 'hover:border-indigo-300',  text: 'text-indigo-600',  desc: 'Deep sanitized cleaning',        character: '🧼', particles: ['🫧','✨','💦'], charAnim: [0,-12,8,-4,0], bgColor: '#c7d2fe', shadowColor: 'rgba(99,102,241,0.32)' },
+  security_guard: { gradient: 'from-red-500 to-rose-500',       light: 'from-red-100 to-rose-100',      border: 'hover:border-red-300',     text: 'text-red-600',     desc: 'Trusted home security',          character: '💂', particles: ['🛡️','⚔️','✅'], charAnim: [0,-10,6,-4,0], bgColor: '#fecdd3', shadowColor: 'rgba(239,68,68,0.32)' },
+};
+
+const SERVICE_IMAGES = {
+  house_cleaning: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80',
+  cooking:        'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=600&q=80',
+  babysitting:    'https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=600&q=80',
+  elder_care:     'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=600&q=80',
+  laundry:        'https://images.unsplash.com/photo-1545173168-9f1947eebb7f?auto=format&fit=crop&w=600&q=80',
+  gardening:      'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80',
+  driver:         'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=600&q=80',
+  deep_cleaning:  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=600&q=80',
+  security_guard: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=600&q=80',
 };
 
 const HERO_SLIDES = [
@@ -777,7 +789,9 @@ const Home = () => {
   const isWorker = user?.role === 'worker';
   const [searchCity, setSearchCity] = useState('');
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [activeServiceIdx, setActiveServiceIdx] = useState(0);
   const touchTimerRef = useRef(null);
+  const svcAutoRef = useRef(null);
 
   const [svcCursor,   setSvcCursor]   = useState({ px: 50, py: 50 });
   const [stepsCursor, setStepsCursor] = useState({ px: 50, py: 50 });
@@ -803,6 +817,13 @@ const Home = () => {
     };
     window.addEventListener('mousemove', onMove);
     return () => window.removeEventListener('mousemove', onMove);
+  }, []);
+
+  useEffect(() => {
+    svcAutoRef.current = setInterval(() => {
+      setActiveServiceIdx(i => (i + 1) % SERVICES.length);
+    }, 3500);
+    return () => clearInterval(svcAutoRef.current);
   }, []);
 
   return (
@@ -888,9 +909,9 @@ const Home = () => {
           <div className="flex gap-2">
             <Link
               to="/workers"
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-white text-gray-900 font-bold py-3 rounded-xl text-sm shadow"
+              className="flex-1 inline-flex items-center justify-center bg-white text-gray-900 font-bold py-3 rounded-xl text-sm shadow"
             >
-              {t('home.findWorkers')} <ArrowRight size={15} />
+              {t('home.findWorkers')}
             </Link>
             {!user && (
               <Link
@@ -908,50 +929,76 @@ const Home = () => {
       {!isWorker && <ServicesMarquee />}
 
       {/* ── Stats ────────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gray-950 py-16">
+      <section className="relative overflow-hidden bg-gray-950 py-10">
         {/* Ambient glows */}
-        <div className="absolute top-0 left-1/4 w-96 h-40 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-40 bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="absolute top-0 left-1/4 w-72 h-28 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-72 h-28 bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
             viewport={{ once: true, margin: '-40px' }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4"
           >
-            {STATS.map(({ label, value, icon: Icon, gradient, iconColor }, i) => (
+            {STATS.map(({ label, value, icon: Icon, gradient }, i) => (
               <motion.div
                 key={label}
-                variants={{ initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0, transition: { duration: 0.5, delay: i * 0.1 } } }}
-                whileHover={{ y: -6, scale: 1.03 }}
-                transition={{ type: 'spring', stiffness: 280, damping: 20 }}
-                className="relative group cursor-default rounded-2xl overflow-hidden border border-white/8"
-                style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(10px)' }}
+                variants={{ initial: { opacity: 0, y: 24 }, animate: { opacity: 1, y: 0, transition: { duration: 0.45, delay: i * 0.1 } } }}
+                whileHover={{ y: -5, scale: 1.05 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                className="relative group cursor-default rounded-xl overflow-hidden border border-white/10"
+                style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)' }}
               >
-                {/* Gradient glow border on hover */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-400 rounded-2xl`} />
-                {/* Bottom accent bar */}
-                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${gradient}`} />
-                <div className="relative p-5 lg:p-7 flex flex-col items-center text-center gap-3">
-                  <motion.div
-                    animate={{ rotate: [0, 8, -8, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, delay: i * 0.8, ease: 'easeInOut' }}
-                    className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} bg-opacity-15 flex items-center justify-center`}
-                    style={{ background: 'rgba(255,255,255,0.08)' }}
-                  >
-                    <Icon size={22} className="text-white" />
-                  </motion.div>
+                {/* Shimmer sweep on hover */}
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.07) 50%, transparent 65%)',
+                    backgroundSize: '200% 100%',
+                  }}
+                  animate={{ backgroundPositionX: ['-100%', '300%'] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
+                />
+                {/* Gradient glow on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl`} />
+                {/* Bottom accent bar with animated width */}
+                <motion.div
+                  className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r ${gradient}`}
+                  initial={{ width: '0%' }}
+                  whileInView={{ width: '100%' }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, delay: 0.3 + i * 0.1, ease: 'easeOut' }}
+                />
+
+                <div className="relative p-3 lg:p-4 flex flex-col items-center text-center gap-2">
+                  {/* Icon with pulse ring */}
+                  <div className="relative flex items-center justify-center">
+                    <motion.div
+                      className={`absolute w-9 h-9 rounded-lg bg-gradient-to-br ${gradient} opacity-25 blur-md`}
+                      animate={{ scale: [1, 1.4, 1], opacity: [0.25, 0.1, 0.25] }}
+                      transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.5, ease: 'easeInOut' }}
+                    />
+                    <motion.div
+                      animate={{ rotate: [0, 7, -7, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, delay: i * 0.8, ease: 'easeInOut' }}
+                      className={`relative w-8 h-8 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center`}
+                      style={{ boxShadow: '0 3px 10px rgba(0,0,0,0.35)' }}
+                    >
+                      <Icon size={15} className="text-white" />
+                    </motion.div>
+                  </div>
+
                   <motion.p
                     initial={{ opacity: 0, scale: 0.5 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
-                    transition={{ type: 'spring', stiffness: 200, delay: 0.2 + i * 0.1 }}
-                    className={`text-3xl lg:text-4xl font-black bg-gradient-to-r ${gradient} bg-clip-text text-transparent leading-tight`}
+                    transition={{ type: 'spring', stiffness: 220, delay: 0.25 + i * 0.1 }}
+                    className={`text-xl lg:text-2xl font-black bg-gradient-to-r ${gradient} bg-clip-text text-transparent leading-tight`}
                   >
                     {value}
                   </motion.p>
-                  <p className="text-gray-400 text-xs lg:text-sm font-medium leading-tight">{label}</p>
+                  <p className="text-gray-400 text-[10px] lg:text-xs font-medium leading-tight tracking-wide">{label}</p>
                 </div>
               </motion.div>
             ))}
@@ -1007,261 +1054,264 @@ const Home = () => {
         </section>
       )}
 
-      {/* ── Services Grid (customer only) ─────────────────────────────────────── */}
+      {/* ── Services Carousel (customer only) ─────────────────────────────────── */}
       {!isWorker && (
-        <section ref={svcSectionRef} className="py-20 relative">
-          {/* ── Background decorations contained in their own clipping layer ── */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {/* Vivid base mesh */}
+        <section ref={svcSectionRef} className="py-16 sm:py-20 relative overflow-hidden">
+          {/* ── Golden gradient background ── */}
+          <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-0" style={{
-              background: 'linear-gradient(135deg,#e0e7ff 0%,#fce7f3 20%,#fef9c3 40%,#d1fae5 60%,#e0f2fe 80%,#f3e8ff 100%)',
+              background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 30%, #fde68a 55%, #fef3c7 75%, #fffbeb 100%)',
             }} />
-            {/* Dot-grid texture */}
-            <div className="absolute inset-0 opacity-[0.45]" style={{
-              backgroundImage: 'radial-gradient(circle, #818cf8 1.2px, transparent 1.2px)',
-              backgroundSize: '24px 24px',
-            }} />
-            {/* Cross-hatch overlay */}
-            <div className="absolute inset-0 opacity-[0.04]" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg,#6366f1 0,#6366f1 1px,transparent 1px,transparent 28px),repeating-linear-gradient(90deg,#6366f1 0,#6366f1 1px,transparent 1px,transparent 28px)',
-            }} />
-            {/* Cursor spotlight */}
+            {/* Radial glow centre */}
             <div className="absolute inset-0" style={{
-              background: `radial-gradient(600px circle at ${svcCursor.px}% ${svcCursor.py}%, rgba(139,92,246,0.22) 0%, rgba(59,130,246,0.14) 30%, rgba(16,185,129,0.09) 60%, transparent 80%)`,
+              background: 'radial-gradient(ellipse 70% 55% at 50% 55%, rgba(251,191,36,0.18) 0%, transparent 70%)',
             }} />
-            {/* 6 vivid floating blobs */}
-            <motion.div animate={{ x:[0,60,-35,20,0], y:[0,-40,30,-15,0] }} transition={{ duration:13, repeat:Infinity, ease:'easeInOut' }}
-              className="absolute top-[-100px] left-[-80px] w-[480px] h-[480px] rounded-full opacity-50"
-              style={{ background: 'radial-gradient(circle,#a5b4fc,transparent 65%)' }} />
-            <motion.div animate={{ x:[0,-50,40,-20,0], y:[0,50,-30,10,0] }} transition={{ duration:17, repeat:Infinity, ease:'easeInOut', delay:3 }}
-              className="absolute bottom-[-80px] right-[-60px] w-[420px] h-[420px] rounded-full opacity-45"
-              style={{ background: 'radial-gradient(circle,#fde68a,transparent 65%)' }} />
-            <motion.div animate={{ x:[0,30,-50,20,0], y:[0,-30,40,-10,0] }} transition={{ duration:20, repeat:Infinity, ease:'easeInOut', delay:6 }}
-              className="absolute top-1/2 left-1/2 w-[380px] h-[380px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40"
-              style={{ background: 'radial-gradient(circle,#6ee7b7,transparent 65%)' }} />
-            <motion.div animate={{ x:[0,-40,30,0], y:[0,35,-25,0] }} transition={{ duration:15, repeat:Infinity, ease:'easeInOut', delay:2 }}
-              className="absolute top-[10%] right-[15%] w-[300px] h-[300px] rounded-full opacity-35"
-              style={{ background: 'radial-gradient(circle,#f9a8d4,transparent 65%)' }} />
-            <motion.div animate={{ x:[0,25,-35,0], y:[0,-20,30,0] }} transition={{ duration:22, repeat:Infinity, ease:'easeInOut', delay:8 }}
-              className="absolute bottom-[15%] left-[20%] w-[260px] h-[260px] rounded-full opacity-30"
-              style={{ background: 'radial-gradient(circle,#7dd3fc,transparent 65%)' }} />
-            <motion.div animate={{ x:[0,-20,40,0], y:[0,25,-35,0] }} transition={{ duration:19, repeat:Infinity, ease:'easeInOut', delay:5 }}
-              className="absolute top-[60%] right-[5%] w-[220px] h-[220px] rounded-full opacity-35"
-              style={{ background: 'radial-gradient(circle,#c4b5fd,transparent 65%)' }} />
+            {/* Sparkles */}
+            {[
+              { top: '7%',  left: '4%',   size: 16, delay: 0   },
+              { top: '14%', left: '17%',  size: 10, delay: 0.6 },
+              { top: '4%',  left: '39%',  size: 14, delay: 1.2 },
+              { top: '9%',  left: '61%',  size: 9,  delay: 0.3 },
+              { top: '6%',  left: '81%',  size: 18, delay: 0.9 },
+              { top: '18%', left: '95%',  size: 12, delay: 1.5 },
+              { top: '84%', left: '6%',   size: 14, delay: 0.7 },
+              { top: '91%', left: '24%',  size: 10, delay: 1.1 },
+              { top: '79%', left: '54%',  size: 16, delay: 0.4 },
+              { top: '87%', left: '73%',  size: 10, delay: 1.8 },
+              { top: '74%', left: '93%',  size: 14, delay: 1.0 },
+              { top: '45%', left: '1%',   size: 11, delay: 2.0 },
+              { top: '50%', left: '98%',  size: 13, delay: 1.3 },
+            ].map((sp, i) => (
+              <motion.span
+                key={i}
+                className="absolute text-amber-400 select-none"
+                style={{ top: sp.top, left: sp.left, fontSize: sp.size, lineHeight: 1 }}
+                animate={{ opacity: [0.25, 1, 0.25], scale: [0.7, 1.3, 0.7], rotate: [0, 180, 360] }}
+                transition={{ duration: 2.8 + i * 0.35, repeat: Infinity, delay: sp.delay, ease: 'easeInOut' }}
+              >✦</motion.span>
+            ))}
           </div>
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Section label */}
+            {/* ── Header ── */}
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-              className="text-center mb-6"
+              transition={{ duration: 0.5 }}
+              className="text-center mb-12"
             >
-              <span className="inline-block bg-primary-50 text-primary-600 text-sm font-semibold px-4 py-1.5 rounded-full tracking-wide">What We Offer</span>
+              <span className="inline-flex items-center gap-2 bg-amber-100/80 text-amber-700 text-xs font-bold tracking-[0.25em] uppercase px-5 py-2.5 rounded-full border border-amber-300/70 mb-5 backdrop-blur-sm shadow-sm">
+                <span>✦</span> HOME SERVICES <span>✦</span>
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight mb-4">
+                Services for Every Need
+              </h2>
+              <p className="text-gray-500 max-w-md mx-auto text-sm sm:text-base">
+                From daily house cleaning to long-term elder care — verified professionals for everything.
+              </p>
             </motion.div>
 
-            {/* Running marquee heading */}
-            <div className="relative overflow-hidden mb-4 -mx-4 sm:-mx-6 lg:-mx-8">
-              <div className="bg-gradient-to-r from-primary-600 via-violet-600 to-pink-500 py-4 overflow-hidden">
-                <motion.div
-                  animate={{ x: ['0%', '-50%'] }}
-                  transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
-                  className="flex whitespace-nowrap"
-                >
-                  {[...Array(6)].map((_, i) => (
-                    <span key={i} className="inline-flex items-center gap-4 text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight px-8">
-                      Services for Every Need
-                      <span className="text-yellow-300 text-2xl select-none">✦</span>
-                    </span>
-                  ))}
-                </motion.div>
+            {/* ── Carousel ── */}
+            <div className="relative">
+              {/* Prev */}
+              <button
+                onClick={() => {
+                  clearInterval(svcAutoRef.current);
+                  setActiveServiceIdx(i => (i - 1 + SERVICES.length) % SERVICES.length);
+                }}
+                className="absolute left-0 sm:-left-5 top-1/2 -translate-y-1/2 z-50 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/90 backdrop-blur-sm shadow-xl border border-amber-200 flex items-center justify-center text-gray-700 hover:bg-amber-50 hover:border-amber-400 transition-all duration-200 hover:scale-110"
+                aria-label="Previous service"
+              >
+                <ChevronLeft size={22} />
+              </button>
+
+              {/* Cards stage — no overflow-hidden so popup stays visible */}
+              <div className="relative mx-12 sm:mx-16">
+                {/* Side fades replace hard clip */}
+                <div className="absolute inset-y-0 left-0 w-16 sm:w-24 pointer-events-none z-40" style={{ background: 'linear-gradient(to right, #fef3c7 0%, transparent 100%)' }} />
+                <div className="absolute inset-y-0 right-0 w-16 sm:w-24 pointer-events-none z-40" style={{ background: 'linear-gradient(to left, #fef3c7 0%, transparent 100%)' }} />
+                <div className="relative flex items-center justify-center" style={{ height: 450 }}>
+                  {SERVICES.map((svc, idx) => {
+                    const theme = SERVICE_THEME[svc];
+                    let offset = idx - activeServiceIdx;
+                    if (offset > SERVICES.length / 2) offset -= SERVICES.length;
+                    if (offset < -SERVICES.length / 2) offset += SERVICES.length;
+                    if (Math.abs(offset) > 2) return null;
+
+                    const isCenter = offset === 0;
+                    const isHovered = hoveredCard === svc;
+
+                    const xMap    = { '-2': -420, '-1': -228, '0': 0, '1': 228, '2': 420 };
+                    const scaleMap = { '-2': 0.60, '-1': 0.79, '0': 1.0, '1': 0.79, '2': 0.60 };
+                    const opacMap = { '-2': 0.50, '-1': 0.75, '0': 1,   '1': 0.75, '2': 0.50 };
+                    const zMap    = { '-2': 10,   '-1': 20,   '0': 40,  '1': 20,   '2': 10  };
+
+                    const xPos   = xMap[String(offset)];
+                    const scaleV = scaleMap[String(offset)];
+                    const opacV  = opacMap[String(offset)];
+                    const zV     = zMap[String(offset)];
+
+                    return (
+                      <motion.div
+                        key={svc}
+                        animate={{ x: xPos, scale: scaleV, opacity: opacV, zIndex: zV }}
+                        transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+                        style={{ position: 'absolute', width: 245, height: 375, cursor: isCenter ? 'default' : 'pointer' }}
+                        onClick={() => { if (!isCenter) { clearInterval(svcAutoRef.current); setActiveServiceIdx(idx); } }}
+                        onMouseEnter={() => { if (isCenter) setHoveredCard(svc); }}
+                        onMouseLeave={() => setHoveredCard(null)}
+                        onTouchStart={(e) => {
+                          if (!isCenter) { clearInterval(svcAutoRef.current); setActiveServiceIdx(idx); return; }
+                          if (hoveredCard !== svc) {
+                            e.preventDefault();
+                            clearTimeout(touchTimerRef.current);
+                            setHoveredCard(svc);
+                            touchTimerRef.current = setTimeout(() => setHoveredCard(null), 2000);
+                          }
+                        }}
+                      >
+                        {/* Card shell */}
+                        <div
+                          className="w-full h-full rounded-2xl relative overflow-visible"
+                          style={{
+                            background: 'white',
+                            borderRadius: 20,
+                            border: isCenter ? `2.5px solid ${theme.bgColor}` : '2px solid rgba(255,255,255,0.55)',
+                            boxShadow: isCenter
+                              ? `0 0 0 4px ${theme.bgColor}55, 0 0 48px ${theme.shadowColor}, 0 24px 64px rgba(0,0,0,0.22)`
+                              : '0 6px 22px rgba(0,0,0,0.10)',
+                          }}
+                        >
+                          {/* ── Photo ── */}
+                          <div className="relative overflow-hidden" style={{ height: '61%', borderRadius: '18px 18px 0 0' }}>
+                            <img
+                              src={SERVICE_IMAGES[svc]}
+                              alt={serviceLabels[svc]}
+                              className="w-full h-full object-cover transition-transform duration-700"
+                              style={{ transform: isCenter ? 'scale(1.04)' : 'scale(1)' }}
+                              loading="lazy"
+                            />
+                            {/* Bottom colour wash */}
+                            <div className="absolute inset-0" style={{
+                              background: `linear-gradient(to bottom, transparent 45%, ${theme.bgColor}88 100%)`,
+                            }} />
+                            {/* Active badge */}
+                            {isCenter && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="absolute top-3 left-3 right-3 flex items-center justify-between"
+                              >
+                                <span className={`text-[10px] font-bold bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full ${theme.text} shadow-sm tracking-wider uppercase`}>
+                                  {serviceLabels[svc]}
+                                </span>
+                                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-sm" />
+                              </motion.div>
+                            )}
+                          </div>
+
+                          {/* ── Card body ── */}
+                          <div className="flex flex-col items-center gap-1.5 pt-3 pb-4 px-3" style={{ height: '39%' }}>
+                            {/* Icon */}
+                            <div
+                              className={`w-9 h-9 rounded-xl bg-gradient-to-br ${theme.gradient} flex items-center justify-center text-lg shadow-md select-none`}
+                              style={{ boxShadow: `0 3px 10px ${theme.shadowColor}` }}
+                            >
+                              {serviceIcons[svc]}
+                            </div>
+                            <p className="text-xs font-black text-gray-800 text-center leading-tight">{serviceLabels[svc]}</p>
+                            {isCenter && (
+                              <p className="text-[10px] text-gray-400 text-center leading-snug">{theme.desc}</p>
+                            )}
+                            {isCenter && (
+                              <Link
+                                to={`/workers?service=${svc}`}
+                                className={`mt-0.5 inline-flex items-center gap-1 text-[11px] font-bold ${theme.text} bg-white px-3 py-1 rounded-full shadow-md border border-white/80 hover:shadow-lg transition-all`}
+                                style={{ boxShadow: `0 2px 8px ${theme.shadowColor}` }}
+                              >
+                                Book Now <ArrowRight size={10} />
+                              </Link>
+                            )}
+                          </div>
+
+                          {/* ── Popup character — floats inside the image area, above the icon ── */}
+                          <AnimatePresence>
+                            {isHovered && isCenter && (
+                              <motion.div
+                                key="popup"
+                                initial={{ scale: 0.1, opacity: 0, y: 18 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.1, opacity: 0, y: 10 }}
+                                transition={{ type: 'spring', stiffness: 420, damping: 16 }}
+                                className="absolute left-1/2 -translate-x-1/2 z-30 flex flex-col items-center pointer-events-none"
+                                style={{ bottom: 'calc(39% + 12px)' }}
+                              >
+                                {/* Soft glow */}
+                                <motion.div
+                                  animate={{ scale: [1, 1.3, 1], opacity: [0.45, 0.75, 0.45] }}
+                                  transition={{ duration: 1.5, repeat: Infinity }}
+                                  className="absolute rounded-full"
+                                  style={{ width: 110, height: 110, background: `radial-gradient(circle, ${theme.bgColor}, transparent 68%)`, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+                                />
+                                {/* Bubble */}
+                                <div
+                                  className="relative flex items-center justify-center rounded-full shadow-2xl border-[3px] border-white"
+                                  style={{ width: 76, height: 76, background: theme.bgColor, fontSize: 40 }}
+                                >
+                                  <motion.span
+                                    animate={{ rotate: theme.charAnim, scale: [1, 1.2, 0.9, 1.1, 1] }}
+                                    transition={{ duration: 0.8, ease: 'easeInOut' }}
+                                    className="select-none leading-none"
+                                  >{theme.character}</motion.span>
+                                  <motion.span initial={{ opacity: 0, x: 0, y: 0, scale: 0 }} animate={{ opacity: [0,1,1,0], x: -38, y: -24, scale: [0,1.3,1.1,0.7] }} transition={{ duration: 1.0, delay: 0.05, repeat: Infinity, repeatDelay: 0.9 }} className="absolute text-base select-none">{theme.particles[0]}</motion.span>
+                                  <motion.span initial={{ opacity: 0, x: 0, y: 0, scale: 0 }} animate={{ opacity: [0,1,1,0], x:  35, y: -28, scale: [0,1.2,1.0,0.6] }} transition={{ duration: 1.1, delay: 0.2,  repeat: Infinity, repeatDelay: 0.8 }} className="absolute text-base select-none">{theme.particles[1]}</motion.span>
+                                  <motion.span initial={{ opacity: 0, x: 0, y: 0, scale: 0 }} animate={{ opacity: [0,1,1,0], x:  40, y:  16, scale: [0,1.1,0.9,0.5] }} transition={{ duration: 1.2, delay: 0.4,  repeat: Infinity, repeatDelay: 0.7 }} className="absolute text-sm select-none">{theme.particles[2]}</motion.span>
+                                  <motion.span initial={{ opacity: 0, x: 0, y: 0, scale: 0 }} animate={{ opacity: [0,1,0],   x: -32, y:  20, scale: [0,0.9,0.4]     }} transition={{ duration: 0.9, delay: 0.6,  repeat: Infinity, repeatDelay: 1.1 }} className="absolute text-xs select-none">✨</motion.span>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
-              {/* Fade edges */}
-              <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-gray-50 to-transparent pointer-events-none" />
-              <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+
+              {/* Next */}
+              <button
+                onClick={() => {
+                  clearInterval(svcAutoRef.current);
+                  setActiveServiceIdx(i => (i + 1) % SERVICES.length);
+                }}
+                className="absolute right-0 sm:-right-5 top-1/2 -translate-y-1/2 z-50 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/90 backdrop-blur-sm shadow-xl border border-amber-200 flex items-center justify-center text-gray-700 hover:bg-amber-50 hover:border-amber-400 transition-all duration-200 hover:scale-110"
+                aria-label="Next service"
+              >
+                <ChevronRight size={22} />
+              </button>
             </div>
 
-            <motion.p
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.15 }}
-              className="text-center text-gray-500 max-w-xl mx-auto mb-14"
-            >
-              From daily house cleaning to long-term elder care — verified professionals for everything.
-            </motion.p>
-
-            <motion.div
-              variants={staggerContainer}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true, margin: '-40px' }}
-              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5"
-            >
-              {SERVICES.map((svc, idx) => {
-                const theme = SERVICE_THEME[svc];
-                const isHovered = hoveredCard === svc;
+            {/* ── Pagination dots ── */}
+            <div className="flex justify-center items-center gap-2 mt-7">
+              {SERVICES.map((s, idx) => {
+                const t = SERVICE_THEME[s];
+                const active = idx === activeServiceIdx;
                 return (
-                  <motion.div
-                    key={svc}
-                    variants={{
-                      initial: { opacity: 0, y: 40, scale: 0.92 },
-                      animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.45, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] } },
+                  <button
+                    key={idx}
+                    onClick={() => { clearInterval(svcAutoRef.current); setActiveServiceIdx(idx); }}
+                    aria-label={`Go to ${serviceLabels[s]}`}
+                    className="transition-all duration-300 rounded-full"
+                    style={{
+                      width: active ? 24 : 10,
+                      height: 10,
+                      background: active ? t.shadowColor.replace('0.32', '0.85') : 'rgba(180,160,80,0.35)',
                     }}
-                  >
-                    <Link
-                      to={`/workers?service=${svc}`}
-                      className="block"
-                      onMouseEnter={() => setHoveredCard(svc)}
-                      onMouseLeave={() => setHoveredCard(null)}
-                      onTouchStart={(e) => {
-                        // First tap shows popup; second tap (while popup visible) navigates
-                        if (hoveredCard !== svc) {
-                          e.preventDefault();
-                          clearTimeout(touchTimerRef.current);
-                          setHoveredCard(svc);
-                          touchTimerRef.current = setTimeout(() => setHoveredCard(null), 2000);
-                        }
-                      }}
-                    >
-                      <motion.div
-                        animate={isHovered ? { y: -10, scale: 1.04 } : { y: 0, scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 320, damping: 22 }}
-                        className="relative flex flex-col items-center gap-2 pt-12 pb-5 px-3 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-2xl overflow-visible cursor-pointer"
-                        style={{ minHeight: 185 }}
-                      >
-                        {/* Animated bg fill */}
-                        <motion.div
-                          animate={{ opacity: isHovered ? 1 : 0 }}
-                          transition={{ duration: 0.3 }}
-                          className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${theme.light}`}
-                        />
-
-                        {/* Top gradient bar */}
-                        <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient} rounded-t-3xl`} />
-
-                        {/* ── Popup character — floats above card ── */}
-                        <AnimatePresence>
-                          {isHovered && (
-                            <motion.div
-                              key="popup"
-                              initial={{ y: 40, scale: 0.1, opacity: 0 }}
-                              animate={{ y: -80, scale: 1, opacity: 1 }}
-                              exit={{ y: 30, scale: 0.15, opacity: 0 }}
-                              transition={{ type: 'spring', stiffness: 420, damping: 16 }}
-                              className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center pointer-events-none"
-                            >
-                              {/* Glow ring behind bubble */}
-                              <motion.div
-                                animate={{ scale: [1, 1.25, 1], opacity: [0.4, 0.7, 0.4] }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
-                                className="absolute rounded-full"
-                                style={{ width: 'clamp(100px, 13vw, 130px)', height: 'clamp(100px, 13vw, 130px)', background: `radial-gradient(circle, ${theme.bgColor}, transparent 70%)`, top: -15 }}
-                              />
-                              {/* Character bubble */}
-                              <div
-                                className="relative flex items-center justify-center rounded-full shadow-2xl border-[4px] sm:border-[5px] border-white"
-                                style={{ width: 'clamp(76px, 10vw, 100px)', height: 'clamp(76px, 10vw, 100px)', background: theme.bgColor, fontSize: 'clamp(36px, 5vw, 52px)' }}
-                              >
-                                <motion.span
-                                  animate={{ rotate: theme.charAnim, scale: [1, 1.2, 0.9, 1.1, 1] }}
-                                  transition={{ duration: 0.8, ease: 'easeInOut' }}
-                                  className="select-none leading-none"
-                                >
-                                  {theme.character}
-                                </motion.span>
-                                {/* Particle 1 */}
-                                <motion.span
-                                  initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
-                                  animate={{ opacity: [0, 1, 1, 0], x: -46, y: -30, scale: [0, 1.4, 1.2, 0.8] }}
-                                  transition={{ duration: 1.0, delay: 0.05, repeat: Infinity, repeatDelay: 0.9 }}
-                                  className="absolute text-xl select-none"
-                                >{theme.particles[0]}</motion.span>
-                                {/* Particle 2 */}
-                                <motion.span
-                                  initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
-                                  animate={{ opacity: [0, 1, 1, 0], x: 42, y: -36, scale: [0, 1.3, 1.1, 0.7] }}
-                                  transition={{ duration: 1.1, delay: 0.2, repeat: Infinity, repeatDelay: 0.8 }}
-                                  className="absolute text-xl select-none"
-                                >{theme.particles[1]}</motion.span>
-                                {/* Particle 3 */}
-                                <motion.span
-                                  initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
-                                  animate={{ opacity: [0, 1, 1, 0], x: 50, y: 18, scale: [0, 1.2, 1.0, 0.6] }}
-                                  transition={{ duration: 1.2, delay: 0.4, repeat: Infinity, repeatDelay: 0.7 }}
-                                  className="absolute text-lg select-none"
-                                >{theme.particles[2]}</motion.span>
-                                {/* Particle 4 — extra bounce left-bottom */}
-                                <motion.span
-                                  initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
-                                  animate={{ opacity: [0, 1, 0], x: -40, y: 22, scale: [0, 1.0, 0.5] }}
-                                  transition={{ duration: 0.9, delay: 0.6, repeat: Infinity, repeatDelay: 1.1 }}
-                                  className="absolute text-base select-none"
-                                >✨</motion.span>
-                              </div>
-                              {/* Tail */}
-                              <div
-                                className="w-4 h-4 -mt-2 rotate-45 border-b-[3px] border-r-[3px] border-white"
-                                style={{ background: theme.bgColor }}
-                              />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-
-                        {/* Main icon (hidden when popped) */}
-                        <motion.div
-                          animate={{ scale: isHovered ? 0.7 : 1, opacity: isHovered ? 0.4 : 1 }}
-                          transition={{ duration: 0.25 }}
-                          className="relative z-10 w-14 h-14 flex items-center justify-center text-4xl leading-none select-none"
-                        >
-                          {serviceIcons[svc]}
-                        </motion.div>
-
-                        {/* Label */}
-                        <motion.p
-                          animate={{ color: isHovered ? theme.text.replace('text-', '') : '#1f2937' }}
-                          className={`relative z-10 text-sm font-black text-gray-800 text-center leading-tight`}
-                        >
-                          {serviceLabels[svc]}
-                        </motion.p>
-
-                        {/* Desc — slides in on hover */}
-                        <AnimatePresence>
-                          {isHovered && (
-                            <motion.p
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="relative z-10 text-xs text-gray-500 text-center leading-snug px-1"
-                            >
-                              {theme.desc}
-                            </motion.p>
-                          )}
-                        </AnimatePresence>
-
-                        {/* CTA */}
-                        <AnimatePresence>
-                          {isHovered && (
-                            <motion.span
-                              initial={{ opacity: 0, scale: 0.7, y: 6 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.7, y: 6 }}
-                              transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.05 }}
-                              className={`relative z-10 inline-flex items-center gap-1 text-xs font-bold ${theme.text} bg-white px-3 py-1 rounded-full shadow border border-white/80`}
-                            >
-                              Book Now <ArrowRight size={10} />
-                            </motion.span>
-                          )}
-                        </AnimatePresence>
-                      </motion.div>
-                    </Link>
-                  </motion.div>
+                  />
                 );
               })}
-            </motion.div>
+            </div>
 
             {/* Bottom CTA */}
             <motion.div
@@ -1269,7 +1319,7 @@ const Home = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.3 }}
-              className="text-center mt-12"
+              className="text-center mt-10"
             >
               <Link
                 to="/workers"
@@ -1552,7 +1602,6 @@ const Home = () => {
                 <div className="w-44 h-80 bg-gradient-to-b from-gray-800 to-gray-900 rounded-[2.5rem] border-4 border-gray-700 shadow-2xl shadow-black/60 flex flex-col items-center justify-center gap-3 relative overflow-hidden">
                   {/* Screen glow */}
                   <div className="absolute inset-2 rounded-[2rem] bg-gradient-to-br from-primary-900 to-primary-800 flex flex-col items-center justify-center gap-3 p-4">
-                    <img src="/ms-icon.png" alt="MaidSaathi" className="w-14 h-14 object-contain rounded-2xl" />
                     <p className="text-white font-black text-base text-center leading-tight">Maid<span className="text-yellow-300">Saathi</span></p>
                     <div className="w-full space-y-1.5">
                       {['House Cleaning', 'Cooking', 'Elder Care'].map((s) => (

@@ -10,6 +10,16 @@ export const useAuth = () => {
   return context;
 };
 
+// Decode JWT and return whether it is expired (or malformed).
+const isJwtExpired = (token) => {
+  try {
+    const exp = JSON.parse(atob(token.split('.')[1])).exp;
+    return !exp || exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,14 +39,33 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    // Skip the API call entirely if there is no token — avoids a pointless
-    // 401 → refresh attempt → failure cycle on public pages (register, home, etc.)
     const token = localStorage.getItem('accessToken');
+
+    // No token at all — definitely logged out.
     if (!token) {
       setUser(null);
       setLoading(false);
       return;
     }
+
+    // Token exists but is already expired client-side.
+    // Skip /auth/me (avoids a guaranteed 401) and try a silent refresh instead.
+    if (isJwtExpired(token)) {
+      localStorage.removeItem('accessToken');
+      try {
+        const { data } = await api.post('/auth/refresh', {});
+        localStorage.setItem('accessToken', data.accessToken);
+        const meRes = await api.get('/auth/me');
+        setUser(meRes.data?.data || meRes.data);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Token looks valid — verify with the server.
     try {
       const res = await api.get('/auth/me');
       // Backend returns { success, data: { ...user } }
