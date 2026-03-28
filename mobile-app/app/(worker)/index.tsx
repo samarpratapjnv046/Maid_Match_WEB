@@ -40,7 +40,7 @@ export default function WorkerDashboardScreen() {
     try {
       const [profileRes, bookingsRes] = await Promise.all([
         api.get(`/workers/profile`).catch(() => null),
-        api.get('/bookings?limit=3'),
+        api.get('/bookings?limit=5'),
       ]);
 
       if (profileRes?.data?.success) {
@@ -58,7 +58,7 @@ export default function WorkerDashboardScreen() {
       if (bookingsRes.data.success) {
         const data = bookingsRes.data.data;
         const list = Array.isArray(data) ? data : data?.bookings || [];
-        setRecentBookings(list.slice(0, 3));
+        setRecentBookings(list.slice(0, 5));
       }
     } catch {
       // silently fail
