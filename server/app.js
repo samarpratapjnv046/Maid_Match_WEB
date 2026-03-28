@@ -27,6 +27,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
+// ─── Trust Render's reverse proxy ────────────────────────────────────────────
+app.set('trust proxy', 1);
+
 // ─── Compression (gzip) ───────────────────────────────────────────────────────
 // Skip for Razorpay webhook (raw body required); compress everything else
 app.use(compression({ filter: (req) => req.path !== '/api/payments/webhook' }));

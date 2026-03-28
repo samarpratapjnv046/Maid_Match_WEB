@@ -1,27 +1,18 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-const createTransporter = () => {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
-  if (!user || !pass) throw new Error('EMAIL_USER or EMAIL_PASS environment variable is not set.');
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: { user, pass },
-    tls: { rejectUnauthorized: false },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-  });
+const sendEmail = async ({ to, subject, html }) => {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error('RESEND_API_KEY environment variable is not set.');
+  const resend = new Resend(apiKey);
+  const from = process.env.EMAIL_FROM || 'MaidSaathi <noreply@maidsaathi.in>';
+  const { error } = await resend.emails.send({ from, to, subject, html });
+  if (error) throw new Error(error.message);
 };
 
 /**
  * Send a password-reset OTP email.
  */
 export const sendOTPEmail = async (to, name, otp) => {
-  const transporter = createTransporter();
-  const user = process.env.EMAIL_USER;
 
   const html = `
 <!DOCTYPE html>
@@ -85,20 +76,13 @@ export const sendOTPEmail = async (to, name, otp) => {
 </body>
 </html>`.trim();
 
-  await transporter.sendMail({
-    from: `"MaidSaathi" <${user}>`,
-    to,
-    subject: `${otp} is your MaidSaathi password reset code`,
-    html,
-  });
+  await sendEmail({ to, subject: `${otp} is your MaidSaathi password reset code`, html });
 };
 
 /**
  * Send an email OTP to verify identity during registration.
  */
 export const sendRegisterOTPEmail = async (to, name, otp) => {
-  const transporter = createTransporter();
-  const user = process.env.EMAIL_USER;
 
   const html = `
 <!DOCTYPE html>
@@ -162,20 +146,13 @@ export const sendRegisterOTPEmail = async (to, name, otp) => {
 </body>
 </html>`.trim();
 
-  await transporter.sendMail({
-    from: `"MaidSaathi" <${user}>`,
-    to,
-    subject: `${otp} is your MaidSaathi verification code`,
-    html,
-  });
+  await sendEmail({ to, subject: `${otp} is your MaidSaathi verification code`, html });
 };
 
 /**
  * Send a bank account OTP verification email to a worker.
  */
 export const sendBankOTPEmail = async (to, name, otp) => {
-  const transporter = createTransporter();
-  const user = process.env.EMAIL_USER;
 
   const html = `
 <!DOCTYPE html>
@@ -239,12 +216,7 @@ export const sendBankOTPEmail = async (to, name, otp) => {
 </body>
 </html>`.trim();
 
-  await transporter.sendMail({
-    from: `"MaidSaathi" <${user}>`,
-    to,
-    subject: `${otp} is your MaidSaathi bank verification code`,
-    html,
-  });
+  await sendEmail({ to, subject: `${otp} is your MaidSaathi bank verification code`, html });
 };
 
 /**
@@ -255,8 +227,6 @@ export const sendBankOTPEmail = async (to, name, otp) => {
  * @param {object} booking     - { service_type, start_time, _id }
  */
 export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
-  const transporter = createTransporter();
-  const emailUser   = process.env.EMAIL_USER;
 
   const serviceLabel = (booking.service_type || 'Home Service')
     .replace(/_/g, ' ')
@@ -356,12 +326,7 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
 </body>
 </html>`.trim();
 
-  await transporter.sendMail({
-    from: `"MaidSaathi" <${emailUser}>`,
-    to,
-    subject: `Your MaidSaathi Booking OTP: ${otp}`,
-    html,
-  });
+  await sendEmail({ to, subject: `Your MaidSaathi Booking OTP: ${otp}`, html });
 };
 
 /**
@@ -370,8 +335,6 @@ export const sendCompletionOTPEmail = async (to, name, otp, booking = {}) => {
  * @param {string} name    - Worker's full name
  */
 export const sendWorkerVerifiedEmail = async (to, name) => {
-  const transporter = createTransporter();
-  const emailUser = process.env.EMAIL_USER;
   const appUrl = process.env.CLIENT_URL || 'https://MaidSaathi.in';
   const dashboardUrl = `${appUrl}/worker/dashboard`;
   const profileUrl = `${appUrl}/worker/profile`;
@@ -486,12 +449,7 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
 </body>
 </html>`.trim();
 
-  await transporter.sendMail({
-    from: `"MaidSaathi" <${emailUser}>`,
-    to,
-    subject: `🎉 Congratulations ${name}! Your MaidSaathi profile is now Verified`,
-    html,
-  });
+  await sendEmail({ to, subject: `🎉 Congratulations ${name}! Your MaidSaathi profile is now Verified`, html });
 };
 
 /**
@@ -504,8 +462,6 @@ export const sendWorkerVerifiedEmail = async (to, name) => {
  * @param {string} bookingId  - Booking ID for reference
  */
 export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankName, bookingId) => {
-  const transporter = createTransporter();
-  const emailUser   = process.env.EMAIL_USER;
 
   const html = `
 <!DOCTYPE html>
@@ -601,12 +557,7 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
 </body>
 </html>`.trim();
 
-  await transporter.sendMail({
-    from: `"MaidSaathi" <${emailUser}>`,
-    to,
-    subject: `Your MaidSaathi refund of ₹${amount} has been processed`,
-    html,
-  });
+  await sendEmail({ to, subject: `Your MaidSaathi refund of ₹${amount} has been processed`, html });
 };
 
 /**
@@ -618,8 +569,6 @@ export const sendRefundConfirmationEmail = async (to, name, amount, utr, bankNam
  * @param {string} bankName - Destination bank name
  */
 export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankName) => {
-  const transporter = createTransporter();
-  const emailUser   = process.env.EMAIL_USER;
 
   const html = `
 <!DOCTYPE html>
@@ -712,11 +661,6 @@ export const sendWithdrawalApprovedEmail = async (to, name, amount, utr, bankNam
 </body>
 </html>`.trim();
 
-  await transporter.sendMail({
-    from: `"MaidSaathi" <${emailUser}>`,
-    to,
-    subject: `Your MaidSaathi withdrawal of ₹${amount} has been sent to your bank`,
-    html,
-  });
+  await sendEmail({ to, subject: `Your MaidSaathi withdrawal of ₹${amount} has been sent to your bank`, html });
 };
 
