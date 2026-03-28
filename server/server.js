@@ -5,6 +5,7 @@ import app from './app.js';
 import connectDB from './src/config/db.js';
 import logger from './src/utils/logger.js';
 import { initChatSocket } from './src/socket/chatSocket.js';
+import { startAutoExpireJob } from './src/jobs/autoExpireBookings.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -32,6 +33,7 @@ connectDB().then(() => {
   });
 
   initChatSocket(io);
+  startAutoExpireJob();
 
   httpServer.listen(PORT, () => {
     logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);

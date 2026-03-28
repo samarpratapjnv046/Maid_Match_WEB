@@ -4,6 +4,7 @@ const BOOKING_STATUSES = [
   'offer_pending',
   'accepted',
   'rejected',
+  'expired',
   'pending_payment',
   'paid',
   'completed',
