@@ -8,6 +8,7 @@ import WithdrawalRequest from '../models/WithdrawalRequest.js';
 import cloudinary from '../config/cloudinary.js';
 import { AppError } from '../utils/errorHandler.js';
 import { sendWorkerVerifiedEmail, sendRefundConfirmationEmail, sendWithdrawalApprovedEmail } from '../utils/email.js';
+import { notify } from '../utils/notificationHelper.js';
 
 const logAction = async (adminId, action, entityType, entityId, before, after, note, ip) => {
   await AuditLog.create({ admin_id: adminId, action, entity_type: entityType, entity_id: entityId, before_state: before, after_state: after, note, ip_address: ip });
@@ -130,6 +131,14 @@ export const verifyWorker = async (req, res, next) => {
       );
     }
 
+    // In-app notification to the worker
+    notify(worker.user_id._id, {
+      type: 'admin_verification',
+      title: 'Profile Verified!',
+      body: 'Congratulations! Your profile has been verified by the admin. You can now start accepting bookings.',
+      data: { status: 'verified' },
+    });
+
     res.json({ success: true, message: 'Worker verified successfully.' });
   } catch (err) { next(err); }
 };
@@ -150,6 +159,15 @@ export const rejectWorker = async (req, res, next) => {
     await worker.save();
 
     await logAction(req.user._id, 'REJECT_WORKER', 'worker', worker._id, before, { is_verified: false, rejection_reason: reason }, reason, req.ip);
+
+    // In-app notification to the worker
+    notify(worker.user_id, {
+      type: 'admin_verification',
+      title: 'Profile Verification Failed',
+      body: `Your profile verification was not approved. Reason: ${reason}`,
+      data: { status: 'rejected', reason },
+    });
+
     res.json({ success: true, message: 'Worker rejected.' });
   } catch (err) { next(err); }
 };

@@ -4,6 +4,7 @@ import Booking from '../models/Booking.js';
 import cloudinary, { uploadToCloudinary } from '../config/cloudinary.js';
 import { AppError } from '../utils/errorHandler.js';
 import { APIFeatures } from '../utils/apiFeatures.js';
+import { notify } from '../utils/notificationHelper.js';
 
 // @desc    Create worker profile (after registration as worker)
 // @route   POST /api/workers/profile
@@ -260,6 +261,16 @@ export const toggleAvailability = async (req, res, next) => {
 
     worker.is_available = !worker.is_available;
     await worker.save();
+
+    // In-app confirmation notification to the worker
+    notify(req.user._id, {
+      type: 'profile_status',
+      title: worker.is_available ? 'You are now Active' : 'You are now Inactive',
+      body: worker.is_available
+        ? 'Your profile is visible to clients. You can now receive booking requests.'
+        : 'Your profile is hidden from bookings. Toggle back to start receiving requests.',
+      data: { is_available: worker.is_available },
+    });
 
     res.json({
       success: true,

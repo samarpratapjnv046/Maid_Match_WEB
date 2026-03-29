@@ -1,10 +1,11 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, User as UserIcon, LogOut, LayoutDashboard, Search, ChevronDown, ArrowLeftRight, Loader2 } from 'lucide-react';
+import { Menu, X, LogOut, LayoutDashboard, Search, ChevronDown, ArrowLeftRight, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 import LanguageSwitcher from '../common/LanguageSwitcher';
+import NotificationPanel from './NotificationPanel';
 
 const getDashboardPath = (role) => {
   if (role === 'worker') return '/worker/dashboard';
@@ -151,6 +152,9 @@ export default function Navbar() {
               </button>
             )}
 
+            {/* Notification bell — desktop, logged-in users only */}
+            {user && <NotificationPanel />}
+
             {user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -209,13 +213,16 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-gray-700 hover:text-primary-600 transition-colors p-1"
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile: notification bell + hamburger */}
+          <div className="md:hidden flex items-center gap-1">
+            {user && <NotificationPanel />}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-gray-700 hover:text-primary-600 transition-colors p-1"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
 

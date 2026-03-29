@@ -10,6 +10,7 @@ import { generateAndStoreOTP, verifyOTP } from '../services/otpService.js';
 import { calculateCommission, calculateDistanceCharge, MAX_DISTANCE_KM } from '../services/paymentService.js';
 import { getDistanceBetweenPincodes } from '../utils/geocodeService.js';
 import { AppError } from '../utils/errorHandler.js';
+import { notify } from '../utils/notificationHelper.js';
 
 const pushStatus = (booking, status, userId, note = '') => {
   booking.status_history.push({ status, changed_by: userId, note });
@@ -159,6 +160,14 @@ export const createBooking = async (req, res, next) => {
       status_history: [{ status: 'offer_pending', changed_by: req.user._id, note: 'Booking created' }],
     });
 
+    // Notify the worker about the new booking request (fire-and-forget)
+    notify(worker.user_id, {
+      type: 'booking_request',
+      title: 'New Booking Request',
+      body: `${req.user.name} requested ${service_type}`,
+      data: { bookingId: booking._id.toString() },
+    });
+
     res.status(201).json({ success: true, data: booking });
   } catch (err) {
     next(err);
@@ -189,6 +198,24 @@ export const respondToBooking = async (req, res, next) => {
     }
 
     await booking.save();
+
+    // Notify the customer about the response (fire-and-forget)
+    if (action === 'accept') {
+      notify(booking.user_id, {
+        type: 'booking_status',
+        title: 'Booking Accepted!',
+        body: 'Your booking request has been accepted. You can now proceed with payment.',
+        data: { bookingId: booking._id.toString(), status: 'accepted' },
+      });
+    } else {
+      notify(booking.user_id, {
+        type: 'booking_status',
+        title: 'Booking Rejected',
+        body: `Your booking was rejected. Reason: ${booking.rejection_reason}`,
+        data: { bookingId: booking._id.toString(), status: 'rejected' },
+      });
+    }
+
     res.json({ success: true, data: booking });
   } catch (err) {
     next(err);
@@ -315,6 +342,14 @@ export const completeBookingWithOTP = async (req, res, next) => {
     // Delete chat messages now that the booking is complete
     await Message.deleteMany({ booking_id: booking._id });
 
+    // Notify customer that job is completed (fire-and-forget)
+    notify(booking.user_id, {
+      type: 'booking_status',
+      title: 'Job Completed',
+      body: `Your booking has been marked as completed. Earnings have been credited to the worker.`,
+      data: { bookingId: booking._id.toString(), status: 'completed' },
+    });
+
     res.json({ success: true, message: 'Booking completed. Earnings credited to wallet.', data: booking });
   } catch (err) {
     await session.abortTransaction();
@@ -365,6 +400,26 @@ export const cancelBooking = async (req, res, next) => {
 
       await Message.deleteMany({ booking_id: booking._id });
 
+      // Notify the other party
+      if (req.user.role === 'customer') {
+        const workerDoc = await Worker.findById(booking.worker_id).select('user_id');
+        if (workerDoc) {
+          notify(workerDoc.user_id, {
+            type: 'booking_status',
+            title: 'Booking Cancellation Requested',
+            body: 'A customer has requested cancellation of a paid booking and submitted refund details.',
+            data: { bookingId: booking._id.toString(), status: 'cancellation_requested' },
+          });
+        }
+      } else {
+        notify(booking.user_id, {
+          type: 'booking_status',
+          title: 'Booking Cancellation Requested',
+          body: 'The worker has requested cancellation of your booking.',
+          data: { bookingId: booking._id.toString(), status: 'cancellation_requested' },
+        });
+      }
+
       return res.json({
         success: true,
         message: 'Cancellation request submitted. Our team will review and transfer the refund to your bank account within 3–5 business days.',
@@ -378,6 +433,26 @@ export const cancelBooking = async (req, res, next) => {
     await booking.save();
 
     await Message.deleteMany({ booking_id: booking._id });
+
+    // Notify the other party
+    if (req.user.role === 'customer') {
+      const workerDoc = await Worker.findById(booking.worker_id).select('user_id');
+      if (workerDoc) {
+        notify(workerDoc.user_id, {
+          type: 'booking_status',
+          title: 'Booking Cancelled',
+          body: 'A customer has cancelled their booking.',
+          data: { bookingId: booking._id.toString(), status: 'cancelled' },
+        });
+      }
+    } else {
+      notify(booking.user_id, {
+        type: 'booking_status',
+        title: 'Booking Cancelled',
+        body: 'The worker has cancelled your booking.',
+        data: { bookingId: booking._id.toString(), status: 'cancelled' },
+      });
+    }
 
     res.json({ success: true, message: 'Booking cancelled successfully.', data: booking });
   } catch (err) {

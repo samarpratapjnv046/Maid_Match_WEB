@@ -12,16 +12,20 @@ export function SocketProvider({ children }) {
   const { user } = useAuth();
   const socketRef = useRef(null);
 
-  // { [bookingId]: number }  — live unread counts per booking
+  // { [bookingId]: number }  — live unread counts per booking (chat)
   const [unreadCounts, setUnreadCounts] = useState({});
 
-  // Notification popup queue: [{ id, bookingId, senderName, senderRole, senderPhoto, text, unreadCount }]
+  // Chat notification popup queue
   const [notifications, setNotifications] = useState([]);
+
+  // System notifications (booking, OTP, verification, etc.)
+  const [systemNotifications, setSystemNotifications] = useState([]);
+  const [systemUnreadCount, setSystemUnreadCount] = useState(0);
 
   // Which booking's chat window is currently open → suppress its popup
   const activeChatBookingId = useRef(null);
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // ── Chat helpers ─────────────────────────────────────────────────────────────
 
   const dismissNotification = useCallback((id) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
@@ -29,7 +33,6 @@ export function SocketProvider({ children }) {
 
   const dismissAllNotifications = useCallback(() => setNotifications([]), []);
 
-  // Clear badge + notifications for a booking (called when its chat window opens)
   const markLocalRead = useCallback((bookingId) => {
     setUnreadCounts((prev) => {
       if (!prev[bookingId]) return prev;
@@ -40,24 +43,82 @@ export function SocketProvider({ children }) {
     setNotifications((prev) => prev.filter((n) => n.bookingId !== bookingId));
   }, []);
 
-  // Register which booking chat is open (+ immediately clear its unread)
   const setActiveChatBooking = useCallback((bookingId) => {
     activeChatBookingId.current = bookingId;
     if (bookingId) markLocalRead(bookingId);
   }, [markLocalRead]);
 
-  // ── Fetch unread on login / refresh ──────────────────────────────────────
+  // ── System notification helpers ───────────────────────────────────────────────
+
+  const markSystemNotifRead = useCallback(async (id) => {
+    setSystemNotifications((prev) => {
+      const notif = prev.find((n) => n._id === id);
+      if (!notif) return prev;
+      if (notif.type === 'otp') {
+        // OTP: mark as read but keep in list until booking completes
+        return prev.map((n) => (n._id === id ? { ...n, is_read: true } : n));
+      }
+      // All other types: remove from state immediately (deleted from DB too)
+      return prev.filter((n) => n._id !== id);
+    });
+    setSystemUnreadCount((prev) => Math.max(0, prev - 1));
+    try {
+      await api.patch(`/notifications/${id}/read`);
+    } catch {
+      // silent
+    }
+  }, []);
+
+  const markAllSystemRead = useCallback(async () => {
+    setSystemNotifications((prev) =>
+      // Remove non-OTP; keep OTP but mark as read
+      prev.filter((n) => n.type === 'otp').map((n) => ({ ...n, is_read: true }))
+    );
+    setSystemUnreadCount(0);
+    try {
+      await api.patch('/notifications/read-all');
+    } catch {
+      // silent
+    }
+  }, []);
+
+  // Delete a single notification from state + DB
+  const deleteSystemNotif = useCallback(async (id) => {
+    setSystemNotifications((prev) => {
+      const notif = prev.find((n) => n._id === id);
+      if (notif && !notif.is_read) {
+        setSystemUnreadCount((c) => Math.max(0, c - 1));
+      }
+      return prev.filter((n) => n._id !== id);
+    });
+    try {
+      await api.delete(`/notifications/${id}`);
+    } catch {
+      // silent
+    }
+  }, []);
+
+  // Delete ALL notifications from state + DB
+  const deleteAllSystemNotifs = useCallback(async () => {
+    setSystemNotifications([]);
+    setSystemUnreadCount(0);
+    try {
+      await api.delete('/notifications');
+    } catch {
+      // silent
+    }
+  }, []);
+
+  // ── Fetch unread chat messages ────────────────────────────────────────────────
   const fetchUnread = useCallback(async () => {
     try {
       const { data } = await api.get('/chat/unread');
       const items = data.data || [];
-
       const counts = {};
       const startupPopups = [];
 
       for (const item of items) {
         counts[item.bookingId] = item.unreadCount;
-
         if (item.latestMessage) {
           const msg = item.latestMessage;
           startupPopups.push({
@@ -66,9 +127,7 @@ export function SocketProvider({ children }) {
             senderName: msg.sender_id?.name || 'Someone',
             senderRole: msg.sender_role,
             senderPhoto: msg.sender_id?.profilePhoto?.url || null,
-            text: item.unreadCount > 1
-              ? `${item.unreadCount} unread messages`
-              : msg.text,
+            text: item.unreadCount > 1 ? `${item.unreadCount} unread messages` : msg.text,
             unreadCount: item.unreadCount,
           });
         }
@@ -77,22 +136,32 @@ export function SocketProvider({ children }) {
       setUnreadCounts(counts);
       if (startupPopups.length) setNotifications(startupPopups.slice(0, 5));
     } catch {
-      // silent — not critical
+      // silent
     }
   }, []);
 
-  // ── Socket connection ─────────────────────────────────────────────────────
+  // ── Fetch system notifications ────────────────────────────────────────────────
+  const fetchSystemNotifications = useCallback(async () => {
+    try {
+      const { data } = await api.get('/notifications');
+      setSystemNotifications(data.data || []);
+      setSystemUnreadCount(data.unreadCount || 0);
+    } catch {
+      // silent
+    }
+  }, []);
+
+  // ── Socket connection ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) {
       socketRef.current?.disconnect();
       socketRef.current = null;
-      setUnreadCounts({});
-      setNotifications([]);
       return;
     }
 
-    // Show unread popups as soon as user session is known
+    // Load persisted data on login
     fetchUnread();
+    fetchSystemNotifications();
 
     const token = localStorage.getItem('accessToken');
     if (!token) return;
@@ -108,27 +177,28 @@ export function SocketProvider({ children }) {
     socketRef.current = socket;
 
     socket.on('connect_error', (err) => {
-      // Suppress repeated console spam — only log once per error type
       if (!socketRef.current?._connectErrorLogged) {
         console.warn('[Socket] Could not connect to server:', err.message);
         if (socketRef.current) socketRef.current._connectErrorLogged = true;
       }
     });
 
+    // On every (re)connect: re-fetch so any events missed while offline are loaded
     socket.on('connect', () => {
       if (socketRef.current) socketRef.current._connectErrorLogged = false;
+      fetchUnread();
+      fetchSystemNotifications();
     });
 
+    // ── Chat message notification ─────────────────────────────────────────────
     socket.on('chat_notification', (data) => {
       const { bookingId, messageId } = data;
 
-      // Bump the unread count for this booking
       setUnreadCounts((prev) => ({
         ...prev,
         [bookingId]: (prev[bookingId] || 0) + 1,
       }));
 
-      // Don't show a popup if the user already has that chat open
       if (activeChatBookingId.current === bookingId) return;
 
       const popup = {
@@ -143,29 +213,63 @@ export function SocketProvider({ children }) {
 
       setNotifications((prev) => {
         if (prev.some((n) => n.id === popup.id)) return prev;
-        // One popup per booking at a time — replace older one for same booking
         const filtered = prev.filter((n) => n.bookingId !== bookingId);
         return [popup, ...filtered].slice(0, 5);
       });
+    });
+
+    // ── System notification (booking, OTP, verification, etc.) ───────────────
+    socket.on('notification', (notif) => {
+      // When a booking completes, also remove OTP notifications for that booking from state
+      if (notif.type === 'booking_status' && notif.data?.status === 'completed' && notif.data?.bookingId) {
+        setSystemNotifications((prev) =>
+          prev.filter((n) => !(n.type === 'otp' && n.data?.bookingId === notif.data.bookingId))
+        );
+      }
+
+      setSystemNotifications((prev) => {
+        if (prev.some((n) => n._id === notif._id)) return prev;
+        return [notif, ...prev].slice(0, 50);
+      });
+      setSystemUnreadCount((prev) => prev + 1);
     });
 
     return () => {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [user, fetchUnread]);
+  }, [user, fetchUnread, fetchSystemNotifications]);
+
+  // ── Expose null-safe values so stale state never leaks between sessions ───────
+  const isLoggedIn = Boolean(user);
+  const safeUnreadCounts        = isLoggedIn ? unreadCounts        : {};
+  const safeNotifications       = isLoggedIn ? notifications       : [];
+  const safeSystemNotifications = isLoggedIn ? systemNotifications : [];
+  const safeSystemUnreadCount   = isLoggedIn ? systemUnreadCount   : 0;
+  const totalChatUnread = Object.values(safeUnreadCounts).reduce((a, b) => a + b, 0);
+  const totalUnreadCount = totalChatUnread + safeSystemUnreadCount;
 
   return (
     <SocketContext.Provider
       value={{
         socket: socketRef,
-        notifications,
-        unreadCounts,
+        // Chat
+        notifications: safeNotifications,
+        unreadCounts: safeUnreadCounts,
         dismissNotification,
         dismissAllNotifications,
         setActiveChatBooking,
         markLocalRead,
         fetchUnread,
+        // System notifications
+        systemNotifications: safeSystemNotifications,
+        systemUnreadCount: safeSystemUnreadCount,
+        totalUnreadCount,
+        markSystemNotifRead,
+        markAllSystemRead,
+        deleteSystemNotif,
+        deleteAllSystemNotifs,
+        fetchSystemNotifications,
       }}
     >
       {children}

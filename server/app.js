@@ -18,6 +18,7 @@ import chatRoutes from './src/routes/chatRoutes.js';
 import offerRoutes from './src/routes/offerRoutes.js';
 import couponRoutes from './src/routes/couponRoutes.js';
 import contactRoutes from './src/routes/contactRoutes.js';
+import notificationRoutes from './src/routes/notificationRoutes.js';
 
 import { globalErrorHandler } from './src/utils/errorHandler.js';
 import { generalLimiter } from './src/middleware/rateLimiter.js';
@@ -100,6 +101,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/offers', offerRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ─── Static Files (Production) ────────────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {

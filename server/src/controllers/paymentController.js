@@ -16,6 +16,7 @@ import logger from '../utils/logger.js';
 import { sendCompletionOTPEmail } from '../utils/email.js';
 import { sendOTPSMS } from '../utils/sms.js';
 import User from '../models/User.js';
+import { notify } from '../utils/notificationHelper.js';
 
 // @desc    Create Razorpay order
 // @route   POST /api/payments/create-order
@@ -132,6 +133,25 @@ export const verifyPayment = async (req, res, next) => {
       if (user.phone) {
         sendOTPSMS(user.phone, otp).catch((err) => logger.error('OTP SMS failed:', err.message));
       }
+    }
+
+    // Push OTP notification to customer in-app
+    notify(req.user._id, {
+      type: 'otp',
+      title: 'Your Work Completion OTP',
+      body: `Your OTP is ${otp}. Share it with the worker when they arrive to complete the job.`,
+      data: { bookingId: booking._id.toString(), otp },
+    });
+
+    // Notify the worker that payment has been received
+    const workerDoc = await Worker.findById(booking.worker_id).select('user_id');
+    if (workerDoc) {
+      notify(workerDoc.user_id, {
+        type: 'booking_status',
+        title: 'Payment Received',
+        body: 'The customer has completed the payment. The booking is now active.',
+        data: { bookingId: booking._id.toString(), status: 'paid' },
+      });
     }
 
     res.json({

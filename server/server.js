@@ -6,6 +6,7 @@ import connectDB from './src/config/db.js';
 import logger from './src/utils/logger.js';
 import { initChatSocket } from './src/socket/chatSocket.js';
 import { startAutoExpireJob } from './src/jobs/autoExpireBookings.js';
+import { setIO } from './src/utils/socketInstance.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -32,6 +33,7 @@ connectDB().then(() => {
     },
   });
 
+  setIO(io);
   initChatSocket(io);
   startAutoExpireJob();
 
